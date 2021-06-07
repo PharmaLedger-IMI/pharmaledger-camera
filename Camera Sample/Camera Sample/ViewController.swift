@@ -9,14 +9,19 @@
 import UIKit
 import PharmaLedger_Camera
 
-class ViewController: UIViewController {
+class ViewController: UIViewController, CameraEventListener {
+    
+    func previewFrameCallback(byteArray: [UInt8]) {
+        //print("received byte array!")
+    }
     
     var cameraPreview:CameraPreview?
 
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
-        cameraPreview = CameraPreview.init()
+        
+        cameraPreview = CameraPreview.init(cameraListener: self)
         cameraPreview?.modalPresentationStyle = .fullScreen
         
         addChild(cameraPreview!)

@@ -9,15 +9,19 @@
 import UIKit
 import AVFoundation
 
+public protocol CameraEventListener{
+    func previewFrameCallback(byteArray:[UInt8])
+}
+
 public class CameraPreview:UIViewController,CameraSessionDelegate{
     
     //MARK: CameraSessionDelegate
     
     func onCameraPreviewFrame(sampleBuffer: CMSampleBuffer) {
-        
         DispatchQueue.main.async {
             //Convert the sample buffer to UIImage and update the preview image
             self.preview?.image = self.imageFromSampleBuffer(sampleBuffer: sampleBuffer)
+            self.cameraListener?.previewFrameCallback(byteArray: self.byteArrayFromSampleBuffer(sampleBuffer: sampleBuffer))
         }
     }
     
@@ -30,9 +34,30 @@ public class CameraPreview:UIViewController,CameraSessionDelegate{
     var preview:UIImageView?
     var cameraSession:CameraSession?
     
+    private var cameraListener:CameraEventListener?
+    
     private let ciContext = CIContext()
     
     //MARK: Initialization
+    
+    /**
+     Initializes the preview with camera event callbacks
+     */
+    public init(cameraListener:CameraEventListener){
+        super.init(nibName: nil, bundle: nil)
+        self.cameraListener = cameraListener
+    }
+    
+    /**
+     Initializes the preview with no callbacks
+     */
+    public init(){
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     //MARK: Public functions
     
@@ -85,5 +110,18 @@ public class CameraPreview:UIViewController,CameraSessionDelegate{
         return UIImage(cgImage: cgImage)
     }
     
+    private func byteArrayFromSampleBuffer(sampleBuffer: CMSampleBuffer) -> [UInt8]{
+        let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer)!
+
+        CVPixelBufferLockBaseAddress(imageBuffer, CVPixelBufferLockFlags(rawValue: 0))
+        let byterPerRow = CVPixelBufferGetBytesPerRow(imageBuffer)
+        let height = CVPixelBufferGetHeight(imageBuffer)
+        let srcBuff = CVPixelBufferGetBaseAddress(imageBuffer)
+
+        let data = NSData(bytes: srcBuff, length: byterPerRow * height)
+        CVPixelBufferUnlockBaseAddress(imageBuffer, CVPixelBufferLockFlags(rawValue: 0))
+
+        return [UInt8].init(repeating: 0, count: data.length / MemoryLayout<UInt8>.size)
+    }
     
 }

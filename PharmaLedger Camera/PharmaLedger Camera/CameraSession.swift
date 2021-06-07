@@ -39,12 +39,6 @@ class CameraSession:NSObject, AVCaptureVideoDataOutputSampleBufferDelegate{
     }
     
     //MARK: Initialization
-    /*
-    override init() {
-        super.init()
-        print("CameraSession","init")
-        initCamera()
-    }*/
     
     init(cameraSessionDelegate:CameraSessionDelegate) {
         super.init()
