@@ -10,6 +10,11 @@ import UIKit
 import PharmaLedger_Camera
 
 class ViewController: UIViewController, CameraEventListener {
+    func captureCallback(imageData: Data) {
+        print("received bytes from capture!")
+        let filedir = cameraPreview?.savePhotoToFiles(imageData: imageData, fileName: "test")
+        print("file saved to \(filedir!)")
+    }
     
     func previewFrameCallback(byteArray: [UInt8]) {
         //print("received byte array!")
@@ -20,9 +25,8 @@ class ViewController: UIViewController, CameraEventListener {
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
-        
         cameraPreview = CameraPreview.init(cameraListener: self)
-        cameraPreview?.modalPresentationStyle = .fullScreen
+        cameraPreview?.modalPresentationStyle = .currentContext
         
         addChild(cameraPreview!)
         
@@ -36,7 +40,26 @@ class ViewController: UIViewController, CameraEventListener {
                 cameraPreview!.view.bottomAnchor.constraint(equalTo: view.bottomAnchor)
             ])
         
+        let captureButton:UIButton = UIButton.init()
+        captureButton.setTitle("Take picture", for: .normal)
+        captureButton.addTarget(self, action: #selector(captureButtonClick), for: .touchUpInside)
+        //captureButton.target(forAction: #selector(captureButtonClick), withSender: self)
+        
+        captureButton.translatesAutoresizingMaskIntoConstraints = false
+        
+        view.addSubview(captureButton)
+        
+        NSLayoutConstraint.activate([
+            captureButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            captureButton.centerYAnchor.constraint(equalTo: view.bottomAnchor, constant: -50)
+        ])
+        
         cameraPreview!.didMove(toParent: self)
+    }
+    
+    @objc func captureButtonClick(){
+        print("capture button clicked!")
+        cameraPreview?.takePicture()
     }
 
 

@@ -8,9 +8,11 @@
 
 import UIKit
 import AVFoundation
+import Photos
 
 public protocol CameraEventListener{
     func previewFrameCallback(byteArray:[UInt8])
+    func captureCallback(imageData:Data)
 }
 
 public class CameraPreview:UIViewController,CameraSessionDelegate{
@@ -25,17 +27,20 @@ public class CameraPreview:UIViewController,CameraSessionDelegate{
         }
     }
     
+    func onCapture(imageData: Data) {
+        cameraListener?.captureCallback(imageData: imageData)
+    }
+    
     func onCameraInitialized() {
         print("CameraPreview", "Camera initialized!")
     }
     
     //MARK: Constants and variables
     
-    var preview:UIImageView?
-    var cameraSession:CameraSession?
+    private var preview:UIImageView?
+    private var cameraSession:CameraSession?
     
     private var cameraListener:CameraEventListener?
-    
     private let ciContext = CIContext()
     
     //MARK: Initialization
@@ -60,6 +65,10 @@ public class CameraPreview:UIViewController,CameraSessionDelegate{
     }
     
     //MARK: Public functions
+    
+    public func takePicture(){
+        cameraSession?.takePicture()
+    }
     
     //MARK: View lifecycle
     
@@ -98,6 +107,57 @@ public class CameraPreview:UIViewController,CameraSessionDelegate{
         print("CameraPreview", "viewDidAppear")
     }
     
+    //MARK: File saving
+    
+    /**
+     Saves the image to photos library
+     */
+    public func savePhotoToLibrary(imageData: Data){
+        PHPhotoLibrary.requestAuthorization { (status) in
+            if status == .authorized{
+                PHPhotoLibrary.shared().performChanges({
+                    let creationRequest = PHAssetCreationRequest.forAsset()
+                    
+                    creationRequest.addResource(with: .photo, data: imageData, options: nil)
+                    
+                }, completionHandler: { success, error in
+                    if !success, let error = error {
+                        print("error creating asset: \(error)")
+                        
+                    }else{
+                        print("file saved succesfully!")
+                    }
+                    
+                })
+                
+            }else{
+                
+            }
+        }
+    }
+    
+    /**
+     Saves the image data to the app file directory. Returns the final absolute path to the file as String
+     */
+    public func savePhotoToFiles(imageData: Data, fileName:String) -> String{
+        guard let directory = try? FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: false) as NSURL else {
+            print("Failed to save photo")
+            return ""
+        }
+        let finalPath = "\(directory.absoluteString!)\(fileName).jpg"
+        
+        do {
+
+            try imageData.write(to: URL.init(string: finalPath)!)
+            print("Data written to \(finalPath)")
+            return finalPath
+        }catch{
+            print("Data write failed")
+            return ""
+        }
+        
+    }
+    
     //MARK: Helpers
     
     /**
@@ -110,6 +170,9 @@ public class CameraPreview:UIViewController,CameraSessionDelegate{
         return UIImage(cgImage: cgImage)
     }
     
+    /**
+     Converts samplebuffer to byte array
+     */
     private func byteArrayFromSampleBuffer(sampleBuffer: CMSampleBuffer) -> [UInt8]{
         let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer)!
 
@@ -122,6 +185,10 @@ public class CameraPreview:UIViewController,CameraSessionDelegate{
         CVPixelBufferUnlockBaseAddress(imageBuffer, CVPixelBufferLockFlags(rawValue: 0))
 
         return [UInt8].init(repeating: 0, count: data.length / MemoryLayout<UInt8>.size)
+    }
+    
+    public func imageDataToBytes(imageData:Data) -> [UInt8] {
+        return [UInt8](imageData)
     }
     
 }
