@@ -9,13 +9,9 @@
 import UIKit
 import AVFoundation
 import Photos
+import Foundation
 
-public protocol CameraEventListener{
-    func previewFrameCallback(byteArray:[UInt8])
-    func captureCallback(imageData:Data)
-}
-
-public class CameraPreview:UIViewController,CameraSessionDelegate{
+@objc public class CameraPreview:UIViewController,CameraSessionDelegate{
     
     //MARK: CameraSessionDelegate
     
@@ -48,7 +44,7 @@ public class CameraPreview:UIViewController,CameraSessionDelegate{
     /**
      Initializes the preview with camera event callbacks
      */
-    public init(cameraListener:CameraEventListener){
+    @objc public init(cameraListener:CameraEventListener){
         super.init(nibName: nil, bundle: nil)
         self.cameraListener = cameraListener
     }
@@ -56,7 +52,7 @@ public class CameraPreview:UIViewController,CameraSessionDelegate{
     /**
      Initializes the preview with no callbacks
      */
-    public init(){
+    @objc public init(){
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -66,7 +62,7 @@ public class CameraPreview:UIViewController,CameraSessionDelegate{
     
     //MARK: Public functions
     
-    public func takePicture(){
+    @objc public func takePicture(){
         cameraSession?.takePicture()
     }
     
@@ -112,7 +108,7 @@ public class CameraPreview:UIViewController,CameraSessionDelegate{
     /**
      Saves the image to photos library
      */
-    public func savePhotoToLibrary(imageData: Data){
+    @objc public func savePhotoToLibrary(imageData: Data){
         PHPhotoLibrary.requestAuthorization { (status) in
             if status == .authorized{
                 PHPhotoLibrary.shared().performChanges({
@@ -139,7 +135,7 @@ public class CameraPreview:UIViewController,CameraSessionDelegate{
     /**
      Saves the image data to the app file directory. Returns the final absolute path to the file as String
      */
-    public func savePhotoToFiles(imageData: Data, fileName:String) -> String{
+    @objc public func savePhotoToFiles(imageData: Data, fileName:String) -> String{
         guard let directory = try? FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: false) as NSURL else {
             print("Failed to save photo")
             return ""
@@ -187,7 +183,7 @@ public class CameraPreview:UIViewController,CameraSessionDelegate{
         return [UInt8].init(repeating: 0, count: data.length / MemoryLayout<UInt8>.size)
     }
     
-    public func imageDataToBytes(imageData:Data) -> [UInt8] {
+    @objc public func imageDataToBytes(imageData:Data) -> [UInt8] {
         return [UInt8](imageData)
     }
     

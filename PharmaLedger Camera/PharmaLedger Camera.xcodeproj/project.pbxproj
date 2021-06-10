@@ -7,12 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B55389522671FD6F0064A5D5 /* CameraEventListener.swift in Sources */ = {isa = PBXBuildFile; fileRef = B55389512671FD6E0064A5D5 /* CameraEventListener.swift */; };
 		B57070E2266DEC5700E917B2 /* PharmaLedger_Camera.h in Headers */ = {isa = PBXBuildFile; fileRef = B57070E0266DEC5700E917B2 /* PharmaLedger_Camera.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B57070E9266DF00E00E917B2 /* CameraPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57070E8266DF00E00E917B2 /* CameraPreview.swift */; };
 		B57070EB266DF32800E917B2 /* CameraSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57070EA266DF32800E917B2 /* CameraSession.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		B55389512671FD6E0064A5D5 /* CameraEventListener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraEventListener.swift; sourceTree = "<group>"; };
 		B57070DD266DEC5700E917B2 /* PharmaLedger_Camera.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = PharmaLedger_Camera.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		B57070E0266DEC5700E917B2 /* PharmaLedger_Camera.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PharmaLedger_Camera.h; sourceTree = "<group>"; };
 		B57070E1266DEC5700E917B2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -53,6 +55,7 @@
 				B57070E0266DEC5700E917B2 /* PharmaLedger_Camera.h */,
 				B57070E1266DEC5700E917B2 /* Info.plist */,
 				B57070E8266DF00E00E917B2 /* CameraPreview.swift */,
+				B55389512671FD6E0064A5D5 /* CameraEventListener.swift */,
 				B57070EA266DF32800E917B2 /* CameraSession.swift */,
 			);
 			path = "PharmaLedger Camera";
@@ -138,6 +141,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B57070E9266DF00E00E917B2 /* CameraPreview.swift in Sources */,
+				B55389522671FD6F0064A5D5 /* CameraEventListener.swift in Sources */,
 				B57070EB266DF32800E917B2 /* CameraSession.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -285,6 +289,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
+				MARKETING_VERSION = 0.1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = "io.truemed.PharmaLedger-Camera";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -313,6 +318,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
+				MARKETING_VERSION = 0.1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = "io.truemed.PharmaLedger-Camera";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;

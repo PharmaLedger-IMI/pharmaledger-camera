@@ -7,14 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B530C5832671E2D900D1FBC9 /* PharmaLedger_Camera.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B5707137266E1F8200E917B2 /* PharmaLedger_Camera.framework */; };
+		B530C5842671E2D900D1FBC9 /* PharmaLedger_Camera.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B5707137266E1F8200E917B2 /* PharmaLedger_Camera.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		B5707119266E19FA00E917B2 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5707118266E19FA00E917B2 /* AppDelegate.swift */; };
 		B570711B266E19FA00E917B2 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B570711A266E19FA00E917B2 /* SceneDelegate.swift */; };
 		B570711D266E19FA00E917B2 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B570711C266E19FA00E917B2 /* ViewController.swift */; };
 		B5707120266E19FA00E917B2 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B570711E266E19FA00E917B2 /* Main.storyboard */; };
 		B5707122266E19FB00E917B2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B5707121266E19FB00E917B2 /* Assets.xcassets */; };
 		B5707125266E19FB00E917B2 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B5707123266E19FB00E917B2 /* LaunchScreen.storyboard */; };
-		B5707139266E1FCA00E917B2 /* PharmaLedger_Camera.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B5707137266E1F8200E917B2 /* PharmaLedger_Camera.framework */; };
-		B570713A266E1FCA00E917B2 /* PharmaLedger_Camera.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B5707137266E1F8200E917B2 /* PharmaLedger_Camera.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -28,13 +28,13 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		B570713B266E1FCA00E917B2 /* Embed Frameworks */ = {
+		B530C5852671E2D900D1FBC9 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				B570713A266E1FCA00E917B2 /* PharmaLedger_Camera.framework in Embed Frameworks */,
+				B530C5842671E2D900D1FBC9 /* PharmaLedger_Camera.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -58,7 +58,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B5707139266E1FCA00E917B2 /* PharmaLedger_Camera.framework in Frameworks */,
+				B530C5832671E2D900D1FBC9 /* PharmaLedger_Camera.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -122,7 +122,7 @@
 				B5707111266E19FA00E917B2 /* Sources */,
 				B5707112266E19FA00E917B2 /* Frameworks */,
 				B5707113266E19FA00E917B2 /* Resources */,
-				B570713B266E1FCA00E917B2 /* Embed Frameworks */,
+				B530C5852671E2D900D1FBC9 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
