@@ -141,6 +141,7 @@
 			attributes = {
 				LastSwiftUpdateCheck = 1250;
 				LastUpgradeCheck = 1250;
+				ORGANIZATIONNAME = "TrueMed Inc.";
 				TargetAttributes = {
 					B5707114266E19FA00E917B2 = {
 						CreatedOnToolsVersion = 12.5;

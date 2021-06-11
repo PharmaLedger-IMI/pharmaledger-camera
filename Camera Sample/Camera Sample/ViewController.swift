@@ -10,14 +10,14 @@ import UIKit
 import PharmaLedger_Camera
 
 class ViewController: UIViewController, CameraEventListener {
+    
     func captureCallback(imageData: Data) {
-        print("received bytes from capture!")
         let filedir = cameraPreview?.savePhotoToFiles(imageData: imageData, fileName: "test")
         print("file saved to \(filedir!)")
     }
     
     func previewFrameCallback(byteArray: [UInt8]) {
-        //print("received byte array!")
+        
     }
     
     var cameraPreview:CameraPreview?

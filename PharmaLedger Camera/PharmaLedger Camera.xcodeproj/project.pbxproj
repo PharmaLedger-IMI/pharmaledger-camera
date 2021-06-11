@@ -100,6 +100,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 1250;
+				ORGANIZATIONNAME = "TrueMed Inc.";
 				TargetAttributes = {
 					B57070DC266DEC5700E917B2 = {
 						CreatedOnToolsVersion = 12.5;

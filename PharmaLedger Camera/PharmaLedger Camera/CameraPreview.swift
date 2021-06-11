@@ -3,7 +3,7 @@
 //  PharmaLedger Camera
 //
 //  Created by Ville Raitio on 7.6.2021.
-//  Copyright TrueMed Inc. 2021
+//  Copyright © 2021 TrueMed Inc. All rights reserved.
 //
 
 import UIKit
@@ -11,6 +11,9 @@ import AVFoundation
 import Photos
 import Foundation
 
+/**
+ Camera preview Viewcontroller with streamlined access for camera functionalities.
+ */
 @objc public class CameraPreview:UIViewController,CameraSessionDelegate{
     
     //MARK: CameraSessionDelegate
@@ -43,6 +46,7 @@ import Foundation
     
     /**
      Initializes the preview with camera event callbacks
+     - Parameter cameraListener: Protocol to notify preview byte arrays and photo capture callbacks.
      */
     @objc public init(cameraListener:CameraEventListener){
         super.init(nibName: nil, bundle: nil)
@@ -62,6 +66,9 @@ import Foundation
     
     //MARK: Public functions
     
+    /**
+     Requests the camera session for a photo capture.
+     */
     @objc public func takePicture(){
         cameraSession?.takePicture()
     }
@@ -106,7 +113,8 @@ import Foundation
     //MARK: File saving
     
     /**
-     Saves the image to photos library
+     Saves the image to photos library. Requires NSPhotoLibraryUsageDescription declaration in Info.plist file.
+     - Parameter imageData Data object received from the photo capture callback
      */
     @objc public func savePhotoToLibrary(imageData: Data){
         PHPhotoLibrary.requestAuthorization { (status) in
@@ -134,6 +142,10 @@ import Foundation
     
     /**
      Saves the image data to the app file directory. Returns the final absolute path to the file as String
+     - Parameters:
+        - imageData: Data object received from the photo capture callback
+        - fileName: Name for the saved image (.jpg will be appended to the end)
+     - Returns: Absolute String path of the saved file.
      */
     @objc public func savePhotoToFiles(imageData: Data, fileName:String) -> String{
         guard let directory = try? FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: false) as NSURL else {
@@ -183,6 +195,11 @@ import Foundation
         return [UInt8].init(repeating: 0, count: data.length / MemoryLayout<UInt8>.size)
     }
     
+    /**
+     Converts a Data object to UInt8 byte array
+     - Parameter imageData: Data object received from the capture callback
+     - Returns Byte array in UInt8 form
+     */
     @objc public func imageDataToBytes(imageData:Data) -> [UInt8] {
         return [UInt8](imageData)
     }
