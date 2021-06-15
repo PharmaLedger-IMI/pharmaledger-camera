@@ -12,14 +12,14 @@ import UIKit
 protocol CameraSessionDelegate {
     func onCameraPreviewFrame(sampleBuffer: CMSampleBuffer)
     func onCapture(imageData:Data)
-    func onCameraInitialized()
+    func onCameraInitialized(captureSession:AVCaptureSession)
 }
 
 class CameraSession:NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVCapturePhotoCaptureDelegate{
     
     //MARK: Constants and variables
 
-    private var captureSession:AVCaptureSession?
+    public var captureSession:AVCaptureSession?
     private let sessionQueue = DispatchQueue(label: "camera_session_queue")
     let discoverySession = AVCaptureDevice.DiscoverySession(deviceTypes:
         [.builtInTrueDepthCamera, .builtInDualCamera, .builtInWideAngleCamera],
@@ -58,7 +58,7 @@ class CameraSession:NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVCa
             if(configuration == .success){
                 captureSession?.commitConfiguration()
                 captureSession?.startRunning()
-                cameraSessionDelegate?.onCameraInitialized()
+                cameraSessionDelegate?.onCameraInitialized(captureSession: captureSession!)
                 print("CameraSession","Camera successfully configured")
             }else{
                 print("configuration error!","Error: \(configuration)")

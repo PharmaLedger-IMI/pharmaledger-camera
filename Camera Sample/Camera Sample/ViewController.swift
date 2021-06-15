@@ -16,7 +16,7 @@ class ViewController: UIViewController, CameraEventListener {
         let filedir = cameraPreview?.savePhotoToFiles(imageData: imageData, fileName: "test")
         print("file saved to \(filedir!)")
         
-        cameraPreview?.removeFromSuperview()
+        //cameraPreview?.removeFromSuperview()
     }
     
     func previewFrameCallback(byteArray: [UInt8]) {
