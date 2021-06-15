@@ -196,4 +196,5 @@ class CameraSession:NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVCa
             */
         }
     }
+    
 }

@@ -1,27 +1,26 @@
-//
-//  CameraPreview.swift
+// 
+//  CameraPreviewView.swift
 //  PharmaLedger Camera
 //
 //  Created by Ville Raitio on 7.6.2021.
 //  Copyright © 2021 TrueMed Inc. All rights reserved.
 //
-
+	
 import UIKit
 import AVFoundation
 import Photos
 import Foundation
 
 /**
- Camera preview Viewcontroller with streamlined access for camera functionalities.
+ UIView CameraPreview that can be added as a sub view to existing view controllers or view containers.
  */
-@objc public class CameraPreview:UIViewController,CameraSessionDelegate{
+@objc public class CameraPreview:UIImageView,CameraSessionDelegate{
     
     //MARK: CameraSessionDelegate
-    
+
     func onCameraPreviewFrame(sampleBuffer: CMSampleBuffer) {
         DispatchQueue.main.async {
-            //Convert the sample buffer to UIImage and update the preview image
-            self.preview?.image = self.imageFromSampleBuffer(sampleBuffer: sampleBuffer)
+            self.image = self.imageFromSampleBuffer(sampleBuffer: sampleBuffer)
             self.cameraListener?.previewFrameCallback(byteArray: self.byteArrayFromSampleBuffer(sampleBuffer: sampleBuffer))
         }
     }
@@ -36,11 +35,12 @@ import Foundation
     
     //MARK: Constants and variables
     
-    private var preview:UIImageView?
     private var cameraSession:CameraSession?
-    
     private var cameraListener:CameraEventListener?
+    
     private let ciContext = CIContext()
+    
+    private var cameraAspectRatio:CGFloat = 4.0/3.0
     
     //MARK: Initialization
     
@@ -49,15 +49,16 @@ import Foundation
      - Parameter cameraListener: Protocol to notify preview byte arrays and photo capture callbacks.
      */
     @objc public init(cameraListener:CameraEventListener){
-        super.init(nibName: nil, bundle: nil)
+        super.init(image: nil, highlightedImage: nil)
         self.cameraListener = cameraListener
+        print("CameraPreview","init")
     }
     
     /**
      Initializes the preview with no callbacks
      */
     @objc public init(){
-        super.init(nibName: nil, bundle: nil)
+        super.init(image: nil, highlightedImage: nil)
     }
     
     required init?(coder: NSCoder) {
@@ -75,39 +76,29 @@ import Foundation
     
     //MARK: View lifecycle
     
-    override public func viewDidLoad() {
-        print("CameraPreview", "viewDidLoad")
-        preview = UIImageView.init()
-        preview?.translatesAutoresizingMaskIntoConstraints = false
-        preview?.contentMode = .scaleAspectFit
-        view.addSubview(preview!)
+    public override func willMove(toSuperview newSuperview: UIView?) {
+        print("CameraPreview","willMove to superview")
+    }
+    
+    public override func didMoveToSuperview() {
+        if(superview == nil){
+            print("CameraPreview","Superview is nil! Stopping camera...")
+            cameraSession?.stopCamera()
+            return
+        }
+        self.contentMode = .scaleAspectFit
+        self.translatesAutoresizingMaskIntoConstraints = false
+        print("CameraPreview","didMove to superview")
+        let heightAnchorConstant = (superview?.frame.width)!*cameraAspectRatio
+        print("CameraPreview","View size: \((superview?.frame.width)!)x\(heightAnchorConstant)")
         
         NSLayoutConstraint.activate([
-            preview!.widthAnchor.constraint(equalTo: view.widthAnchor),
-            preview!.heightAnchor.constraint(equalTo: view.heightAnchor),
-            preview!.topAnchor.constraint(equalTo: view.topAnchor),
-            preview!.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            self.widthAnchor.constraint(equalTo: superview!.widthAnchor),
+            self.topAnchor.constraint(equalTo: superview!.topAnchor),
+            self.heightAnchor.constraint(equalToConstant: heightAnchorConstant)
         ])
         
         cameraSession = CameraSession.init(cameraSessionDelegate: self)
-        
-    }
-    
-    public override func viewWillDisappear(_ animated: Bool) {
-        print("CameraPreview", "viewWillDisappear")
-        cameraSession?.stopCamera()
-    }
-    
-    override public func viewDidDisappear(_ animated: Bool) {
-        print("CameraPreview", "viewDidDisappear")
-    }
-    
-    public override func viewWillAppear(_ animated: Bool) {
-        print("CameraPreview", "viewWillAppear")
-    }
-    
-    public override func viewDidAppear(_ animated: Bool) {
-        print("CameraPreview", "viewDidAppear")
     }
     
     //MARK: File saving
@@ -203,5 +194,4 @@ import Foundation
     @objc public func imageDataToBytes(imageData:Data) -> [UInt8] {
         return [UInt8](imageData)
     }
-    
 }
