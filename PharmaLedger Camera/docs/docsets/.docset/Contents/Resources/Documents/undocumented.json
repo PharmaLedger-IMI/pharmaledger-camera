@@ -1,0 +1,68 @@
+{
+  "warnings": [
+    {
+      "file": "/Volumes/TrueMed/pharmaledger-camera/PharmaLedger Camera/PharmaLedger Camera/CameraPreview.swift",
+      "line": 71,
+      "symbol": "CameraPreview.init(frame:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Volumes/TrueMed/pharmaledger-camera/PharmaLedger Camera/PharmaLedger Camera/CameraPreview.swift",
+      "line": 97,
+      "symbol": "CameraPreview.willMove(toSuperview:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Volumes/TrueMed/pharmaledger-camera/PharmaLedger Camera/PharmaLedger Camera/CameraPreview.swift",
+      "line": 101,
+      "symbol": "CameraPreview.didMoveToSuperview()",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Volumes/TrueMed/pharmaledger-camera/PharmaLedger Camera/PharmaLedger Camera/CameraSession.swift",
+      "line": 12,
+      "symbol": "CameraSessionDelegate",
+      "symbol_kind": "source.lang.swift.decl.protocol",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Volumes/TrueMed/pharmaledger-camera/PharmaLedger Camera/PharmaLedger Camera/CameraSession.swift",
+      "line": 51,
+      "symbol": "CameraSession",
+      "symbol_kind": "source.lang.swift.decl.class",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Volumes/TrueMed/pharmaledger-camera/PharmaLedger Camera/PharmaLedger Camera/CameraSession.swift",
+      "line": 55,
+      "symbol": "CameraSession.captureSession",
+      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Volumes/TrueMed/pharmaledger-camera/PharmaLedger Camera/PharmaLedger Camera/CameraSession.swift",
+      "line": 79,
+      "symbol": "CameraSession.init(cameraSessionDelegate:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Volumes/TrueMed/pharmaledger-camera/PharmaLedger Camera/PharmaLedger Camera/CameraSession.swift",
+      "line": 181,
+      "symbol": "CameraSession.captureOutput(_:didOutput:from:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    },
+    {
+      "file": "/Volumes/TrueMed/pharmaledger-camera/PharmaLedger Camera/PharmaLedger Camera/CameraSession.swift",
+      "line": 189,
+      "symbol": "CameraSession.photoOutput(_:didFinishProcessingPhoto:error:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
+      "warning": "undocumented"
+    }
+  ],
+  "source_directory": "/Volumes/TrueMed/pharmaledger-camera/PharmaLedger Camera"
+}

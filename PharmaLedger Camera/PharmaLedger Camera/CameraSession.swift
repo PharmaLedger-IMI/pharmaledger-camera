@@ -9,11 +9,13 @@
 import AVFoundation
 import UIKit
 
+/// Protocol for listening to camera events, such as preview frame samplebuffer and photo capture callbacks
 @objc public protocol CameraSessionDelegate {
     
     /**
      Provides the sample buffer of the camera preview feed
      - Parameter sampleBuffer: CMSampleBuffer that can be buffered into an image or data object
+     
      # Code
      ```
      func onCameraPreviewFrame(sampleBuffer: CMSampleBuffer){
@@ -47,6 +49,7 @@ import UIKit
     @objc func onCameraInitialized()
 }
 
+/// Camera session handler that provides streamlined access to functionalities such as preview frame callbacks, photo capture and camera configurations
 @objc public class CameraSession:NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVCapturePhotoCaptureDelegate{
     
     //MARK: Constants and variables
@@ -75,6 +78,8 @@ import UIKit
     
     //MARK: Initialization
     
+    /// Initialisation of the CameraSession. Attempts to configure the session session and starts it if successfull
+    /// - Parameter cameraSessionDelegate: Camera event listener
     public init(cameraSessionDelegate:CameraSessionDelegate) {
         super.init()
         print("CameraSession","init with delegate")
