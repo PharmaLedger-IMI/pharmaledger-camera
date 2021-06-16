@@ -9,17 +9,17 @@
 import AVFoundation
 import UIKit
 
-protocol CameraSessionDelegate {
+@objc public protocol CameraSessionDelegate {
     func onCameraPreviewFrame(sampleBuffer: CMSampleBuffer)
     func onCapture(imageData:Data)
     func onCameraInitialized(captureSession:AVCaptureSession)
 }
 
-class CameraSession:NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVCapturePhotoCaptureDelegate{
+@objc public class CameraSession:NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVCapturePhotoCaptureDelegate{
     
     //MARK: Constants and variables
 
-    public var captureSession:AVCaptureSession?
+    private var captureSession:AVCaptureSession?
     private let sessionQueue = DispatchQueue(label: "camera_session_queue")
     let discoverySession = AVCaptureDevice.DiscoverySession(deviceTypes:
         [.builtInTrueDepthCamera, .builtInDualCamera, .builtInWideAngleCamera],
@@ -43,7 +43,7 @@ class CameraSession:NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVCa
     
     //MARK: Initialization
     
-    init(cameraSessionDelegate:CameraSessionDelegate) {
+    public init(cameraSessionDelegate:CameraSessionDelegate) {
         super.init()
         print("CameraSession","init with delegate")
         self.cameraSessionDelegate = cameraSessionDelegate
@@ -128,12 +128,14 @@ class CameraSession:NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVCa
     
     //MARK: Public functions
     
-    func stopCamera(){
+    /// Stops the camera session
+    @objc func stopCamera(){
         captureSession?.stopRunning()
         sessionQueue.suspend()
     }
     
-    func takePicture(){
+    /// Starts a photo capture session
+    @objc func takePicture(){
         
         let photoSettings = AVCapturePhotoSettings()
         photoSettings.isHighResolutionPhotoEnabled = true
@@ -143,7 +145,7 @@ class CameraSession:NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVCa
     
     //MARK: Preview and capture callbacks
     
-    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection){
+    public func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection){
         //guard let uiImage = imageFromSampleBuffer(sampleBuffer: sampleBuffer) else { return }
         
         DispatchQueue.main.async { [unowned self] in
@@ -151,7 +153,7 @@ class CameraSession:NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVCa
         }
     }
     
-    func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
+    public func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
         guard let imageData = photo.fileDataRepresentation() else {
             return
         }
@@ -189,11 +191,6 @@ class CameraSession:NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVCa
         AVCaptureDevice.requestAccess(for: AVMediaType.video) { [unowned self] granted in
             self.cameraPermissionGranted = granted
             self.sessionQueue.resume()
-            /*
-            if(!self.cameraPermissionGranted){
-                self.delegate?.onCameraPermissionDenied()
-            }
-            */
         }
     }
     

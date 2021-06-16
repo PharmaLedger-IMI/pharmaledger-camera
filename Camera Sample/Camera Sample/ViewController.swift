@@ -8,27 +8,53 @@
 
 import UIKit
 import PharmaLedger_Camera
+import AVFoundation
+import ImageIO
 
-class ViewController: UIViewController, CameraEventListener {
+class ViewController: UIViewController, CameraEventListener, CameraSessionDelegate {
     
+    //MARK: CameraSessionDelegate
+    func onCameraPreviewFrame(sampleBuffer: CMSampleBuffer) {
+        DispatchQueue.main.async {
+            guard let data:Data = dataFromSampleBuffer(sampleBuffer: sampleBuffer, ciContext: self.ciContext, jpegCompression: 1.0) else {
+                print("received nil data")
+                return
+            }
+            let img:UIImage = UIImage.init(data: data)!
+            self.cameraImagePreview?.image = img
+        }
+    }
+    
+    func onCapture(imageData: Data) {
+        
+    }
+    
+    func onCameraInitialized(captureSession: AVCaptureSession) {
+        
+    }
+    
+    //MARK: CameraEventListener
     func captureCallback(imageData: Data) {
         print("captureCallback")
-        let filedir = cameraPreview?.savePhotoToFiles(imageData: imageData, fileName: "test")
-        print("file saved to \(filedir!)")
-        
-        //cameraPreview?.removeFromSuperview()
+        let filedir = savePhotoToFiles(imageData: imageData, fileName: "test")
+        print("file saved to \(filedir)")
     }
     
-    func previewFrameCallback(byteArray: [UInt8]) {
+    func previewFrameCallback(cgImage: CGImage) {
         
     }
+    
+    private var cameraImagePreview:UIImageView?
+    private var cameraSession:CameraSession?
+    private let ciContext = CIContext()
     
     var cameraPreview:CameraPreview?
 
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
-        openCameraView()
+        //openCameraView()
+        startCameraSession()
         
         let captureButton:UIButton = UIButton.init()
         captureButton.setTitle("Take picture", for: .normal)
@@ -57,6 +83,24 @@ class ViewController: UIViewController, CameraEventListener {
     private func openCameraView(){
         cameraPreview = CameraPreview.init(cameraListener: self)
         view.addSubview(cameraPreview!)
+    }
+    
+    private func startCameraSession(){
+        cameraImagePreview = UIImageView.init()
+        cameraImagePreview?.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(cameraImagePreview!)
+        
+        cameraSession = CameraSession.init(cameraSessionDelegate: self)
+        
+        let cameraAspectRatio:CGFloat = 4.0/3.0
+        
+        let heightAnchorConstant = (view.frame.width)*cameraAspectRatio
+        
+        NSLayoutConstraint.activate([
+            cameraImagePreview!.widthAnchor.constraint(equalTo: view.widthAnchor),
+            cameraImagePreview!.topAnchor.constraint(equalTo: view.topAnchor),
+            cameraImagePreview!.heightAnchor.constraint(equalToConstant: heightAnchorConstant)
+        ])
     }
     
     @objc func captureButtonClick(){
@@ -103,4 +147,3 @@ class ViewController: UIViewController, CameraEventListener {
     }
     
 }
-

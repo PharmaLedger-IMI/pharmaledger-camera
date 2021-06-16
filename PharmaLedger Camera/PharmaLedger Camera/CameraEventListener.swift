@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import UIKit
 
 /**
  Public event listener for camera preview frames and successfull capture callbacks.
@@ -21,7 +22,7 @@ import Foundation
      }
       ```
      */
-    @objc func previewFrameCallback(byteArray:[UInt8])
+    @objc func previewFrameCallback(cgImage:CGImage)
     
     /**
      - Parameter imageData: CaptureCallback Data object
