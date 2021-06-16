@@ -8,7 +8,6 @@
 	
 import UIKit
 import AVFoundation
-import Photos
 import Foundation
 
 /**
@@ -21,7 +20,7 @@ import Foundation
     public func onCameraPreviewFrame(sampleBuffer: CMSampleBuffer) {
         DispatchQueue.main.async {
             //self.image = self.imageFromSampleBuffer(sampleBuffer: sampleBuffer)
-            guard let cgImage:CGImage = cgImageFromSampleBuffer(sampleBuffer: sampleBuffer, ciContext: self.ciContext) else {
+            guard let cgImage:CGImage = sampleBuffer.bufferToCGImage(ciContext: self.ciContext) else {
                 return
             }
             
@@ -33,8 +32,11 @@ import Foundation
         cameraListener?.captureCallback(imageData: imageData)
     }
     
-    public func onCameraInitialized(captureSession:AVCaptureSession) {
+    public func onCameraInitialized() {
         print("CameraPreview", "Camera initialized!")
+        guard let captureSession:AVCaptureSession = cameraSession?.captureSession else {
+            return
+        }
         DispatchQueue.main.async {
             self.cameraPreview = AVCaptureVideoPreviewLayer.init(session: captureSession)
             self.cameraPreview!.frame = self.bounds

@@ -14,11 +14,12 @@ import UIKit
  */
 @objc public protocol CameraEventListener{
     /**
-     - Parameter byteArray: Preview image output as an UInt8 byte array
+     - Parameter cgImage: Preview image output as a CGImage bitmap
+     
      # Code
       ```
-     func previewFrameCallback(byteArray: [UInt8]) {
-     
+     func previewFrameCallback(cgImage: CGImage) {
+        
      }
       ```
      */
@@ -26,11 +27,15 @@ import UIKit
     
     /**
      - Parameter imageData: CaptureCallback Data object
+     
      # Code
       ```
      func captureCallback(imageData: Data) {
-         let filedir = cameraPreview?.savePhotoToFiles(imageData: imageData, fileName: "test")
-         print("file saved to \(filedir!)")
+         guard let filedir = imageData.savePhotoToFiles(fileName: "test") else {
+             //Something went wrong when saving the file
+             return
+         }
+         print("file saved to \(filedir)")
      }
       ```
      */

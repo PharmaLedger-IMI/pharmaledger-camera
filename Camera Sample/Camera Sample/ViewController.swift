@@ -9,19 +9,26 @@
 import UIKit
 import PharmaLedger_Camera
 import AVFoundation
-import ImageIO
 
 class ViewController: UIViewController, CameraEventListener, CameraSessionDelegate {
     
     //MARK: CameraSessionDelegate
     func onCameraPreviewFrame(sampleBuffer: CMSampleBuffer) {
         DispatchQueue.main.async {
-            guard let data:Data = dataFromSampleBuffer(sampleBuffer: sampleBuffer, ciContext: self.ciContext, jpegCompression: 1.0) else {
-                print("received nil data")
-                return
+            if(self.useImage){
+                guard let image:UIImage = sampleBuffer.bufferToUIImage(ciContext: self.ciContext) else {
+                    return
+                }
+                self.cameraImagePreview?.image = image
+            }else {
+            
+                guard let data:Data = sampleBuffer.bufferToData(ciContext: self.ciContext, jpegCompression: 1.0) else {
+                    print("received nil data")
+                    return
+                }
+                let img:UIImage = UIImage.init(data: data)!
+                self.cameraImagePreview?.image = img
             }
-            let img:UIImage = UIImage.init(data: data)!
-            self.cameraImagePreview?.image = img
         }
     }
     
@@ -29,14 +36,17 @@ class ViewController: UIViewController, CameraEventListener, CameraSessionDelega
         
     }
     
-    func onCameraInitialized(captureSession: AVCaptureSession) {
+    func onCameraInitialized() {
         
     }
     
     //MARK: CameraEventListener
     func captureCallback(imageData: Data) {
         print("captureCallback")
-        let filedir = savePhotoToFiles(imageData: imageData, fileName: "test")
+        guard let filedir = imageData.savePhotoToFiles(fileName: "test") else {
+            //Something went wrong when saving the file
+            return
+        }
         print("file saved to \(filedir)")
     }
     
@@ -44,6 +54,7 @@ class ViewController: UIViewController, CameraEventListener, CameraSessionDelega
         
     }
     
+    private let useImage:Bool = false
     private var cameraImagePreview:UIImageView?
     private var cameraSession:CameraSession?
     private let ciContext = CIContext()

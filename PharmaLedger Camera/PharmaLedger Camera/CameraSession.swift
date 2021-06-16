@@ -10,16 +10,48 @@ import AVFoundation
 import UIKit
 
 @objc public protocol CameraSessionDelegate {
-    func onCameraPreviewFrame(sampleBuffer: CMSampleBuffer)
-    func onCapture(imageData:Data)
-    func onCameraInitialized(captureSession:AVCaptureSession)
+    
+    /**
+     Provides the sample buffer of the camera preview feed
+     - Parameter sampleBuffer: CMSampleBuffer that can be buffered into an image or data object
+     # Code
+     ```
+     func onCameraPreviewFrame(sampleBuffer: CMSampleBuffer){
+        //Convert the sample buffer into an UI image so that it can be displayed in UIImage view
+        guard let image:UIImage = sampleBuffer.bufferToUIImage(ciContext: self.ciContext) else {
+             return
+         }
+        mImageView.image = image
+     }
+     ```
+     */
+    @objc func onCameraPreviewFrame(sampleBuffer: CMSampleBuffer)
+    /**
+     Provides the image output of the photo capture.
+     - Parameter imageData: Data object of the photo capture image
+     
+     # Code
+     ```
+     func onCapture(imageData: Data) {
+         guard let filedir = imageData.savePhotoToFiles(fileName: "test") else {
+             //Something went wrong when saving the file
+             return
+         }
+         print("file saved to \(filedir)")
+     }
+     ```
+     */
+    @objc func onCapture(imageData:Data)
+    
+    /// Called when the camera initialization has finished
+    @objc func onCameraInitialized()
 }
 
 @objc public class CameraSession:NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVCapturePhotoCaptureDelegate{
     
     //MARK: Constants and variables
 
-    private var captureSession:AVCaptureSession?
+    public var captureSession:AVCaptureSession?
     private let sessionQueue = DispatchQueue(label: "camera_session_queue")
     let discoverySession = AVCaptureDevice.DiscoverySession(deviceTypes:
         [.builtInTrueDepthCamera, .builtInDualCamera, .builtInWideAngleCamera],
@@ -58,7 +90,7 @@ import UIKit
             if(configuration == .success){
                 captureSession?.commitConfiguration()
                 captureSession?.startRunning()
-                cameraSessionDelegate?.onCameraInitialized(captureSession: captureSession!)
+                cameraSessionDelegate?.onCameraInitialized()
                 print("CameraSession","Camera successfully configured")
             }else{
                 print("configuration error!","Error: \(configuration)")
