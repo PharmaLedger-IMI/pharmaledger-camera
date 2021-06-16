@@ -161,13 +161,13 @@ import UIKit
     //MARK: Public functions
     
     /// Stops the camera session
-    @objc func stopCamera(){
+    @objc public func stopCamera(){
         captureSession?.stopRunning()
         sessionQueue.suspend()
     }
     
     /// Starts a photo capture session
-    @objc func takePicture(){
+    @objc public func takePicture(){
         
         let photoSettings = AVCapturePhotoSettings()
         photoSettings.isHighResolutionPhotoEnabled = true
