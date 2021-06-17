@@ -9,46 +9,6 @@
 import AVFoundation
 import UIKit
 
-/// Protocol for listening to camera events, such as preview frame samplebuffer and photo capture callbacks
-@objc public protocol CameraSessionDelegate {
-    
-    /**
-     Provides the sample buffer of the camera preview feed
-     - Parameter sampleBuffer: CMSampleBuffer that can be buffered into an image or data object
-     
-     # Code
-     ```
-     func onCameraPreviewFrame(sampleBuffer: CMSampleBuffer){
-        //Convert the sample buffer into an UI image so that it can be displayed in UIImage view
-        guard let image:UIImage = sampleBuffer.bufferToUIImage(ciContext: self.ciContext) else {
-             return
-         }
-        mImageView.image = image
-     }
-     ```
-     */
-    @objc func onCameraPreviewFrame(sampleBuffer: CMSampleBuffer)
-    /**
-     Provides the image output of the photo capture.
-     - Parameter imageData: Data object of the photo capture image
-     
-     # Code
-     ```
-     func onCapture(imageData: Data) {
-         guard let filedir = imageData.savePhotoToFiles(fileName: "test") else {
-             //Something went wrong when saving the file
-             return
-         }
-         print("file saved to \(filedir)")
-     }
-     ```
-     */
-    @objc func onCapture(imageData:Data)
-    
-    /// Called when the camera initialization has finished
-    @objc func onCameraInitialized()
-}
-
 /// Camera session handler that provides streamlined access to functionalities such as preview frame callbacks, photo capture and camera configurations
 @objc public class CameraSession:NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVCapturePhotoCaptureDelegate{
     
@@ -59,7 +19,7 @@ import UIKit
     let discoverySession = AVCaptureDevice.DiscoverySession(deviceTypes:
         [.builtInTrueDepthCamera, .builtInDualCamera, .builtInWideAngleCamera],
         mediaType: .video, position: .back)
-    private var cameraSessionDelegate:CameraSessionDelegate?
+    private var cameraSessionDelegate:CameraEventListener?
     private var photoOutput: AVCapturePhotoOutput?
     
     private var cameraPermissionGranted = false
@@ -79,11 +39,11 @@ import UIKit
     //MARK: Initialization
     
     /// Initialisation of the CameraSession. Attempts to configure the session session and starts it if successfull
-    /// - Parameter cameraSessionDelegate: Camera event listener
-    public init(cameraSessionDelegate:CameraSessionDelegate) {
+    /// - Parameter cameraEventListener: Camera event listener
+    public init(cameraEventListener:CameraEventListener) {
         super.init()
         print("CameraSession","init with delegate")
-        self.cameraSessionDelegate = cameraSessionDelegate
+        self.cameraSessionDelegate = cameraEventListener
         self.initCamera()
     }
     
@@ -171,7 +131,13 @@ import UIKit
         sessionQueue.suspend()
     }
     
-    /// Starts a photo capture session
+    /// Starts the camera session.
+    @objc public func startCamera(){
+        captureSession?.startRunning()
+        sessionQueue.resume()
+    }
+    
+    /// Starts a photo capture
     @objc public func takePicture(){
         
         let photoSettings = AVCapturePhotoSettings()
@@ -186,7 +152,7 @@ import UIKit
         //guard let uiImage = imageFromSampleBuffer(sampleBuffer: sampleBuffer) else { return }
         
         DispatchQueue.main.async { [unowned self] in
-            self.cameraSessionDelegate?.onCameraPreviewFrame(sampleBuffer: sampleBuffer)
+            self.cameraSessionDelegate?.onPreviewFrame(sampleBuffer: sampleBuffer)
         }
     }
     

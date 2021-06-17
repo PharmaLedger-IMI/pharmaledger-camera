@@ -7,8 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		B553895A2672062B0064A5D5 /* PharmaLedger_Camera.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B5538958267206260064A5D5 /* PharmaLedger_Camera.framework */; };
-		B553895B2672062B0064A5D5 /* PharmaLedger_Camera.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B5538958267206260064A5D5 /* PharmaLedger_Camera.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		B5AECC332671E43400952AD8 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = B5AECC322671E43400952AD8 /* AppDelegate.m */; };
 		B5AECC362671E43400952AD8 /* SceneDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = B5AECC352671E43400952AD8 /* SceneDelegate.m */; };
 		B5AECC392671E43400952AD8 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B5AECC382671E43400952AD8 /* ViewController.m */; };
@@ -16,6 +14,8 @@
 		B5AECC3E2671E43400952AD8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B5AECC3D2671E43400952AD8 /* Assets.xcassets */; };
 		B5AECC412671E43400952AD8 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B5AECC3F2671E43400952AD8 /* LaunchScreen.storyboard */; };
 		B5AECC442671E43400952AD8 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = B5AECC432671E43400952AD8 /* main.m */; };
+		B5CF610B267A388A0086C506 /* PharmaLedger_Camera.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B5CF6108267A373B0086C506 /* PharmaLedger_Camera.framework */; };
+		B5CF610C267A388A0086C506 /* PharmaLedger_Camera.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B5CF6108267A373B0086C506 /* PharmaLedger_Camera.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -25,7 +25,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				B553895B2672062B0064A5D5 /* PharmaLedger_Camera.framework in Embed Frameworks */,
+				B5CF610C267A388A0086C506 /* PharmaLedger_Camera.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -33,7 +33,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		B5538958267206260064A5D5 /* PharmaLedger_Camera.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PharmaLedger_Camera.framework; path = ../../pharmatest/frameworks/0.1.2/PharmaLedger_Camera.framework; sourceTree = "<group>"; };
 		B5AECC2E2671E43400952AD8 /* CameraObjc.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CameraObjc.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B5AECC312671E43400952AD8 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		B5AECC322671E43400952AD8 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -46,6 +45,7 @@
 		B5AECC402671E43400952AD8 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		B5AECC422671E43400952AD8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B5AECC432671E43400952AD8 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		B5CF6108267A373B0086C506 /* PharmaLedger_Camera.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PharmaLedger_Camera.framework; path = ../../pharmaledger_builds/0.1.0/PharmaLedger_Camera.framework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -53,7 +53,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B553895A2672062B0064A5D5 /* PharmaLedger_Camera.framework in Frameworks */,
+				B5CF610B267A388A0086C506 /* PharmaLedger_Camera.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -63,7 +63,7 @@
 		B5AECC252671E43300952AD8 = {
 			isa = PBXGroup;
 			children = (
-				B5538958267206260064A5D5 /* PharmaLedger_Camera.framework */,
+				B5CF6108267A373B0086C506 /* PharmaLedger_Camera.framework */,
 				B5AECC302671E43400952AD8 /* CameraObjc */,
 				B5AECC2F2671E43400952AD8 /* Products */,
 			);

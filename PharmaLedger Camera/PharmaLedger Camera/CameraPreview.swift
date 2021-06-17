@@ -13,23 +13,16 @@ import Foundation
 /**
  UIView CameraPreview that can be added as a sub view to existing view controllers or view containers.
  */
-@objc public class CameraPreview:UIView,CameraSessionDelegate{
+@objc public class CameraPreview:UIView, CameraEventListener{
     
     //MARK: CameraSessionDelegate
 
-    public func onCameraPreviewFrame(sampleBuffer: CMSampleBuffer) {
-        DispatchQueue.main.async {
-            //self.image = self.imageFromSampleBuffer(sampleBuffer: sampleBuffer)
-            guard let cgImage:CGImage = sampleBuffer.bufferToCGImage(ciContext: self.ciContext) else {
-                return
-            }
-            
-            self.cameraListener?.previewFrameCallback(cgImage: cgImage)
-        }
+    public func onPreviewFrame(sampleBuffer: CMSampleBuffer) {
+        cameraEventListener?.onPreviewFrame(sampleBuffer: sampleBuffer)
     }
     
     public func onCapture(imageData: Data) {
-        cameraListener?.captureCallback(imageData: imageData)
+        cameraEventListener?.onCapture(imageData: imageData)
     }
     
     public func onCameraInitialized() {
@@ -49,7 +42,7 @@ import Foundation
     //MARK: Constants and variables
     
     private var cameraSession:CameraSession?
-    private var cameraListener:CameraEventListener?
+    private var cameraEventListener:CameraEventListener?
     private var cameraPreview:AVCaptureVideoPreviewLayer?
     
     private let ciContext = CIContext()
@@ -62,13 +55,13 @@ import Foundation
      Initializes the preview with camera event callbacks
      - Parameter cameraListener: Protocol to notify preview byte arrays and photo capture callbacks.
      */
-    @objc public init(cameraListener:CameraEventListener){
+    @objc public init(cameraEventListener:CameraEventListener){
         super.init(frame: CGRect())
-        self.cameraListener = cameraListener
+        self.cameraEventListener = cameraEventListener
         print("CameraPreview","init")
     }
     
-    public override init(frame: CGRect) {
+    override init(frame: CGRect) {
         super.init(frame: frame)
     }
     
@@ -90,6 +83,25 @@ import Foundation
      */
     @objc public func takePicture(){
         cameraSession?.takePicture()
+    }
+    
+    /// Stops the camera session
+    @objc public func stopCamera(){
+        cameraSession?.stopCamera()
+    }
+    
+    /// Starts the camera session
+    @objc public func startCamera(){
+        cameraSession?.startCamera()
+    }
+    
+    /// Checks if the camera session is runing or stopped
+    /// - Returns: True for running, False for stopped. If capture session couldn't be defined, returns nil
+    public func isCameraRunning() -> Bool?{
+        guard let captureSession = cameraSession?.captureSession else {
+            return nil
+        }
+        return captureSession.isRunning
     }
     
     //MARK: View lifecycle
@@ -116,6 +128,6 @@ import Foundation
             self.heightAnchor.constraint(equalToConstant: heightAnchorConstant)
         ])
         
-        cameraSession = CameraSession.init(cameraSessionDelegate: self)
+        cameraSession = CameraSession.init(cameraEventListener: self)
     }
 }

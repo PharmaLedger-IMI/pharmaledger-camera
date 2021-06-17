@@ -10,38 +10,10 @@ import UIKit
 import PharmaLedger_Camera
 import AVFoundation
 
-class ViewController: UIViewController, CameraEventListener, CameraSessionDelegate {
-    
-    //MARK: CameraSessionDelegate
-    func onCameraPreviewFrame(sampleBuffer: CMSampleBuffer) {
-        DispatchQueue.main.async {
-            if(self.useImage){
-                guard let image:UIImage = sampleBuffer.bufferToUIImage(ciContext: self.ciContext) else {
-                    return
-                }
-                self.cameraImagePreview?.image = image
-            }else {
-            
-                guard let data:Data = sampleBuffer.bufferToData(ciContext: self.ciContext, jpegCompression: 1.0) else {
-                    print("received nil data")
-                    return
-                }
-                let img:UIImage = UIImage.init(data: data)!
-                self.cameraImagePreview?.image = img
-            }
-        }
-    }
-    
-    func onCapture(imageData: Data) {
-        
-    }
-    
-    func onCameraInitialized() {
-        
-    }
+class ViewController: UIViewController, CameraEventListener {
     
     //MARK: CameraEventListener
-    func captureCallback(imageData: Data) {
+    func onCapture(imageData: Data) {
         print("captureCallback")
         guard let filedir = imageData.savePhotoToFiles(fileName: "test") else {
             //Something went wrong when saving the file
@@ -50,7 +22,11 @@ class ViewController: UIViewController, CameraEventListener, CameraSessionDelega
         print("file saved to \(filedir)")
     }
     
-    func previewFrameCallback(cgImage: CGImage) {
+    func onPreviewFrame(sampleBuffer: CMSampleBuffer) {
+        cameraImagePreview?.image = sampleBuffer.bufferToUIImage(ciContext: ciContext)
+    }
+
+    func onCameraInitialized() {
         
     }
     
@@ -59,26 +35,47 @@ class ViewController: UIViewController, CameraEventListener, CameraSessionDelega
     private var cameraSession:CameraSession?
     private let ciContext = CIContext()
     
+    private let controlsContainer:UIStackView = UIStackView.init()
+    private let captureButton:UIButton = UIButton.init()
+    private let cameraToggleButton:UIButton = UIButton.init()
+    
+    private let cameraAspectRatio:CGFloat = 4.0/3.0
+    private var cameraViewHeight:CGFloat?
+    private var controlsHeight:CGFloat?
+    
     var cameraPreview:CameraPreview?
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        cameraViewHeight = (view.frame.width)*cameraAspectRatio
+        controlsHeight = (view.frame.height)-cameraViewHeight!
         // Do any additional setup after loading the view.
-        //openCameraView()
-        startCameraSession()
+        controlsContainer.alignment = .center
+        controlsContainer.axis = .horizontal
+        controlsContainer.distribution = .fillEqually
+        controlsContainer.translatesAutoresizingMaskIntoConstraints = false
         
-        let captureButton:UIButton = UIButton.init()
+        view.addSubview(controlsContainer)
+        //startCameraSession()
+        openCameraView()
+        
         captureButton.setTitle("Take picture", for: .normal)
         captureButton.addTarget(self, action: #selector(captureButtonClick), for: .touchUpInside)
-        //captureButton.target(forAction: #selector(captureButtonClick), withSender: self)
         
+        cameraToggleButton.setTitle("Stop camera", for: .normal)
+        cameraToggleButton.addTarget(self, action: #selector(toggleCamera), for: .touchUpInside)
+        
+        cameraToggleButton.translatesAutoresizingMaskIntoConstraints = false
         captureButton.translatesAutoresizingMaskIntoConstraints = false
         
-        view.addSubview(captureButton)
+        
+        controlsContainer.addArrangedSubview(captureButton)
+        controlsContainer.addArrangedSubview(cameraToggleButton)
         
         NSLayoutConstraint.activate([
-            captureButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            captureButton.centerYAnchor.constraint(equalTo: view.bottomAnchor, constant: -50)
+            controlsContainer.heightAnchor.constraint(equalToConstant: controlsHeight!),
+            controlsContainer.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            controlsContainer.widthAnchor.constraint(equalTo: view.widthAnchor)
         ])
         
     }
@@ -92,7 +89,7 @@ class ViewController: UIViewController, CameraEventListener, CameraSessionDelega
     }
     
     private func openCameraView(){
-        cameraPreview = CameraPreview.init(cameraListener: self)
+        cameraPreview = CameraPreview.init(cameraEventListener: self)
         view.addSubview(cameraPreview!)
     }
     
@@ -101,22 +98,38 @@ class ViewController: UIViewController, CameraEventListener, CameraSessionDelega
         cameraImagePreview?.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(cameraImagePreview!)
         
-        cameraSession = CameraSession.init(cameraSessionDelegate: self)
-        
-        let cameraAspectRatio:CGFloat = 4.0/3.0
-        
-        let heightAnchorConstant = (view.frame.width)*cameraAspectRatio
+        cameraSession = CameraSession.init(cameraEventListener: self)
         
         NSLayoutConstraint.activate([
             cameraImagePreview!.widthAnchor.constraint(equalTo: view.widthAnchor),
             cameraImagePreview!.topAnchor.constraint(equalTo: view.topAnchor),
-            cameraImagePreview!.heightAnchor.constraint(equalToConstant: heightAnchorConstant)
+            cameraImagePreview!.heightAnchor.constraint(equalToConstant: cameraViewHeight!)
         ])
+        
+       
     }
     
     @objc func captureButtonClick(){
         print("capture button clicked!")
         cameraPreview?.takePicture()
+        cameraSession?.takePicture()
+    }
+    
+    @objc func toggleCamera(){
+        
+        
+        guard let capturesession = cameraSession?.captureSession else {
+            return
+        }
+        if(capturesession.isRunning){
+            cameraSession?.stopCamera()
+            cameraToggleButton.setTitle("Start camera", for: .normal)
+        }else{
+            cameraSession?.startCamera()
+            cameraToggleButton.setTitle("Stop camera", for: .normal)
+        }
+        
+        
     }
 
     //MARK: Device orientation

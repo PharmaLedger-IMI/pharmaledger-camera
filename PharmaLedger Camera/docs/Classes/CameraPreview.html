@@ -17,7 +17,7 @@
     <a title="CameraPreview Class Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html"> Docs</a> (80% documented)</p>
+        <p><a href="../index.html"> 0.1.0 Docs</a> (83% documented)</p>
         <p class="header-right">
           <form role="search" action="../search.json">
             <input type="text" placeholder="Search documentation" data-typeahead>
@@ -63,9 +63,6 @@
               <li class="nav-group-task">
                 <a href="../Protocols/CameraEventListener.html">CameraEventListener</a>
               </li>
-              <li class="nav-group-task">
-                <a href="../Protocols/CameraSessionDelegate.html">CameraSessionDelegate</a>
-              </li>
             </ul>
           </li>
         </ul>
@@ -78,7 +75,7 @@
                 <div class="language">
                   
                   <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="kd">class</span> <span class="kt">CameraPreview</span> <span class="p">:</span> <span class="kt">UIView</span><span class="p">,</span> <span class="kt"><a href="../Protocols/CameraSessionDelegate.html">CameraSessionDelegate</a></span></code></pre>
+<span class="kd">public</span> <span class="kd">class</span> <span class="kt">CameraPreview</span> <span class="p">:</span> <span class="kt">UIView</span><span class="p">,</span> <span class="kt"><a href="../Protocols/CameraEventListener.html">CameraEventListener</a></span></code></pre>
 
                 </div>
               </div>
@@ -100,9 +97,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:@M@PharmaLedger_Camera@objc(pl)CameraSessionDelegate(im)onCameraPreviewFrameWithSampleBuffer:"></a>
-                    <a name="//apple_ref/swift/Method/onCameraPreviewFrame(sampleBuffer:)" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@M@PharmaLedger_Camera@objc(pl)CameraSessionDelegate(im)onCameraPreviewFrameWithSampleBuffer:">onCameraPreviewFrame(sampleBuffer:<wbr>)</a>
+                    <a name="/c:@M@PharmaLedger_Camera@objc(pl)CameraEventListener(im)onPreviewFrameWithSampleBuffer:"></a>
+                    <a name="//apple_ref/swift/Method/onPreviewFrame(sampleBuffer:)" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@M@PharmaLedger_Camera@objc(pl)CameraEventListener(im)onPreviewFrameWithSampleBuffer:">onPreviewFrame(sampleBuffer:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -116,7 +113,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">onCameraPreviewFrame</span><span class="p">(</span><span class="nv">sampleBuffer</span><span class="p">:</span> <span class="kt">CMSampleBuffer</span><span class="p">)</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">onPreviewFrame</span><span class="p">(</span><span class="nv">sampleBuffer</span><span class="p">:</span> <span class="kt">CMSampleBuffer</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -126,9 +123,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:@M@PharmaLedger_Camera@objc(pl)CameraSessionDelegate(im)onCaptureWithImageData:"></a>
+                    <a name="/c:@M@PharmaLedger_Camera@objc(pl)CameraEventListener(im)onCaptureWithImageData:"></a>
                     <a name="//apple_ref/swift/Method/onCapture(imageData:)" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@M@PharmaLedger_Camera@objc(pl)CameraSessionDelegate(im)onCaptureWithImageData:">onCapture(imageData:<wbr>)</a>
+                    <a class="token" href="#/c:@M@PharmaLedger_Camera@objc(pl)CameraEventListener(im)onCaptureWithImageData:">onCapture(imageData:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -152,9 +149,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:@M@PharmaLedger_Camera@objc(pl)CameraSessionDelegate(im)onCameraInitialized"></a>
+                    <a name="/c:@M@PharmaLedger_Camera@objc(pl)CameraEventListener(im)onCameraInitialized"></a>
                     <a name="//apple_ref/swift/Method/onCameraInitialized()" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@M@PharmaLedger_Camera@objc(pl)CameraSessionDelegate(im)onCameraInitialized">onCameraInitialized()</a>
+                    <a class="token" href="#/c:@M@PharmaLedger_Camera@objc(pl)CameraEventListener(im)onCameraInitialized">onCameraInitialized()</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -191,9 +188,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/c:@M@PharmaLedger_Camera@objc(cs)CameraPreview(im)initWithCameraListener:"></a>
-                    <a name="//apple_ref/swift/Method/init(cameraListener:)" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@M@PharmaLedger_Camera@objc(cs)CameraPreview(im)initWithCameraListener:">init(cameraListener:<wbr>)</a>
+                    <a name="/c:@M@PharmaLedger_Camera@objc(cs)CameraPreview(im)initWithCameraEventListener:"></a>
+                    <a name="//apple_ref/swift/Method/init(cameraEventListener:)" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@M@PharmaLedger_Camera@objc(cs)CameraPreview(im)initWithCameraEventListener:">init(cameraEventListener:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -209,7 +206,7 @@
                         <div class="language">
                           <p class="aside-title">Swift</p>
                           <pre class="highlight swift"><code><span class="kd">@objc</span>
-<span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">cameraListener</span><span class="p">:</span> <span class="kt"><a href="../Protocols/CameraEventListener.html">CameraEventListener</a></span><span class="p">)</span></code></pre>
+<span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">cameraEventListener</span><span class="p">:</span> <span class="kt"><a href="../Protocols/CameraEventListener.html">CameraEventListener</a></span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -231,33 +228,6 @@
                             </tr>
                           </tbody>
                         </table>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/c:@M@PharmaLedger_Camera@objc(cs)CameraPreview(im)initWithFrame:"></a>
-                    <a name="//apple_ref/swift/Method/init(frame:)" class="dashAnchor"></a>
-                    <a class="token" href="#/c:@M@PharmaLedger_Camera@objc(cs)CameraPreview(im)initWithFrame:">init(frame:<wbr>)</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Undocumented</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">override</span> <span class="nf">init</span><span class="p">(</span><span class="nv">frame</span><span class="p">:</span> <span class="kt">CGRect</span><span class="p">)</span></code></pre>
-
-                        </div>
                       </div>
                     </section>
                   </div>
@@ -327,6 +297,93 @@
 <span class="kd">public</span> <span class="kd">func</span> <span class="nf">takePicture</span><span class="p">()</span></code></pre>
 
                         </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:@M@PharmaLedger_Camera@objc(cs)CameraPreview(im)stopCamera"></a>
+                    <a name="//apple_ref/swift/Method/stopCamera()" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@M@PharmaLedger_Camera@objc(cs)CameraPreview(im)stopCamera">stopCamera()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Stops the camera session</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@objc</span>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">stopCamera</span><span class="p">()</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/c:@M@PharmaLedger_Camera@objc(cs)CameraPreview(im)startCamera"></a>
+                    <a name="//apple_ref/swift/Method/startCamera()" class="dashAnchor"></a>
+                    <a class="token" href="#/c:@M@PharmaLedger_Camera@objc(cs)CameraPreview(im)startCamera">startCamera()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Starts the camera session</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">@objc</span>
+<span class="kd">public</span> <span class="kd">func</span> <span class="nf">startCamera</span><span class="p">()</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19PharmaLedger_Camera0C7PreviewC02isC7RunningSbSgyF"></a>
+                    <a name="//apple_ref/swift/Method/isCameraRunning()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19PharmaLedger_Camera0C7PreviewC02isC7RunningSbSgyF">isCameraRunning()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Checks if the camera session is runing or stopped</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">isCameraRunning</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">Bool</span><span class="p">?</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>True for running, False for stopped. If capture session couldn&rsquo;t be defined, returns nil</p>
                       </div>
                     </section>
                   </div>
@@ -403,7 +460,7 @@
           </section>
         </section>
         <section id="footer">
-          <p>&copy; 2021 <a class="link" href="https://truemedinc.com/" target="_blank" rel="external">TrueMed Inc.</a>. All rights reserved. (Last updated: 2021-06-16)</p>
+          <p>&copy; 2021 <a class="link" href="https://truemedinc.com" target="_blank" rel="external">TrueMed Inc.</a>. All rights reserved. (Last updated: 2021-06-17)</p>
           <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.7</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
         </section>
       </article>
