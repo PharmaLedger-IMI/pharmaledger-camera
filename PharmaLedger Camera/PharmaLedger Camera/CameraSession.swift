@@ -14,6 +14,7 @@ import UIKit
     
     //MARK: Constants and variables
 
+    /// The Active AVCaptureSession
     public var captureSession:AVCaptureSession?
     private let sessionQueue = DispatchQueue(label: "camera_session_queue")
     let discoverySession = AVCaptureDevice.DiscoverySession(deviceTypes:

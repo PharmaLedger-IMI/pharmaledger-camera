@@ -15,7 +15,7 @@ import Foundation
  */
 @objc public class CameraPreview:UIView, CameraEventListener{
     
-    //MARK: CameraSessionDelegate
+    //MARK: CameraEventListener
 
     public func onPreviewFrame(sampleBuffer: CMSampleBuffer) {
         cameraEventListener?.onPreviewFrame(sampleBuffer: sampleBuffer)

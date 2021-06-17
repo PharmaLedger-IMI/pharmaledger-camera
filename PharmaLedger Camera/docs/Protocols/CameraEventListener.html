@@ -17,7 +17,7 @@
     <a title="CameraEventListener Protocol Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html"> 0.1.0 Docs</a> (83% documented)</p>
+        <p><a href="../index.html"> 0.1.0 Docs</a> (87% documented)</p>
         <p class="header-right">
           <form role="search" action="../search.json">
             <input type="text" placeholder="Search documentation" data-typeahead>
@@ -100,7 +100,7 @@
                       <div class="abstract">
                         <p>Provides the sample buffer of the camera preview feed</p>
 <h1 id='code' class='heading'>Code</h1>
-<pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">onCameraPreviewFrame</span><span class="p">(</span><span class="nv">sampleBuffer</span><span class="p">:</span> <span class="kt">CMSampleBuffer</span><span class="p">){</span>
+<pre class="highlight swift"><code><span class="kd">func</span> <span class="nf">onPreviewFrame</span><span class="p">(</span><span class="nv">sampleBuffer</span><span class="p">:</span> <span class="kt">CMSampleBuffer</span><span class="p">){</span>
    <span class="c1">//Convert the sample buffer into an UI image so that it can be displayed in UIImage view</span>
    <span class="k">guard</span> <span class="k">let</span> <span class="nv">image</span><span class="p">:</span><span class="kt">UIImage</span> <span class="o">=</span> <span class="n">sampleBuffer</span><span class="o">.</span><span class="nf">bufferToUIImage</span><span class="p">(</span><span class="nv">ciContext</span><span class="p">:</span> <span class="k">self</span><span class="o">.</span><span class="n">ciContext</span><span class="p">)</span> <span class="k">else</span> <span class="p">{</span>
         <span class="k">return</span>

@@ -16,15 +16,15 @@
     },
     {
       "file": "/Volumes/TrueMed/pharmaledger-camera/PharmaLedger Camera/PharmaLedger Camera/CameraSession.swift",
-      "line": 17,
-      "symbol": "CameraSession.captureSession",
-      "symbol_kind": "source.lang.swift.decl.var.instance",
+      "line": 152,
+      "symbol": "CameraSession.captureOutput(_:didOutput:from:)",
+      "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Volumes/TrueMed/pharmaledger-camera/PharmaLedger Camera/PharmaLedger Camera/CameraSession.swift",
-      "line": 151,
-      "symbol": "CameraSession.captureOutput(_:didOutput:from:)",
+      "line": 160,
+      "symbol": "CameraSession.photoOutput(_:didFinishProcessingPhoto:error:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     }

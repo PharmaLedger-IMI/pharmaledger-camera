@@ -20,7 +20,7 @@ import AVFoundation
      
      # Code
      ```
-     func onCameraPreviewFrame(sampleBuffer: CMSampleBuffer){
+     func onPreviewFrame(sampleBuffer: CMSampleBuffer){
         //Convert the sample buffer into an UI image so that it can be displayed in UIImage view
         guard let image:UIImage = sampleBuffer.bufferToUIImage(ciContext: self.ciContext) else {
              return
