@@ -3,7 +3,6 @@
 //  PharmaLedger Camera
 //
 //  Created by Ville Raitio on 7.6.2021.
-//  Copyright © 2021 TrueMed Inc. All rights reserved.
 //
 	
 import UIKit

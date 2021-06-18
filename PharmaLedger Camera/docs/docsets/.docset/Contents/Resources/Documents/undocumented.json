@@ -2,28 +2,28 @@
   "warnings": [
     {
       "file": "/Volumes/TrueMed/pharmaledger-camera/PharmaLedger Camera/PharmaLedger Camera/CameraPreview.swift",
-      "line": 109,
+      "line": 108,
       "symbol": "CameraPreview.willMove(toSuperview:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Volumes/TrueMed/pharmaledger-camera/PharmaLedger Camera/PharmaLedger Camera/CameraPreview.swift",
-      "line": 113,
+      "line": 112,
       "symbol": "CameraPreview.didMoveToSuperview()",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Volumes/TrueMed/pharmaledger-camera/PharmaLedger Camera/PharmaLedger Camera/CameraSession.swift",
-      "line": 152,
+      "line": 151,
       "symbol": "CameraSession.captureOutput(_:didOutput:from:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"
     },
     {
       "file": "/Volumes/TrueMed/pharmaledger-camera/PharmaLedger Camera/PharmaLedger Camera/CameraSession.swift",
-      "line": 160,
+      "line": 159,
       "symbol": "CameraSession.photoOutput(_:didFinishProcessingPhoto:error:)",
       "symbol_kind": "source.lang.swift.decl.function.method.instance",
       "warning": "undocumented"

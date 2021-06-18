@@ -3,7 +3,6 @@
 //  Camera Sample
 //
 //  Created by Ville Raitio on 7.6.2021.
-//  Copyright TrueMed Inc. 2021
 //
 
 import UIKit
@@ -19,7 +18,7 @@ class ViewController: UIViewController, CameraEventListener {
             //Something went wrong when saving the file
             return
         }
-        print("file saved to \(filedir)")
+        self.showToast(message: "file saved", font: .systemFont(ofSize: 14.0))
     }
     
     func onPreviewFrame(sampleBuffer: CMSampleBuffer) {
@@ -56,8 +55,8 @@ class ViewController: UIViewController, CameraEventListener {
         controlsContainer.translatesAutoresizingMaskIntoConstraints = false
         
         view.addSubview(controlsContainer)
-        //startCameraSession()
-        openCameraView()
+        startCameraSession()
+        //openCameraView()
         
         captureButton.setTitle("Take picture", for: .normal)
         captureButton.addTarget(self, action: #selector(captureButtonClick), for: .touchUpInside)
@@ -171,3 +170,24 @@ class ViewController: UIViewController, CameraEventListener {
     }
     
 }
+
+extension UIViewController {
+
+func showToast(message : String, font: UIFont) {
+
+    let toastLabel = UILabel(frame: self.view.frame)
+    toastLabel.backgroundColor = UIColor.black.withAlphaComponent(0.6)
+    toastLabel.textColor = UIColor.white
+    toastLabel.font = font
+    toastLabel.textAlignment = .center;
+    toastLabel.text = message
+    toastLabel.alpha = 1.0
+    toastLabel.layer.cornerRadius = 10;
+    toastLabel.clipsToBounds  =  true
+    self.view.addSubview(toastLabel)
+    UIView.animate(withDuration: 4.0, delay: 0.1, options: .curveEaseOut, animations: {
+         toastLabel.alpha = 0.0
+    }, completion: {(isCompleted) in
+        toastLabel.removeFromSuperview()
+    })
+} }
