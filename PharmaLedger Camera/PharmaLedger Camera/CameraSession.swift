@@ -9,24 +9,28 @@ import AVFoundation
 import UIKit
 
 /// Camera session handler that provides streamlined access to functionalities such as preview frame callbacks, photo capture and camera configurations
-@objc public class CameraSession:NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVCapturePhotoCaptureDelegate{
+@objc public class CameraSession:NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVCapturePhotoCaptureDelegate, CameraConfigurationChangeListener{
     
     //MARK: Constants and variables
 
     /// The Active AVCaptureSession
     public var captureSession:AVCaptureSession?
+    private var captureDevice:AVCaptureDevice?
     private let sessionQueue = DispatchQueue(label: "camera_session_queue")
     let discoverySession = AVCaptureDevice.DiscoverySession(deviceTypes:
         [.builtInTrueDepthCamera, .builtInDualCamera, .builtInWideAngleCamera],
         mediaType: .video, position: .back)
-    private var cameraSessionDelegate:CameraEventListener?
+    private let cameraSessionDelegate:CameraEventListener
     private var photoOutput: AVCapturePhotoOutput?
+    
+    private let cameraConfiguration:CameraConfiguration
     
     private var cameraPermissionGranted = false
     
     private enum ConfigurationResult{
         case permissionsDenied
         case deviceDiscoveryFailure
+        case deviceConfigurationFailure
         case deviceInputFailure
         case deviceOutputFailure
         case deviceOutputConnectionFailure
@@ -38,12 +42,28 @@ import UIKit
     
     //MARK: Initialization
     
-    /// Initialisation of the CameraSession. Attempts to configure the session session and starts it if successfull
+    /// Initialisation of the CameraSession. Attempts to configure the session session with default CameraConfiguration and starts it if successfull
     /// - Parameter cameraEventListener: Camera event listener
     public init(cameraEventListener:CameraEventListener) {
-        super.init()
-        print("CameraSession","init with delegate")
+        self.cameraConfiguration = CameraConfiguration.init()
         self.cameraSessionDelegate = cameraEventListener
+        super.init()
+        self.cameraConfiguration.delegate = self
+        print("CameraSession","init with delegate")
+        self.initCamera()
+    }
+    
+    
+    /// Initialisation of the CameraSession using custom launch configurations.
+    /// - Parameters:
+    ///   - cameraEventListener: Camera event listener
+    ///   - cameraConfiguration: Camera configuration
+    public init(cameraEventListener:CameraEventListener, cameraConfiguration:CameraConfiguration){
+        self.cameraConfiguration = cameraConfiguration
+        self.cameraSessionDelegate = cameraEventListener
+        super.init()
+        self.cameraConfiguration.delegate = self
+        print("CameraSession","init with delegate and configuration")
         self.initCamera()
     }
     
@@ -55,11 +75,34 @@ import UIKit
             if(configuration == .success){
                 captureSession?.commitConfiguration()
                 captureSession?.startRunning()
-                cameraSessionDelegate?.onCameraInitialized()
+                cameraSessionDelegate.onCameraInitialized()
                 print("CameraSession","Camera successfully configured")
+                
+                configureDevice(device: captureDevice!)
             }else{
                 print("configuration error!","Error: \(configuration)")
             }
+        }
+    }
+    
+    private func configureDevice(device:AVCaptureDevice){
+        
+        do{
+            print("camConfig","Try to set torch mode to \(cameraConfiguration.getFlashConfiguration() ?? "undefined")")
+            try device.lockForConfiguration()
+            
+            device.torchMode = cameraConfiguration.getTorchMode()
+            if(device.torchMode == .on){
+                do {
+                    try device.setTorchModeOn(level: cameraConfiguration.getTorchLevel())
+                } catch {
+                    print(error)
+                }
+            }
+            
+            device.unlockForConfiguration()
+        }catch {
+            print(error)
         }
     }
     
@@ -74,6 +117,7 @@ import UIKit
         guard let captureDevice:AVCaptureDevice = selectDevice(in: .back) else {
             return .deviceDiscoveryFailure
         }
+        self.captureDevice = captureDevice
         
         guard let captureDeviceInput = try? AVCaptureDeviceInput(device: captureDevice) else {
             return .deviceInputFailure
@@ -135,6 +179,10 @@ import UIKit
     @objc public func startCamera(){
         captureSession?.startRunning()
         sessionQueue.resume()
+        guard let device:AVCaptureDevice = self.captureDevice else {
+            return
+        }
+        self.configureDevice(device: device)
     }
     
     /// Starts a photo capture
@@ -142,8 +190,15 @@ import UIKit
         
         let photoSettings = AVCapturePhotoSettings()
         photoSettings.isHighResolutionPhotoEnabled = true
+        photoSettings.flashMode = cameraConfiguration.getFlashMode()
         
         photoOutput?.capturePhoto(with: photoSettings, delegate: self)
+    }
+    
+    /// Returns the current configuration object of the camera
+    /// - Returns: CameraConfiguration (nil if not defined)
+    public func getConfig() -> CameraConfiguration?{
+        return self.cameraConfiguration
     }
     
     //MARK: Preview and capture callbacks
@@ -152,7 +207,7 @@ import UIKit
         //guard let uiImage = imageFromSampleBuffer(sampleBuffer: sampleBuffer) else { return }
         
         DispatchQueue.main.async { [unowned self] in
-            self.cameraSessionDelegate?.onPreviewFrame(sampleBuffer: sampleBuffer)
+            self.cameraSessionDelegate.onPreviewFrame(sampleBuffer: sampleBuffer)
         }
     }
     
@@ -160,7 +215,7 @@ import UIKit
         guard let imageData = photo.fileDataRepresentation() else {
             return
         }
-        cameraSessionDelegate?.onCapture(imageData: imageData)
+        cameraSessionDelegate.onCapture(imageData: imageData)
     }
     
     //MARK: Camera access permission
@@ -195,6 +250,14 @@ import UIKit
             self.cameraPermissionGranted = granted
             self.sessionQueue.resume()
         }
+    }
+    
+    //MARK: CameraConfigurationChangeListener
+    func onConfigurationsChanged() {
+        guard let device:AVCaptureDevice = self.captureDevice else {
+            return
+        }
+        self.configureDevice(device: device)
     }
     
 }

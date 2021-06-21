@@ -32,10 +32,12 @@ class ViewController: UIViewController, CameraEventListener {
     private let useImage:Bool = false
     private var cameraImagePreview:UIImageView?
     private var cameraSession:CameraSession?
+    private let cameraConfig:CameraConfiguration = CameraConfiguration.init()
     private let ciContext = CIContext()
     
     private let controlsContainer:UIStackView = UIStackView.init()
     private let captureButton:UIButton = UIButton.init()
+    private let flashModeButton:UIButton = UIButton.init()
     private let cameraToggleButton:UIButton = UIButton.init()
     
     private let cameraAspectRatio:CGFloat = 4.0/3.0
@@ -58,16 +60,23 @@ class ViewController: UIViewController, CameraEventListener {
         startCameraSession()
         //openCameraView()
         
-        captureButton.setTitle("Take picture", for: .normal)
+        //captureButton.setTitle("Take picture", for: .normal)
+        captureButton.setImage(UIImage.init(named: "photo_camera"), for: .normal)
         captureButton.addTarget(self, action: #selector(captureButtonClick), for: .touchUpInside)
         
-        cameraToggleButton.setTitle("Stop camera", for: .normal)
+        //cameraToggleButton.setTitle("Stop camera", for: .normal)
+        cameraToggleButton.setImage(UIImage.init(named: "pause"), for: .normal)
         cameraToggleButton.addTarget(self, action: #selector(toggleCamera), for: .touchUpInside)
+        
+        flashModeButton.setImage(UIImage.init(named: "flash_auto"), for: .normal)
+        flashModeButton.addTarget(self, action: #selector(toggleFlash), for: .touchUpInside)
         
         cameraToggleButton.translatesAutoresizingMaskIntoConstraints = false
         captureButton.translatesAutoresizingMaskIntoConstraints = false
+        flashModeButton.translatesAutoresizingMaskIntoConstraints = false
         
         
+        controlsContainer.addArrangedSubview(flashModeButton)
         controlsContainer.addArrangedSubview(captureButton)
         controlsContainer.addArrangedSubview(cameraToggleButton)
         
@@ -96,8 +105,7 @@ class ViewController: UIViewController, CameraEventListener {
         cameraImagePreview = UIImageView.init()
         cameraImagePreview?.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(cameraImagePreview!)
-        
-        cameraSession = CameraSession.init(cameraEventListener: self)
+        cameraSession = CameraSession.init(cameraEventListener: self,cameraConfiguration: cameraConfig)
         
         NSLayoutConstraint.activate([
             cameraImagePreview!.widthAnchor.constraint(equalTo: view.widthAnchor),
@@ -122,13 +130,32 @@ class ViewController: UIViewController, CameraEventListener {
         }
         if(capturesession.isRunning){
             cameraSession?.stopCamera()
-            cameraToggleButton.setTitle("Start camera", for: .normal)
         }else{
             cameraSession?.startCamera()
-            cameraToggleButton.setTitle("Stop camera", for: .normal)
         }
         
         
+    }
+    
+    @objc func toggleFlash(){
+        switch cameraConfig.getFlashConfiguration() {
+        case "off":
+            flashModeButton.setImage(UIImage.init(named: "flash_auto"), for: .normal)
+            cameraConfig.setFlashConfiguration(flash_mode: "auto")
+            break
+        case "auto":
+            flashModeButton.setImage(UIImage.init(named: "flash_on"), for: .normal)
+            cameraConfig.setFlashConfiguration(flash_mode: "flash")
+            break
+        case "flash":
+            flashModeButton.setImage(UIImage.init(named: "flash_torch"), for: .normal)
+            cameraConfig.setFlashConfiguration(flash_mode: "torch")
+            break
+        default://torch
+            flashModeButton.setImage(UIImage.init(named: "flash_off"), for: .normal)
+            cameraConfig.setFlashConfiguration(flash_mode: "off")
+            break
+        }
     }
 
     //MARK: Device orientation
