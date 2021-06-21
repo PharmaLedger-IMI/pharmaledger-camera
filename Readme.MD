@@ -2,6 +2,12 @@
 
 This readme is mainly meant as internal TrueMed documentation for managing the PharmaLedger iOS camera framework.
 
+## Contents
+
+- Camera Sample (Swift project that implements the Camera Framework)
+- pharmaledger_flutterdemo (Flutter application that uses the Camera Framework to access the native camera)
+- PharmaLedger Camera (native iOS camera Framework)
+
 ## Building Documentation
 
 Currently documentation is generated using [Jazzy](https://github.com/realm/jazzy). To generate the documentation, run this command in the PharmaLedger Camera framework root folder (remember to replace VERSION_NUMBER with the version number of the build, eg. 0.1.0):
