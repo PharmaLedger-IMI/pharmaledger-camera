@@ -48,4 +48,7 @@ import AVFoundation
     
     /// Called when the camera initialization has finished
     @objc func onCameraInitialized()
+    
+    /// If the user has denied the camera access permission and the SDK was unable to request the permission, this event will be called
+    func onCameraPermissionDenied()
 }

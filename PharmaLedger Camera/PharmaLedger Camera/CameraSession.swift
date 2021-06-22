@@ -83,7 +83,10 @@ import UIKit
                 cameraSessionDelegate.onCameraInitialized()
                 print("CameraSession","Camera successfully configured")
                 
-            }else{
+            }else if(configuration == .permissionsDenied){
+                self.cameraSessionDelegate.onCameraPermissionDenied()
+            }
+            else{
                 print("configuration error!","Error: \(configuration)")
             }
         }

@@ -38,6 +38,10 @@ import Foundation
         }
     }
     
+    public func onCameraPermissionDenied() {
+        
+    }
+    
     //MARK: Constants and variables
     
     private var cameraSession:CameraSession?

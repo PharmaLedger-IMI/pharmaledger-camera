@@ -29,6 +29,10 @@ class ViewController: UIViewController, CameraEventListener {
         print("camConfig","Current colorspace: \(cameraSession?.getCurrentColorSpaceString() ?? "nil")")
     }
     
+    func onCameraPermissionDenied() {
+        print("camera permission was denied!")
+    }
+    
     private let useImage:Bool = false
     private var cameraImagePreview:UIImageView?
     private var cameraSession:CameraSession?
