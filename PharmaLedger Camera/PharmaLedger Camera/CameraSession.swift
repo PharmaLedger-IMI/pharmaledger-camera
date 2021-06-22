@@ -74,11 +74,11 @@ import UIKit
             let configuration = self.configureSession()
             if(configuration == .success){
                 captureSession?.commitConfiguration()
+                configureDevice(device: captureDevice!)
                 captureSession?.startRunning()
                 cameraSessionDelegate.onCameraInitialized()
                 print("CameraSession","Camera successfully configured")
                 
-                configureDevice(device: captureDevice!)
             }else{
                 print("configuration error!","Error: \(configuration)")
             }
@@ -98,6 +98,25 @@ import UIKit
                 } catch {
                     print(error)
                 }
+            }
+            
+            if let preferredColorSpace:AVCaptureColorSpace = cameraConfiguration.getPreferredColorSpace() {
+                
+                let supportedColorSpaces = device.activeFormat.supportedColorSpaces
+                if(supportedColorSpaces.contains(preferredColorSpace)){
+                    captureSession?.automaticallyConfiguresCaptureDeviceForWideColor = false
+                    print("camConfig","Trying to set active colorspace to \(cameraConfiguration.getPreferredColorSpaceString())")
+                    if(preferredColorSpace != device.activeColorSpace){
+                        device.activeColorSpace = preferredColorSpace
+                    }else{
+                        print("camConfig","color space already set")
+                    }
+                }else{
+                    print("preferred color space is not supported!")
+                    cameraConfiguration.setPreferredColorSpace(color_space: "")
+                }
+            }else {
+                captureSession?.automaticallyConfiguresCaptureDeviceForWideColor = true
             }
             
             device.unlockForConfiguration()
@@ -177,12 +196,12 @@ import UIKit
     
     /// Starts the camera session.
     @objc public func startCamera(){
-        captureSession?.startRunning()
-        sessionQueue.resume()
         guard let device:AVCaptureDevice = self.captureDevice else {
             return
         }
         self.configureDevice(device: device)
+        captureSession?.startRunning()
+        sessionQueue.resume()
     }
     
     /// Starts a photo capture
@@ -199,6 +218,20 @@ import UIKit
     /// - Returns: CameraConfiguration (nil if not defined)
     public func getConfig() -> CameraConfiguration?{
         return self.cameraConfiguration
+    }
+    
+    /// Get the current active color space in String format
+    /// - Returns: HLG_BT2020, P3_D65, sRGB or unknown. If device was not set returns nil
+    public func getCurrentColorSpaceString()->String?{
+        guard let device = captureDevice else {
+            return nil
+        }
+        switch device.activeColorSpace {
+        case .HLG_BT2020: return "HLG_BT2020"
+        case .sRGB: return "sRGB"
+        case .P3_D65: return "P3_D65"
+        default: return "unknown"
+        }
     }
     
     //MARK: Preview and capture callbacks

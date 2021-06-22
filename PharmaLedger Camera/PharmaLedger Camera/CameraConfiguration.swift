@@ -22,6 +22,8 @@ public class CameraConfiguration {
     private var flashmode:AVCaptureDevice.FlashMode = .auto
     private var torchlevel:Float = 1.0
     
+    private var colorSpace:AVCaptureColorSpace?
+    
     var delegate:CameraConfigurationChangeListener?
     
     //MARK: Initialization
@@ -33,13 +35,22 @@ public class CameraConfiguration {
         print("camConfig","initialized")
     }
     
-    /// Initialize the camera session with customizable configurations.
+    /// Initialize the camera session with customizable configurations. Parameters that don't need to be configured can be left as nil.
     /// - Parameter flash_mode: Available modes are "torch", "flash", "off" and "auto"
-    public init(flash_mode: String) {
-        self.setFlashConfiguration(flash_mode: flash_mode)
+    /// - Parameter color_space: Possible values are "sRGB", "P3_D65" or "HLG_BT2020".
+    public init(flash_mode: String?, color_space:String?) {
+        self.setFlashConfiguration(flash_mode: flash_mode ?? self.flash_configuration)
+        self.setPreferredColorSpace(color_space: color_space ?? "")
     }
     
-    //MARK: Getters
+    //MARK: Public functions
+    
+    /// Applys the configurations to the current AVCaptureSession. This should be executed each time the configurations are changed during session runtime.
+    public func applyConfiguration(){
+        self.delegate?.onConfigurationsChanged()
+    }
+    
+    //MARK: Flash and torch mode
     
     /// Returns the current torch mode in AVCaptureDevice.TorchMode format
     /// - Returns: TorchMode (.on, .auto or .off)
@@ -65,7 +76,6 @@ public class CameraConfiguration {
         return torchlevel
     }
     
-    //MARK: Setters
     
     /// Sets the camera torch and flash mode
     /// - Parameter flash_mode: Available modes are "torch", "flash", "off" and "auto"
@@ -90,15 +100,62 @@ public class CameraConfiguration {
             break
         }
         print("camConfig","torch mode set to \(flash_mode)")
-        self.delegate?.onConfigurationsChanged()
     }
-    
     
     /// Sets the torch level
     /// - Parameter level: Float in the range of 0 to 1.0
     public func setTorchLevel(level:Float){
         self.torchlevel = level
-        self.delegate?.onConfigurationsChanged()
+    }
+    
+    
+    //MARK: Color space
+    
+    /// Gets the current preference for color space as AVCaptureColorSpace enum value.
+    /// - Returns: Returns .sRGB, .P3_D65 or .HLG_BT2020. Returns nil if the color space configuration was undefined
+    public func getPreferredColorSpace() -> AVCaptureColorSpace?  {
+        return self.colorSpace
+    }
+    
+    /// Gets the current preference for color space as String.
+    /// - Returns: Returns "sRGB", "P3_D65" or "HLG_BT2020" or "undefined"
+    public func getPreferredColorSpaceString() -> String{
+        switch self.colorSpace {
+        case .HLG_BT2020: return "HLG_BT2020"
+        case .sRGB: return "sRGB"
+        case .P3_D65: return "P3_D65"
+        default: return "undefined"
+        }
+    }
+    
+    /** Sets the preferred color space.
+     
+     Depending on the device some color spaces might not be supported.
+     sRGB is supported on all devices.
+     HLG_BT2020 available from iOS v14.1
+     
+- Parameter color_space: Possible values are "sRGB", "P3_D65" or "HLG_BT2020".
+     */
+    public func setPreferredColorSpace(color_space:String){
+        switch color_space {
+        case "sRGB":
+            self.colorSpace = .sRGB
+            break
+        case "HLG_BT2020":
+            if #available(iOS 14.1, *) {
+                self.colorSpace = .HLG_BT2020
+            } else {
+                // Fallback on earlier versions
+                self.colorSpace = .P3_D65
+            }
+            break
+        case "P3_D65":
+            self.colorSpace = .P3_D65
+            break
+        default:
+            self.colorSpace = nil
+            break
+        }
     }
     
 }

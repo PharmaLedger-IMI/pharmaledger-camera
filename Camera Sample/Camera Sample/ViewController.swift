@@ -26,7 +26,7 @@ class ViewController: UIViewController, CameraEventListener {
     }
 
     func onCameraInitialized() {
-        
+        print("camConfig","Current colorspace: \(cameraSession?.getCurrentColorSpaceString() ?? "nil")")
     }
     
     private let useImage:Bool = false
@@ -104,6 +104,7 @@ class ViewController: UIViewController, CameraEventListener {
     private func startCameraSession(){
         cameraImagePreview = UIImageView.init()
         cameraImagePreview?.translatesAutoresizingMaskIntoConstraints = false
+        cameraConfig.setPreferredColorSpace(color_space: "HLG_BT2020")
         view.addSubview(cameraImagePreview!)
         cameraSession = CameraSession.init(cameraEventListener: self,cameraConfiguration: cameraConfig)
         
@@ -156,6 +157,7 @@ class ViewController: UIViewController, CameraEventListener {
             cameraConfig.setFlashConfiguration(flash_mode: "off")
             break
         }
+        cameraConfig.applyConfiguration()
     }
 
     //MARK: Device orientation
