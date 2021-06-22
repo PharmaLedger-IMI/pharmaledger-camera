@@ -12,7 +12,7 @@ This readme is mainly meant as internal TrueMed documentation for managing the P
 
 Currently documentation is generated using [Jazzy](https://github.com/realm/jazzy). To generate the documentation, run this command in the PharmaLedger Camera framework root folder (remember to replace VERSION_NUMBER with the version number of the build, eg. 0.1.0):
 
-`jazzy --module-version VERSION_NUMBER --output docs --copyright "" --author "TrueMed Inc." --author_url https://truemedinc.com --title "PharmaLedger iOS Camera SDK" --skip-undocumented --hide-documentation-coverage`
+`jazzy --output docs --copyright "" --author "TrueMed Inc." --author_url https://truemedinc.com --module PharmaLedger_Camera --title "PharmaLedger iOS Camera SDK" --module-version VERSION_NUMBER --skip-undocumented --hide-documentation-coverage`
 
 Before releasing, you can make sure documentation is up to date by not skipping undocumented code.
 

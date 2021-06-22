@@ -16,6 +16,10 @@ import UIKit
     /// The Active AVCaptureSession
     public var captureSession:AVCaptureSession?
     private var captureDevice:AVCaptureDevice?
+    private var previewCaptureConnection:AVCaptureConnection?
+    private var photoCaptureConnection:AVCaptureConnection?
+    
+    
     private let sessionQueue = DispatchQueue(label: "camera_session_queue")
     let discoverySession = AVCaptureDevice.DiscoverySession(deviceTypes:
         [.builtInTrueDepthCamera, .builtInDualCamera, .builtInWideAngleCamera],
@@ -133,6 +137,7 @@ import UIKit
         captureSession?.sessionPreset = .photo
         
         
+        
         guard let captureDevice:AVCaptureDevice = selectDevice(in: .back) else {
             return .deviceDiscoveryFailure
         }
@@ -160,13 +165,11 @@ import UIKit
             return .deviceOutputConnectionFailure
         }
         
+        self.previewCaptureConnection = connection
+        
         guard connection.isVideoOrientationSupported else {
             return .videoOrientationFailure
         }
-        guard connection.isVideoMirroringSupported else {
-            return .videoMirroringFailure
-        }
-        connection.videoOrientation = .portrait
         
         photoOutput = AVCapturePhotoOutput()
         photoOutput?.isHighResolutionCaptureEnabled = true
@@ -175,6 +178,13 @@ import UIKit
             return .photoOutputFailure
         }
         captureSession?.addOutput(photoOutput!)
+        
+        guard let photo_connection = photoOutput?.connection(with: .video) else {
+            print("photo connection not available")
+            return .deviceOutputConnectionFailure
+        }
+        self.photoCaptureConnection = photo_connection
+        self.updateOrientation()
         
         return .success
     }
@@ -234,14 +244,54 @@ import UIKit
         }
     }
     
+    /// Requests to update the camera orientation based on the current UIDevice orientation
+    public func updateOrientation(){
+        guard let connection = self.previewCaptureConnection else {
+            return
+        }
+        guard let capture_connection = self.photoCaptureConnection else {
+            return
+        }
+        
+        let deviceOrientation = UIDevice.current.orientation
+        
+        switch deviceOrientation {
+        case .landscapeLeft:
+            connection.videoOrientation = .landscapeRight
+            capture_connection.videoOrientation = .landscapeRight
+        case .landscapeRight:
+            connection.videoOrientation = .landscapeLeft
+            capture_connection.videoOrientation = .landscapeLeft
+        default:
+            connection.videoOrientation = .portrait
+            capture_connection.videoOrientation = .portrait
+        }
+    }
+    
+    /// Sets the camera session video orientation to the desired value
+    /// - Parameter orientation: Supported values are "landscapeRight", "landscapeLeft" and "portrait". Defaults to portrait for any unsupported values.
+    public func updateOrientation(orientation:String){
+        guard let connection = self.previewCaptureConnection else {
+            return
+        }
+        switch orientation {
+        case "landscapeLeft":
+            connection.videoOrientation = .landscapeRight
+        case "landscapeRight":
+            connection.videoOrientation = .landscapeLeft
+        default:
+            connection.videoOrientation = .portrait
+        }
+    }
+    
     //MARK: Preview and capture callbacks
     
     public func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection){
-        //guard let uiImage = imageFromSampleBuffer(sampleBuffer: sampleBuffer) else { return }
         
         DispatchQueue.main.async { [unowned self] in
             self.cameraSessionDelegate.onPreviewFrame(sampleBuffer: sampleBuffer)
         }
+        
     }
     
     public func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
