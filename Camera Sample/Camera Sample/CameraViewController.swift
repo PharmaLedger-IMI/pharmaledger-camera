@@ -30,13 +30,22 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
         cameraConfig?.applyConfiguration()
     }
     
+    func onSaveModeChanged(save_mode: String) {
+        self.saveMode = save_mode
+        print("save mode changed to \(save_mode)!")
+    }
+    
     
     //MARK: CameraEventListener
     func onCapture(imageData: Data) {
         print("captureCallback")
-        guard let filedir = imageData.savePhotoToFiles(fileName: "test") else {
-            //Something went wrong when saving the file
-            return
+        if(saveMode == "files"){
+            guard (imageData.savePhotoToFiles(fileName: "test") != nil) else {
+                //Something went wrong when saving the file
+                return
+            }
+        }else{
+            imageData.savePhotoToLibrary()
         }
         self.showToast(message: "file saved", font: .systemFont(ofSize: 14.0))
     }
@@ -72,6 +81,7 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
     private var cameraViewHeight:CGFloat?
     private var cameraViewWidth:CGFloat?
     private var controlsHeight:CGFloat?
+    public var saveMode:String = "files"
     
     private let infoview:UILabel = UILabel.init()
     
@@ -154,7 +164,7 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
         closeButton.addTarget(self, action: #selector(closeViewController), for: .touchUpInside)
         closeButton.translatesAutoresizingMaskIntoConstraints = false
         
-        settingsView.delegate = self
+        settingsView.settingsViewDelegate = self
         settingsView.translatesAutoresizingMaskIntoConstraints = false
         settingsView.backgroundColor = UIColor.init(red: 0, green: 0, blue: 0, alpha: 0.5)
         settingsView.isHidden = true

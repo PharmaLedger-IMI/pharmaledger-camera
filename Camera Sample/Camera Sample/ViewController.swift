@@ -22,6 +22,10 @@ class ViewController: UIViewController,SettingsViewDelegate {
         cameraConfig.setFlashConfiguration(flash_mode: flash_mode)
     }
     
+    func onSaveModeChanged(save_mode: String) {
+        self.saveMode = save_mode
+    }
+    
     //private let uiContainer:UIStackView = UIStackView.init()
     
     private let openCameraViewButton:UIButton = UIButton.init()
@@ -31,10 +35,12 @@ class ViewController: UIViewController,SettingsViewDelegate {
     
     private let settingsView:SettingsView = SettingsView.init()
     
+    private var saveMode:String?
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        settingsView.delegate = self
+        settingsView.settingsViewDelegate = self
     
         settingsView.translatesAutoresizingMaskIntoConstraints = false
         openCameraViewButton.translatesAutoresizingMaskIntoConstraints = false
@@ -72,6 +78,7 @@ class ViewController: UIViewController,SettingsViewDelegate {
         print("open camera...")
         cameraViewController = CameraViewController.init(cameraConfig: cameraConfig)
         cameraViewController?.modalPresentationStyle = .fullScreen
+        cameraViewController?.saveMode = self.saveMode ?? "files"
         //self.navigationController?.pushViewController(cameraViewController!, animated: true)
         
         print("camera should open now")

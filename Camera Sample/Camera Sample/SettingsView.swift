@@ -13,9 +13,10 @@ protocol SettingsViewDelegate {
     func onTorchLevelChanged(level:Float)
     func onColorSpaceChanged(color_space:String)
     func onFlashModeChanged(flash_mode:String)
+    func onSaveModeChanged(save_mode:String)
 }
 
-class SettingsView:UIStackView, UIPickerViewDelegate, UIPickerViewDataSource{
+class SettingsView:UIScrollView, UIPickerViewDelegate, UIPickerViewDataSource{
     
     //MARK: UIPickerViewDataSource
     
@@ -28,6 +29,8 @@ class SettingsView:UIStackView, UIPickerViewDelegate, UIPickerViewDataSource{
             return flashModeValues.count
         }else if(pickerView == colorSpacePicker){
             return colorSpaceValues.count
+        }else if(pickerView == saveModePicker){
+            return saveModeValues.count
         }else{
             return 1
         }
@@ -38,6 +41,8 @@ class SettingsView:UIStackView, UIPickerViewDelegate, UIPickerViewDataSource{
             return flashModeValues[row]
         }else if(pickerView == colorSpacePicker){
             return colorSpaceValues[row]
+        }else if(pickerView == saveModePicker){
+            return saveModeValues[row]
         }else{
             return ""
         }
@@ -46,22 +51,31 @@ class SettingsView:UIStackView, UIPickerViewDelegate, UIPickerViewDataSource{
     func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
         if(pickerView == flashmodePicker){
             self.currentFlashMode = flashModeValues[row]
-            self.delegate?.onFlashModeChanged(flash_mode: self.currentFlashMode)
+            self.settingsViewDelegate?.onFlashModeChanged(flash_mode: self.currentFlashMode)
             print("current flash mode: \(self.currentFlashMode)")
         }else if(pickerView == colorSpacePicker){
             self.currentColorSpace = colorSpaceValues[row]
-            self.delegate?.onColorSpaceChanged(color_space: self.currentColorSpace)
+            self.settingsViewDelegate?.onColorSpaceChanged(color_space: self.currentColorSpace)
             print("current color space: \(self.currentColorSpace)")
+        }else if(pickerView == saveModePicker){
+            self.currentSaveMode = saveModeValues[row]
+            self.settingsViewDelegate?.onSaveModeChanged(save_mode: self.currentSaveMode)
+            print("current save mode: \(self.currentSaveMode)")
         }else{
             
         }
     }
+    
+    private let containerView:UIStackView = UIStackView.init()
     
     private let flashModeLabel:UILabel = UILabel.init()
     private let flashmodePicker:UIPickerView = UIPickerView.init()
     
     private let colorSpaceLabel:UILabel = UILabel.init()
     private let colorSpacePicker:UIPickerView = UIPickerView.init()
+    
+    private let saveModeLabel:UILabel = UILabel.init()
+    private let saveModePicker:UIPickerView = UIPickerView.init()
     
     private let torchLevelLabel:UILabel = UILabel.init()
     private let torchLevelSlider:UISlider = UISlider.init()
@@ -72,9 +86,12 @@ class SettingsView:UIStackView, UIPickerViewDelegate, UIPickerViewDataSource{
     private let flashModeValues:[String] = ["auto", "torch", "flash", "off"]
     private var currentFlashMode = "auto"
     
+    private let saveModeValues:[String] = ["files", "photos"]
+    private var currentSaveMode = "files"
+    
     private var torchLevel:Float = 1.0
     
-    var delegate:SettingsViewDelegate?
+    var settingsViewDelegate:SettingsViewDelegate?
 
     func setColorSpace(color_space:String){
         self.currentColorSpace = color_space
@@ -92,10 +109,10 @@ class SettingsView:UIStackView, UIPickerViewDelegate, UIPickerViewDataSource{
     }
     
     override func didMoveToSuperview() {
-        alignment = .center
-        distribution = .equalSpacing
-        spacing = 10
-        axis = .vertical
+        containerView.alignment = .center
+        containerView.distribution = .equalSpacing
+        containerView.spacing = 10
+        containerView.axis = .vertical
         isUserInteractionEnabled = true
         clipsToBounds = true
         
@@ -105,11 +122,14 @@ class SettingsView:UIStackView, UIPickerViewDelegate, UIPickerViewDataSource{
         colorSpacePicker.translatesAutoresizingMaskIntoConstraints = false
         torchLevelLabel.translatesAutoresizingMaskIntoConstraints = false
         torchLevelSlider.translatesAutoresizingMaskIntoConstraints = false
+        saveModeLabel.translatesAutoresizingMaskIntoConstraints = false
+        saveModePicker.translatesAutoresizingMaskIntoConstraints = false
         
         
         //labels
         flashModeLabel.text = "Flash mode:"
         colorSpaceLabel.text = "Color space:"
+        saveModeLabel.text = "Save mode:"
         torchLevelLabel.text = "Torch level: \(torchLevel)"
         
         //torch level slider
@@ -124,24 +144,40 @@ class SettingsView:UIStackView, UIPickerViewDelegate, UIPickerViewDataSource{
         flashmodePicker.dataSource = self
         colorSpacePicker.delegate = self
         colorSpacePicker.dataSource = self
+        saveModePicker.delegate = self
+        saveModePicker.dataSource = self
         
         //add views to container
-        addArrangedSubview(flashModeLabel)
-        addArrangedSubview(flashmodePicker)
-        addArrangedSubview(torchLevelLabel)
-        addArrangedSubview(torchLevelSlider)
-        addArrangedSubview(colorSpaceLabel)
-        addArrangedSubview(colorSpacePicker)
+        containerView.addArrangedSubview(flashModeLabel)
+        containerView.addArrangedSubview(flashmodePicker)
+        containerView.addArrangedSubview(torchLevelLabel)
+        containerView.addArrangedSubview(torchLevelSlider)
+        containerView.addArrangedSubview(colorSpaceLabel)
+        containerView.addArrangedSubview(colorSpacePicker)
+        containerView.addArrangedSubview(saveModeLabel)
+        containerView.addArrangedSubview(saveModePicker)
+        
+        addSubview(containerView)
+        containerView.translatesAutoresizingMaskIntoConstraints = false
         
         
         NSLayoutConstraint.activate([
-            torchLevelSlider.widthAnchor.constraint(equalTo: self.widthAnchor, constant: -80)
+            containerView.leadingAnchor.constraint(equalTo: leadingAnchor),// constant: 20),
+            containerView.trailingAnchor.constraint(equalTo: trailingAnchor),// constant: -20),
+            containerView.bottomAnchor.constraint(equalTo: bottomAnchor),
+            containerView.topAnchor.constraint(equalTo: topAnchor),
+            containerView.widthAnchor.constraint(equalTo: widthAnchor),// constant: -40),
+            containerView.heightAnchor.constraint(greaterThanOrEqualTo: heightAnchor),
+            torchLevelSlider.widthAnchor.constraint(equalTo: containerView.widthAnchor, constant: -80),
+            flashmodePicker.widthAnchor.constraint(equalTo: containerView.widthAnchor, constant: -80),
+            saveModePicker.widthAnchor.constraint(equalTo: containerView.widthAnchor, constant: -80),
+            colorSpacePicker.widthAnchor.constraint(equalTo: containerView.widthAnchor, constant: -80),
         ])
     }
     
     @objc func updateTorchLevel(){
         self.torchLevel = torchLevelSlider.value
-        self.delegate?.onTorchLevelChanged(level: self.torchLevel)
+        self.settingsViewDelegate?.onTorchLevelChanged(level: self.torchLevel)
         self.torchLevelLabel.text = "Torch level: \(self.torchLevel)"
     }
     
