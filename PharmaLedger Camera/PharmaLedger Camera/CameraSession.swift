@@ -78,8 +78,8 @@ import UIKit
             let configuration = self.configureSession()
             if(configuration == .success){
                 captureSession?.commitConfiguration()
-                configureDevice(device: captureDevice!)
                 captureSession?.startRunning()
+                configureDevice(device: captureDevice!)
                 cameraSessionDelegate.onCameraInitialized()
                 print("CameraSession","Camera successfully configured")
                 
@@ -95,7 +95,7 @@ import UIKit
     private func configureDevice(device:AVCaptureDevice){
         
         do{
-            print("camConfig","Try to set torch mode to \(cameraConfiguration.getFlashConfiguration() ?? "undefined")")
+            print("camConfig","Try to set torch mode to \(cameraConfiguration.getFlashConfiguration() ?? "undefined") and torch level to \(cameraConfiguration.getTorchLevel())")
             try device.lockForConfiguration()
             
             device.torchMode = cameraConfiguration.getTorchMode()
@@ -138,8 +138,6 @@ import UIKit
         guard cameraPermissionGranted else {return .permissionsDenied}
         captureSession?.beginConfiguration()
         captureSession?.sessionPreset = .photo
-        
-        
         
         guard let captureDevice:AVCaptureDevice = selectDevice(in: .back) else {
             return .deviceDiscoveryFailure

@@ -15,6 +15,8 @@
 		B5707120266E19FA00E917B2 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B570711E266E19FA00E917B2 /* Main.storyboard */; };
 		B5707122266E19FB00E917B2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B5707121266E19FB00E917B2 /* Assets.xcassets */; };
 		B5707125266E19FB00E917B2 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B5707123266E19FB00E917B2 /* LaunchScreen.storyboard */; };
+		B59A30F3268306A8000D2D94 /* CameraViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59A30F2268306A8000D2D94 /* CameraViewController.swift */; };
+		B59A30F626834A6C000D2D94 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59A30F526834A6C000D2D94 /* SettingsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -51,6 +53,8 @@
 		B5707124266E19FB00E917B2 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		B5707126266E19FB00E917B2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B5707132266E1F8100E917B2 /* PharmaLedger Camera.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "PharmaLedger Camera.xcodeproj"; path = "../../PharmaLedger Camera/PharmaLedger Camera.xcodeproj"; sourceTree = "<group>"; };
+		B59A30F2268306A8000D2D94 /* CameraViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraViewController.swift; sourceTree = "<group>"; };
+		B59A30F526834A6C000D2D94 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -89,6 +93,8 @@
 				B5707118266E19FA00E917B2 /* AppDelegate.swift */,
 				B570711A266E19FA00E917B2 /* SceneDelegate.swift */,
 				B570711C266E19FA00E917B2 /* ViewController.swift */,
+				B59A30F526834A6C000D2D94 /* SettingsView.swift */,
+				B59A30F2268306A8000D2D94 /* CameraViewController.swift */,
 				B570711E266E19FA00E917B2 /* Main.storyboard */,
 				B5707121266E19FB00E917B2 /* Assets.xcassets */,
 				B5707123266E19FB00E917B2 /* LaunchScreen.storyboard */,
@@ -200,7 +206,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B59A30F626834A6C000D2D94 /* SettingsView.swift in Sources */,
 				B570711D266E19FA00E917B2 /* ViewController.swift in Sources */,
+				B59A30F3268306A8000D2D94 /* CameraViewController.swift in Sources */,
 				B5707119266E19FA00E917B2 /* AppDelegate.swift in Sources */,
 				B570711B266E19FA00E917B2 /* SceneDelegate.swift in Sources */,
 			);

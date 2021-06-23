@@ -1,0 +1,148 @@
+// 
+//  SettingsView.swift
+//  Camera Sample
+//
+//  Created by Ville Raitio on 23.6.2021.
+//  
+//
+	
+
+import UIKit
+
+protocol SettingsViewDelegate {
+    func onTorchLevelChanged(level:Float)
+    func onColorSpaceChanged(color_space:String)
+    func onFlashModeChanged(flash_mode:String)
+}
+
+class SettingsView:UIStackView, UIPickerViewDelegate, UIPickerViewDataSource{
+    
+    //MARK: UIPickerViewDataSource
+    
+    func numberOfComponents(in pickerView: UIPickerView) -> Int {
+        return 1
+    }
+    
+    func pickerView(_ pickerView: UIPickerView, numberOfRowsInComponent component: Int) -> Int {
+        if(pickerView == flashmodePicker){
+            return flashModeValues.count
+        }else if(pickerView == colorSpacePicker){
+            return colorSpaceValues.count
+        }else{
+            return 1
+        }
+    }
+    
+    func pickerView(_ pickerView: UIPickerView, titleForRow row: Int, forComponent component: Int) -> String? {
+        if(pickerView == flashmodePicker){
+            return flashModeValues[row]
+        }else if(pickerView == colorSpacePicker){
+            return colorSpaceValues[row]
+        }else{
+            return ""
+        }
+    }
+    
+    func pickerView(_ pickerView: UIPickerView, didSelectRow row: Int, inComponent component: Int) {
+        if(pickerView == flashmodePicker){
+            self.currentFlashMode = flashModeValues[row]
+            self.delegate?.onFlashModeChanged(flash_mode: self.currentFlashMode)
+            print("current flash mode: \(self.currentFlashMode)")
+        }else if(pickerView == colorSpacePicker){
+            self.currentColorSpace = colorSpaceValues[row]
+            self.delegate?.onColorSpaceChanged(color_space: self.currentColorSpace)
+            print("current color space: \(self.currentColorSpace)")
+        }else{
+            
+        }
+    }
+    
+    private let flashModeLabel:UILabel = UILabel.init()
+    private let flashmodePicker:UIPickerView = UIPickerView.init()
+    
+    private let colorSpaceLabel:UILabel = UILabel.init()
+    private let colorSpacePicker:UIPickerView = UIPickerView.init()
+    
+    private let torchLevelLabel:UILabel = UILabel.init()
+    private let torchLevelSlider:UISlider = UISlider.init()
+    
+    private let colorSpaceValues:[String] = ["default", "sRGB", "P3_D65", "HLG_BT2020"]
+    private var currentColorSpace = "default"
+    
+    private let flashModeValues:[String] = ["auto", "torch", "flash", "off"]
+    private var currentFlashMode = "auto"
+    
+    private var torchLevel:Float = 1.0
+    
+    var delegate:SettingsViewDelegate?
+
+    func setColorSpace(color_space:String){
+        self.currentColorSpace = color_space
+        colorSpacePicker.selectRow(colorSpaceValues.firstIndex(of: color_space) ?? 0, inComponent: 0, animated: false)
+    }
+    
+    func setFlashMode(flash_mode:String){
+        self.currentFlashMode = flash_mode
+        flashmodePicker.selectRow(flashModeValues.firstIndex(of: flash_mode) ?? 0, inComponent: 0, animated: false)
+    }
+    
+    func setTorchLevel(torch_level:Float){
+        self.torchLevel = torch_level
+        self.torchLevelSlider.value = self.torchLevel
+    }
+    
+    override func didMoveToSuperview() {
+        alignment = .center
+        distribution = .equalSpacing
+        spacing = 10
+        axis = .vertical
+        isUserInteractionEnabled = true
+        clipsToBounds = true
+        
+        flashModeLabel.translatesAutoresizingMaskIntoConstraints = false
+        flashmodePicker.translatesAutoresizingMaskIntoConstraints = false
+        colorSpaceLabel.translatesAutoresizingMaskIntoConstraints = false
+        colorSpacePicker.translatesAutoresizingMaskIntoConstraints = false
+        torchLevelLabel.translatesAutoresizingMaskIntoConstraints = false
+        torchLevelSlider.translatesAutoresizingMaskIntoConstraints = false
+        
+        
+        //labels
+        flashModeLabel.text = "Flash mode:"
+        colorSpaceLabel.text = "Color space:"
+        torchLevelLabel.text = "Torch level: \(torchLevel)"
+        
+        //torch level slider
+        torchLevelSlider.minimumValue = 0.1
+        torchLevelSlider.maximumValue = 1.0
+        torchLevelSlider.value = torchLevel
+        torchLevelSlider.isContinuous = false
+        torchLevelSlider.addTarget(self, action: #selector(updateTorchLevel), for: .valueChanged)
+        
+        //pickers
+        flashmodePicker.delegate = self
+        flashmodePicker.dataSource = self
+        colorSpacePicker.delegate = self
+        colorSpacePicker.dataSource = self
+        
+        //add views to container
+        addArrangedSubview(flashModeLabel)
+        addArrangedSubview(flashmodePicker)
+        addArrangedSubview(torchLevelLabel)
+        addArrangedSubview(torchLevelSlider)
+        addArrangedSubview(colorSpaceLabel)
+        addArrangedSubview(colorSpacePicker)
+        
+        
+        NSLayoutConstraint.activate([
+            torchLevelSlider.widthAnchor.constraint(equalTo: self.widthAnchor, constant: -80)
+        ])
+    }
+    
+    @objc func updateTorchLevel(){
+        self.torchLevel = torchLevelSlider.value
+        self.delegate?.onTorchLevelChanged(level: self.torchLevel)
+        self.torchLevelLabel.text = "Torch level: \(self.torchLevel)"
+    }
+    
+}

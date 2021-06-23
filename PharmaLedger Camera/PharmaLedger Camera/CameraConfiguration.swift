@@ -45,7 +45,7 @@ public class CameraConfiguration {
     
     //MARK: Public functions
     
-    /// Applys the configurations to the current AVCaptureSession. This should be executed each time the configurations are changed during session runtime.
+    /// Applies the configurations to the current AVCaptureSession. This should be executed each time the configurations are changed during session runtime.
     public func applyConfiguration(){
         self.delegate?.onConfigurationsChanged()
     }
