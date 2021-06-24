@@ -9,6 +9,7 @@
 
 import UIKit
 
+/// Delegate for setting changes
 protocol SettingsViewDelegate {
     func onTorchLevelChanged(level:Float)
     func onColorSpaceChanged(color_space:String)
@@ -16,6 +17,7 @@ protocol SettingsViewDelegate {
     func onSaveModeChanged(save_mode:String)
 }
 
+/// Scrollable view containing camera settings
 class SettingsView:UIScrollView, UIPickerViewDelegate, UIPickerViewDataSource{
     
     //MARK: UIPickerViewDataSource

@@ -1,6 +1,17 @@
-# PharmaLedger Camera
-
-This readme is mainly meant as internal TrueMed documentation for managing the PharmaLedger iOS camera framework.
+# PharmaLedger Camera SDK
+## Table of contents
+- [PharmaLedger Camera SDK](#pharmaledger-camera-sdk)
+  - [Table of contents](#table-of-contents)
+  - [Repository contents](#repository-contents)
+  - [Documentation](#documentation)
+  - [Sample code](#sample-code)
+    - [Capturing and saving a photo](#capturing-and-saving-a-photo)
+    - [Controlling the CameraSession](#controlling-the-camerasession)
+    - [Handling device orientations](#handling-device-orientations)
+  - [Development](#development)
+    - [Building Documentation](#building-documentation)
+    - [Testing](#testing)
+    - [Releasing](#releasing)
 
 ## Repository contents
 
@@ -15,9 +26,9 @@ This readme is mainly meant as internal TrueMed documentation for managing the P
 
 ## Sample code
 
-This example shows how the **CameraSession** preview feed would be displayed in a iOS native **UIImageView**. For a more complete example, see the [Camera Sample](Camera%20Sample/) project.
+This example shows how the [CameraSession](https://truemedinc.com/pharmaledger-sdk/documentation/Classes/CameraSession.html) preview feed would be displayed in a iOS native **UIImageView**. For a more complete example, see the **Camera Sample** project.
 
-First implement the **CameraEventListener** to receive events from the CameraSession, like preview frames and photo capture callbacks.
+First implement the [CameraEventListener](https://truemedinc.com/pharmaledger-sdk/documentation/Protocols/CameraEventListener.html) to receive events from the CameraSession, like preview frames and photo capture callbacks.
 
     import PharmaLedger_Camera
     import AVFoundation
@@ -35,6 +46,10 @@ First implement the **CameraEventListener** to receive events from the CameraSes
         func onCameraInitialized() {
         
         }
+        
+        func onCameraPermissionDenied(){
+        
+        }
 
 When the delegate has been defined, the CameraSession instance can be created.
 
@@ -47,13 +62,16 @@ When the delegate has been defined, the CameraSession instance can be created.
 
         cameraSession = CameraSession.init(cameraEventListener: self)
 
-        // 2a. Create a preview view and add it to the ViewController
+        // 2a. Create a preview view and add it to 
+        // the ViewController
 
         cameraPreview = UIImageView.init()
         view.addSubview(cameraPreview!)
 
-        // 2b. in this example the preview is scaled using constraints.
-        // The Height constraint is based on the camera aspect ratio, in this example 4:3.
+        // 2b. in this example the preview is scaled
+        // using constraints.
+        // The Height constraint is based on the camera
+        // aspect ratio, in this example 4:3.
 
         cameraPreview?.translatesAutoresizingMaskIntoConstraints = false
         let cameraAspectRatio:CGFloat = 4.0/3.0      
@@ -94,13 +112,59 @@ To capture a photo, simply call cameraSession?.takePicture(). When the capture i
         }
     }
 
+### Controlling the CameraSession
+
+The camera can be configured using the [CameraConfiguration](https://truemedinc.com/pharmaledger-sdk/documentation/Classes/CameraConfiguration.html) class. Below is an example of how to configure the camera
+
+    func openCameraWithConfigurations(){
+        // option 1a - Initialize a fresh camera
+        // configuration with all default values and set
+        // the parameters independently
+        config:CameraConfiguration = CameraConfiguration.init()
+        config.setFlashMode("torch")
+
+        // option 1b - Initialize parameters in the init
+        // Any unnecessary parameters can be left out as nil
+        config:CameraConfiguration = CameraConfiguration.init(flash_mode: "torch", color_space:nil)
+
+        // Initialize the camera with the configuration
+        cameraSession = CameraSession.init(cameraEventListener: self,cameraConfiguration: config)
+
+        // option 2 - Initialize camera without the
+        // configurations and get the current configuration from the cameraSession
+        cameraSession = CameraSession.init(cameraEventListener: self)
+        config = cameraSession.getConfig()
+    }
+
+To configure the Camera during session runtime (eg. when toggling the flash mode), call **applyConfiguration**. This will let the current camerasession know that the configurations have updated.
+
+    func setFlashModeOff(){
+        config.setFlashConfiguration(flash_mode: "off")
+        config.applyConfiguration()
+    }
+
+### Handling device orientations
+
+Currently the SDK does not by itself change the orientation of the camera. Below is an example on how to change the orientation. Note that this does not change the preview view size and it will have to be handled outside the SDK.
+
+    public override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
+
+        // Use updateOrientation() to attempt an
+        // automatic orientation detection
+        cameraSession.updateOrientation()
+
+        // Use below example to set the orientation manually
+        cameraSession.updateOrientation(orientation: "landscapeRight")
+    }
+
 ## Development
 
 ### Building Documentation
 
-Currently documentation is generated using [Jazzy](https://github.com/realm/jazzy). To generate the documentation, run this command in the PharmaLedger Camera framework root folder (remember to replace VERSION_NUMBER with the version number of the build, eg. 0.1.0):
+Currently documentation is generated using [Jazzy](https://github.com/realm/jazzy). To generate the documentation, run this command in the PharmaLedger Camera framework root folder (remember to replace VERSION_NUMBER with the version number of the build, eg. 0.2.0):
 
-`jazzy --output docs --copyright "" --author "TrueMed Inc." --author_url https://truemedinc.com --module PharmaLedger_Camera --title "PharmaLedger iOS Camera SDK" --module-version VERSION_NUMBER --skip-undocumented --hide-documentation-coverage`
+`jazzy --documentation=../*.md --output docs --copyright "" --author "TrueMed Inc." --author_url https://truemedinc.com --module PharmaLedger_Camera --module-version VERSION_NUMBER --skip-undocumented --hide-documentation-coverage`
 
 Before releasing, you can make sure documentation is up to date by not skipping undocumented code.
 

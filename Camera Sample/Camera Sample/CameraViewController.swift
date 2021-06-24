@@ -113,6 +113,9 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        //Setup the UI
+        
         self.view.backgroundColor = UIColor.systemBackground
         
         if(view.frame.width<view.frame.height){
@@ -126,7 +129,7 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
             controlsHeight = (view.frame.width)-cameraViewHeight!
             controlsContainer.axis = .vertical
         }
-        // Do any additional setup after loading the view.
+        
         controlsContainer.alignment = .center
         controlsContainer.distribution = .fillEqually
         controlsContainer.translatesAutoresizingMaskIntoConstraints = false
@@ -135,11 +138,9 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
         view.addSubview(controlsContainer)
         startCameraSession()
         
-        //captureButton.setTitle("Take picture", for: .normal)
         captureButton.setImage(UIImage.init(named: "photo_camera"), for: .normal)
         captureButton.addTarget(self, action: #selector(captureButtonClick), for: .touchUpInside)
         
-        //cameraToggleButton.setTitle("Stop camera", for: .normal)
         cameraToggleButton.setImage(UIImage.init(named: "pause"), for: .normal)
         cameraToggleButton.addTarget(self, action: #selector(toggleCamera), for: .touchUpInside)
         
@@ -229,11 +230,6 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         print("cameraView","viewDidAppear")
-    }
-    
-    private func openCameraView(){
-        cameraPreview = CameraPreview.init(cameraEventListener: self)
-        view.addSubview(cameraPreview!)
     }
     
     private func startCameraSession(){
@@ -368,6 +364,9 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
         
     }
     
+    
+    /// Configures the layout constraints based on the device orientation
+    /// - Parameter orientation: UIDeviceOrientation.
     private func setViewConstraints(orientation:UIDeviceOrientation){
         switch UIDevice.current.orientation{
         case .landscapeLeft, .landscapeRight:
