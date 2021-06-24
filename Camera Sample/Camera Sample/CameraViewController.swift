@@ -113,7 +113,6 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         self.view.backgroundColor = UIColor.systemBackground
         
         cameraViewHeight = (view.frame.width)*cameraAspectRatio
@@ -129,7 +128,6 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
         
         view.addSubview(controlsContainer)
         startCameraSession()
-        //openCameraView()
         
         //captureButton.setTitle("Take picture", for: .normal)
         captureButton.setImage(UIImage.init(named: "photo_camera"), for: .normal)
@@ -261,8 +259,10 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
             return
         }
         if(capturesession.isRunning){
+            cameraToggleButton.setImage(UIImage.init(named: "play"), for: .normal)
             cameraSession?.stopCamera()
         }else{
+            cameraToggleButton.setImage(UIImage.init(named: "pause"), for: .normal)
             cameraSession?.startCamera()
         }
         
@@ -281,14 +281,25 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
     }
     
     @objc func closeViewController(){
+        if(!infoview.isHidden || !settingsView.isHidden){
+            infoview.isHidden = true
+            settingsView.isHidden = true
+            return
+        }
+        
         dismiss(animated: true, completion: {
             self.cameraSession?.stopCamera()
+            self.cameraConfig = nil
+            self.cameraSession = nil
+            print("cleared camera!")
         })
     }
     
     func updateInfoText(){
         //get info
-        let infotext = "Current color space: \(cameraSession?.getCurrentColorSpaceString() ?? "")\nFlash mode: \(cameraConfig?.getFlashConfiguration() ?? "")\nTorch level: \(cameraConfig?.getTorchLevel() ?? 1.0)"
+        let sdk_version = Bundle(for: CameraSession.self).infoDictionary?["CFBundleShortVersionString"]
+        
+        let infotext = "Current color space: \(cameraSession?.getCurrentColorSpaceString() ?? "")\nFlash mode: \(cameraConfig?.getFlashConfiguration() ?? "")\nTorch level: \(cameraConfig?.getTorchLevel() ?? 1.0)\n\n\n\nSDK version: \(sdk_version ?? "")"
         //display info
         infoview.text = infotext
     }

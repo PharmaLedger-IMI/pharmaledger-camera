@@ -19,7 +19,6 @@ import UIKit
     private var previewCaptureConnection:AVCaptureConnection?
     private var photoCaptureConnection:AVCaptureConnection?
     
-    
     private let sessionQueue = DispatchQueue(label: "camera_session_queue")
     let discoverySession = AVCaptureDevice.DiscoverySession(deviceTypes:
         [.builtInTrueDepthCamera, .builtInDualCamera, .builtInWideAngleCamera],
@@ -78,8 +77,9 @@ import UIKit
             let configuration = self.configureSession()
             if(configuration == .success){
                 captureSession?.commitConfiguration()
-                captureSession?.startRunning()
                 configureDevice(device: captureDevice!)
+                captureSession?.startRunning()
+                configureRuntimeSettings(device: captureDevice!)
                 cameraSessionDelegate.onCameraInitialized()
                 print("CameraSession","Camera successfully configured")
                 
@@ -93,11 +93,41 @@ import UIKit
     }
     
     private func configureDevice(device:AVCaptureDevice){
+        do{
+            try device.lockForConfiguration()
+        }catch {
+            print(error)
+            return
+        }
         
+        if let preferredColorSpace:AVCaptureColorSpace = cameraConfiguration.getPreferredColorSpace() {
+            
+            let supportedColorSpaces = device.activeFormat.supportedColorSpaces
+            if(supportedColorSpaces.contains(preferredColorSpace)){
+                captureSession?.automaticallyConfiguresCaptureDeviceForWideColor = false
+                print("camConfig","Trying to set active colorspace to \(cameraConfiguration.getPreferredColorSpaceString())")
+                if(preferredColorSpace != device.activeColorSpace){
+                    device.activeColorSpace = preferredColorSpace
+                }else{
+                    print("camConfig","color space already set")
+                }
+            }else{
+                print("preferred color space is not supported!")
+                cameraConfiguration.setPreferredColorSpace(color_space: "")
+            }
+        }else {
+            print("camConfig","Preferred color space is not defined")
+            captureSession?.automaticallyConfiguresCaptureDeviceForWideColor = true
+        }
+        
+        device.unlockForConfiguration()
+    }
+    
+    /// Call this function after captureSession.startRunning
+    private func configureRuntimeSettings(device:AVCaptureDevice){
         do{
             print("camConfig","Try to set torch mode to \(cameraConfiguration.getFlashConfiguration() ?? "undefined") and torch level to \(cameraConfiguration.getTorchLevel())")
             try device.lockForConfiguration()
-            
             device.torchMode = cameraConfiguration.getTorchMode()
             if(device.torchMode == .on){
                 do {
@@ -106,26 +136,6 @@ import UIKit
                     print(error)
                 }
             }
-            
-            if let preferredColorSpace:AVCaptureColorSpace = cameraConfiguration.getPreferredColorSpace() {
-                
-                let supportedColorSpaces = device.activeFormat.supportedColorSpaces
-                if(supportedColorSpaces.contains(preferredColorSpace)){
-                    captureSession?.automaticallyConfiguresCaptureDeviceForWideColor = false
-                    print("camConfig","Trying to set active colorspace to \(cameraConfiguration.getPreferredColorSpaceString())")
-                    if(preferredColorSpace != device.activeColorSpace){
-                        device.activeColorSpace = preferredColorSpace
-                    }else{
-                        print("camConfig","color space already set")
-                    }
-                }else{
-                    print("preferred color space is not supported!")
-                    cameraConfiguration.setPreferredColorSpace(color_space: "")
-                }
-            }else {
-                captureSession?.automaticallyConfiguresCaptureDeviceForWideColor = true
-            }
-            
             device.unlockForConfiguration()
         }catch {
             print(error)
@@ -212,6 +222,8 @@ import UIKit
         }
         self.configureDevice(device: device)
         captureSession?.startRunning()
+        self.configureRuntimeSettings(device: device)
+        
         sessionQueue.resume()
     }
     
@@ -342,6 +354,7 @@ import UIKit
             return
         }
         self.configureDevice(device: device)
+        self.configureRuntimeSettings(device: device)
     }
     
 }

@@ -92,6 +92,19 @@ class SettingsView:UIScrollView, UIPickerViewDelegate, UIPickerViewDataSource{
     private var torchLevel:Float = 1.0
     
     var settingsViewDelegate:SettingsViewDelegate?
+    
+    func getCurrentColorSpace()->String{
+        return currentColorSpace
+    }
+    func getCurrentFlashMode() -> String {
+        return currentFlashMode
+    }
+    func getCurrentSaveMode() -> String {
+        return currentSaveMode
+    }
+    func getCurrentTorchLevel() -> Float {
+        return torchLevel
+    }
 
     func setColorSpace(color_space:String){
         self.currentColorSpace = color_space
@@ -159,8 +172,7 @@ class SettingsView:UIScrollView, UIPickerViewDelegate, UIPickerViewDataSource{
         
         addSubview(containerView)
         containerView.translatesAutoresizingMaskIntoConstraints = false
-        
-        
+        let widthmodifier:CGFloat = -80
         NSLayoutConstraint.activate([
             containerView.leadingAnchor.constraint(equalTo: leadingAnchor),// constant: 20),
             containerView.trailingAnchor.constraint(equalTo: trailingAnchor),// constant: -20),
@@ -168,10 +180,10 @@ class SettingsView:UIScrollView, UIPickerViewDelegate, UIPickerViewDataSource{
             containerView.topAnchor.constraint(equalTo: topAnchor),
             containerView.widthAnchor.constraint(equalTo: widthAnchor),// constant: -40),
             containerView.heightAnchor.constraint(greaterThanOrEqualTo: heightAnchor),
-            torchLevelSlider.widthAnchor.constraint(equalTo: containerView.widthAnchor, constant: -80),
-            flashmodePicker.widthAnchor.constraint(equalTo: containerView.widthAnchor, constant: -80),
-            saveModePicker.widthAnchor.constraint(equalTo: containerView.widthAnchor, constant: -80),
-            colorSpacePicker.widthAnchor.constraint(equalTo: containerView.widthAnchor, constant: -80),
+            torchLevelSlider.widthAnchor.constraint(equalTo: containerView.widthAnchor, constant: widthmodifier),
+            flashmodePicker.widthAnchor.constraint(equalTo: containerView.widthAnchor, constant: widthmodifier),
+            saveModePicker.widthAnchor.constraint(equalTo: containerView.widthAnchor, constant: widthmodifier),
+            colorSpacePicker.widthAnchor.constraint(equalTo: containerView.widthAnchor, constant: widthmodifier),
         ])
     }
     

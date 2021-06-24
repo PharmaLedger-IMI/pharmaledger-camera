@@ -31,7 +31,7 @@ class ViewController: UIViewController,SettingsViewDelegate {
     private let openCameraViewButton:UIButton = UIButton.init()
     
     private var cameraViewController:CameraViewController?
-    private let cameraConfig:CameraConfiguration = CameraConfiguration.init()
+    private var cameraConfig:CameraConfiguration = CameraConfiguration.init()
     
     private let settingsView:SettingsView = SettingsView.init()
     
@@ -60,7 +60,7 @@ class ViewController: UIViewController,SettingsViewDelegate {
             openCameraViewButton.heightAnchor.constraint(equalToConstant: 100),
             openCameraViewButton.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             settingsView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            settingsView.topAnchor.constraint(equalTo: view.topAnchor),
+            settingsView.topAnchor.constraint(equalTo: view.topAnchor, constant: 50),
             settingsView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             settingsView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -100),
         ])
@@ -68,6 +68,15 @@ class ViewController: UIViewController,SettingsViewDelegate {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        if(cameraViewController != nil){
+            cameraViewController = nil
+            cameraConfig = CameraConfiguration.init()
+            cameraConfig.setFlashConfiguration(flash_mode: settingsView.getCurrentFlashMode())
+            saveMode = settingsView.getCurrentSaveMode()
+            cameraConfig.setTorchLevel(level: settingsView.getCurrentTorchLevel())
+            cameraConfig.setPreferredColorSpace(color_space: settingsView.getCurrentColorSpace())
+            print("camera view controller removed")
+        }
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -76,7 +85,9 @@ class ViewController: UIViewController,SettingsViewDelegate {
     
     @objc func openCamera(){
         print("open camera...")
+        
         cameraViewController = CameraViewController.init(cameraConfig: cameraConfig)
+        
         cameraViewController?.modalPresentationStyle = .fullScreen
         cameraViewController?.saveMode = self.saveMode ?? "files"
         //self.navigationController?.pushViewController(cameraViewController!, animated: true)
