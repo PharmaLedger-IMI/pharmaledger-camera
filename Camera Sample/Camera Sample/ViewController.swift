@@ -58,11 +58,11 @@ class ViewController: UIViewController,SettingsViewDelegate {
             openCameraViewButton.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             openCameraViewButton.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             openCameraViewButton.heightAnchor.constraint(equalToConstant: 100),
-            openCameraViewButton.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            openCameraViewButton.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor),
             settingsView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            settingsView.topAnchor.constraint(equalTo: view.topAnchor, constant: 50),
+            settingsView.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
             settingsView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            settingsView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -100),
+            settingsView.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor, constant: -100),
         ])
     }
     

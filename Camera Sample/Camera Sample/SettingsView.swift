@@ -177,7 +177,7 @@ class SettingsView:UIScrollView, UIPickerViewDelegate, UIPickerViewDataSource{
             containerView.leadingAnchor.constraint(equalTo: leadingAnchor),// constant: 20),
             containerView.trailingAnchor.constraint(equalTo: trailingAnchor),// constant: -20),
             containerView.bottomAnchor.constraint(equalTo: bottomAnchor),
-            containerView.topAnchor.constraint(equalTo: topAnchor),
+            containerView.topAnchor.constraint(equalTo: topAnchor, constant: 20),
             containerView.widthAnchor.constraint(equalTo: widthAnchor),// constant: -40),
             containerView.heightAnchor.constraint(greaterThanOrEqualTo: heightAnchor),
             torchLevelSlider.widthAnchor.constraint(equalTo: containerView.widthAnchor, constant: widthmodifier),

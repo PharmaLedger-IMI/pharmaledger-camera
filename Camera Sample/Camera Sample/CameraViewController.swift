@@ -115,13 +115,19 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
         super.viewDidLoad()
         self.view.backgroundColor = UIColor.systemBackground
         
-        cameraViewHeight = (view.frame.width)*cameraAspectRatio
-        cameraViewWidth = (view.frame.width)
-        controlsHeight = (view.frame.height)-cameraViewHeight!
-        
+        if(view.frame.width<view.frame.height){
+            cameraViewHeight = (view.frame.width)*cameraAspectRatio
+            cameraViewWidth = (view.frame.width)
+            controlsHeight = (view.frame.height)-cameraViewHeight!
+            controlsContainer.axis = .horizontal
+        }else{
+            cameraViewHeight = (view.frame.height)*cameraAspectRatio
+            cameraViewWidth = (view.frame.height)
+            controlsHeight = (view.frame.width)-cameraViewHeight!
+            controlsContainer.axis = .vertical
+        }
         // Do any additional setup after loading the view.
         controlsContainer.alignment = .center
-        controlsContainer.axis = .horizontal
         controlsContainer.distribution = .fillEqually
         controlsContainer.translatesAutoresizingMaskIntoConstraints = false
         controlsContainer.backgroundColor = UIColor.systemBackground
@@ -174,34 +180,37 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
         infoview.textAlignment = .center
         infoview.numberOfLines = 0
         
-        view.addSubview(infoButton)
-        view.addSubview(settingsButton)
+        cameraImagePreview?.addSubview(infoButton)
+        cameraImagePreview?.addSubview(settingsButton)
         cameraImagePreview?.addSubview(closeButton)
         cameraImagePreview?.addSubview(infoview)
         cameraImagePreview?.addSubview(settingsView)
         cameraImagePreview?.isUserInteractionEnabled = true
         
+        let ui_spacing:CGFloat = 5
+        let button_width:CGFloat = 50
+        
         NSLayoutConstraint.activate([
-            infoButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            infoButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 20),
-            infoButton.widthAnchor.constraint(equalToConstant: 50),
-            infoButton.heightAnchor.constraint(equalToConstant: 50),
+            infoButton.leadingAnchor.constraint(equalTo: cameraImagePreview!.layoutMarginsGuide.leadingAnchor, constant: 0),
+            infoButton.topAnchor.constraint(equalTo: cameraImagePreview!.layoutMarginsGuide.topAnchor),
+            infoButton.widthAnchor.constraint(equalToConstant: button_width),
+            infoButton.heightAnchor.constraint(equalToConstant: button_width),
             infoview.leadingAnchor.constraint(equalTo: cameraImagePreview!.leadingAnchor, constant: 40),
             infoview.trailingAnchor.constraint(equalTo: cameraImagePreview!.trailingAnchor, constant: -40),
             infoview.topAnchor.constraint(equalTo: cameraImagePreview!.topAnchor, constant: 40),
             infoview.bottomAnchor.constraint(equalTo: cameraImagePreview!.bottomAnchor, constant: -40),
-            settingsButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            settingsButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 80),
-            settingsButton.widthAnchor.constraint(equalToConstant: 50),
-            settingsButton.heightAnchor.constraint(equalToConstant: 50),
+            settingsButton.leadingAnchor.constraint(equalTo: cameraImagePreview!.layoutMarginsGuide.leadingAnchor, constant: 0),
+            settingsButton.topAnchor.constraint(equalTo: cameraImagePreview!.layoutMarginsGuide.topAnchor, constant: ui_spacing+button_width),
+            settingsButton.widthAnchor.constraint(equalToConstant: button_width),
+            settingsButton.heightAnchor.constraint(equalToConstant: button_width),
             settingsView.leadingAnchor.constraint(equalTo: cameraImagePreview!.leadingAnchor, constant: 40),
             settingsView.trailingAnchor.constraint(equalTo: cameraImagePreview!.trailingAnchor, constant: -40),
             settingsView.topAnchor.constraint(equalTo: cameraImagePreview!.topAnchor, constant: 40),
             settingsView.bottomAnchor.constraint(equalTo: cameraImagePreview!.bottomAnchor, constant: -40),
-            closeButton.trailingAnchor.constraint(equalTo: cameraImagePreview!.trailingAnchor, constant: -20),
-            closeButton.topAnchor.constraint(equalTo: cameraImagePreview!.topAnchor, constant: 20),
-            closeButton.widthAnchor.constraint(equalToConstant: 50),
-            closeButton.heightAnchor.constraint(equalToConstant: 50),
+            closeButton.trailingAnchor.constraint(equalTo: cameraImagePreview!.layoutMarginsGuide.trailingAnchor, constant: -0),
+            closeButton.topAnchor.constraint(equalTo: cameraImagePreview!.layoutMarginsGuide.topAnchor),
+            closeButton.widthAnchor.constraint(equalToConstant: button_width),
+            closeButton.heightAnchor.constraint(equalToConstant: button_width),
         ])
         
         controlsContainer.addArrangedSubview(flashModeButton)
