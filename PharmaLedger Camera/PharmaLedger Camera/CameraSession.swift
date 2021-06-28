@@ -27,7 +27,7 @@ import UIKit
     private var photoOutput: AVCapturePhotoOutput?
     
     private let cameraConfiguration:CameraConfiguration
-    private let notificationCenter:NotificationCenter = NotificationCenter.init()
+    private let notificationCenter:NotificationCenter = NotificationCenter.default
     
     private var cameraPermissionGranted = false
     
@@ -216,8 +216,8 @@ import UIKit
     /// Stops the camera session
     @objc public func stopCamera(){
         captureSession?.stopRunning()
-        sessionQueue.suspend()
         notificationCenter.removeObserver(self)
+        sessionQueue.suspend()
     }
     
     /// Starts the camera session.
@@ -312,6 +312,7 @@ import UIKit
     }
     
     private func addDeviceOrientationObserver(){
+        notificationCenter.removeObserver(self)
         notificationCenter.addObserver(self, selector: #selector(updateOrientation), name: UIDevice.orientationDidChangeNotification, object: nil)
     }
     
