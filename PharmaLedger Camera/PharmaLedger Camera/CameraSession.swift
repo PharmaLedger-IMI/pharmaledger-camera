@@ -286,6 +286,11 @@ import UIKit
             connection.videoOrientation = .portrait
             capture_connection.videoOrientation = .portrait
         }
+        
+        guard let device = captureDevice else {
+            return
+        }
+        configureRuntimeSettings(device: device)
     }
     
     /// Sets the camera session video orientation to the desired value
