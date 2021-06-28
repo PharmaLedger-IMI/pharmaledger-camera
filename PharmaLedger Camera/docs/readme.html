@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>README  Reference</title>
+    <link rel="stylesheet" type="text/css" href="css/jazzy.css" />
+    <link rel="stylesheet" type="text/css" href="css/highlight.css" />
+    <meta charset='utf-8'>
+    <script src="js/jquery.min.js" defer></script>
+    <script src="js/jazzy.js" defer></script>
+    
+    <script src="js/lunr.min.js" defer></script>
+    <script src="js/typeahead.jquery.js" defer></script>
+    <script src="js/jazzy.search.js" defer></script>
+  </head>
+  <body>
+    <a title="README  Reference"></a>
+    <header>
+      <div class="content-wrapper">
+        <p><a href="index.html">PharmaLedger_Camera 0.2.0 Docs</a></p>
+        <p class="header-right">
+          <form role="search" action="search.json">
+            <input type="text" placeholder="Search documentation" data-typeahead>
+          </form>
+        </p>
+      </div>
+    </header>
+    <div class="content-wrapper">
+      <p id="breadcrumbs">
+        <a href="index.html">PharmaLedger_Camera Reference</a>
+        <img id="carat" src="img/carat.png" />
+        README  Reference
+      </p>
+    </div>
+    <div class="content-wrapper">
+      <nav class="sidebar">
+        <ul class="nav-groups">
+          <li class="nav-group-name">
+            <a href="Guides.html">Guides</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="readme.html">README</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Classes.html">Classes</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Classes/CameraConfiguration.html">CameraConfiguration</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/CameraPreview.html">CameraPreview</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Classes/CameraSession.html">CameraSession</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Extensions.html">Extensions</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Extensions/CMSampleBuffer.html">CMSampleBuffer</a>
+              </li>
+              <li class="nav-group-task">
+                <a href="Extensions/Data.html">Data</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-group-name">
+            <a href="Protocols.html">Protocols</a>
+            <ul class="nav-group-tasks">
+              <li class="nav-group-task">
+                <a href="Protocols/CameraEventListener.html">CameraEventListener</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+      <article class="main-content">
+        <section>
+          <section class="section">
+            
+            <h1 id='pharmaledger-camera-sdk' class='heading'>PharmaLedger Camera SDK</h1>
+<h2 id='table-of-contents' class='heading'>Table of contents</h2>
+
+<ul>
+<li><a href="#pharmaledger-camera-sdk">PharmaLedger Camera SDK</a>
+
+<ul>
+<li><a href="#table-of-contents">Table of contents</a></li>
+<li><a href="#repository-contents">Repository contents</a></li>
+<li><a href="#documentation">Documentation</a></li>
+<li><a href="#sample-code">Sample code</a></li>
+<li><a href="#capturing-and-saving-a-photo">Capturing and saving a photo</a></li>
+<li><a href="#controlling-the-camerasession">Controlling the CameraSession</a></li>
+<li><a href="#handling-device-orientations">Handling device orientations</a></li>
+<li><a href="#development">Development</a></li>
+<li><a href="#building-documentation">Building Documentation</a></li>
+<li><a href="#testing">Testing</a></li>
+<li><a href="#releasing">Releasing</a></li>
+</ul></li>
+</ul>
+<h2 id='repository-contents' class='heading'>Repository contents</h2>
+
+<ul>
+<li>Camera Sample (Swift project that implements the Camera Framework)</li>
+<li>pharmaledger_flutterdemo (Flutter application that uses the Camera Framework to access the native camera)</li>
+<li>PharmaLedger Camera (native iOS camera Framework)</li>
+</ul>
+<h2 id='documentation' class='heading'>Documentation</h2>
+
+<ul>
+<li>The html Swift documentation is hosted live at <a href="https://truemedinc.com/pharmaledger-sdk/documentation/">truemedinc.com</a></li>
+<li>Please see our <a href="https://truemedinc.com/pharmaledger-sdk/documentation/guides/Setup.pdf">Setup guide</a> on how to add the Framework to your project</li>
+</ul>
+<h2 id='sample-code' class='heading'>Sample code</h2>
+
+<p>This example shows how the <a href="https://truemedinc.com/pharmaledger-sdk/documentation/Classes/CameraSession.html">CameraSession</a> preview feed would be displayed in a iOS native <strong>UIImageView</strong>. For a more complete example, see the <strong>Camera Sample</strong> project.</p>
+
+<p>First implement the <a href="https://truemedinc.com/pharmaledger-sdk/documentation/Protocols/CameraEventListener.html">CameraEventListener</a> to receive events from the CameraSession, like preview frames and photo capture callbacks.</p>
+<pre class="highlight plaintext"><code>import PharmaLedger_Camera
+import AVFoundation
+import UIKit
+
+class ViewController: UIViewController, CameraEventListener {
+    func onPreviewFrame(sampleBuffer: CMSampleBuffer) {
+
+    }
+
+    func onCapture(imageData: Data) {
+
+    }
+
+    func onCameraInitialized() {
+
+    }
+
+    func onCameraPermissionDenied(){
+
+    }
+</code></pre>
+
+<p>When the delegate has been defined, the CameraSession instance can be created.</p>
+<pre class="highlight plaintext"><code>private var cameraSession:CameraSession?
+private var cameraPreview:UIImageView?
+
+/// Use this function for example in your viewDidLoad script
+private func startCameraSession(){
+    // 1. Init the CameraSession
+
+    cameraSession = CameraSession.init(cameraEventListener: self)
+
+    // 2a. Create a preview view and add it to 
+    // the ViewController
+
+    cameraPreview = UIImageView.init()
+    view.addSubview(cameraPreview!)
+
+    // 2b. in this example the preview is scaled
+    // using constraints.
+    // The Height constraint is based on the camera
+    // aspect ratio, in this example 4:3.
+
+    cameraPreview?.translatesAutoresizingMaskIntoConstraints = false
+    let cameraAspectRatio:CGFloat = 4.0/3.0      
+    let heightAnchorConstant = (view.frame.width)*cameraAspectRatio
+
+    NSLayoutConstraint.activate([
+        cameraPreview!.widthAnchor.constraint(equalTo: view.widthAnchor),
+        cameraPreview!.topAnchor.constraint(equalTo: view.topAnchor),
+        cameraPreview!.heightAnchor.constraint(equalToConstant: heightAnchorConstant)
+    ])
+}
+</code></pre>
+
+<p>To display the camera preview frames in the cameraPreview view, edit the onPreviewFrame(sampleBuffer: CMSampleBuffer) method from CameraEventListener</p>
+<pre class="highlight plaintext"><code>//define the CIContext as a constant
+let ciContext:CIContext = CIContext()
+
+func onPreviewFrame(sampleBuffer: CMSampleBuffer) {
+    DispatchQueue.main.async {
+        //1. Get UIImage from the sampleBuffer.
+        guard let image:UIImage = sampleBuffer.bufferToUIImage(ciContext: ciContext) else {
+            return
+        }
+        //2. update the preview image
+        self.cameraPreview?.image = image
+    }
+}
+</code></pre>
+<h3 id='capturing-and-saving-a-photo' class='heading'>Capturing and saving a photo</h3>
+
+<p>To capture a photo, simply call cameraSession?.takePicture(). When the capture is finished, the Data object is returned in the onCapture(imageData: Data) method. Below example shows how to save the file:</p>
+<pre class="highlight plaintext"><code>func onCapture(imageData: Data) {
+    //below snippet saves a file "test.jpg" into the app files directory
+    guard let filedir = imageData.savePhotoToFiles(fileName: "test") else {
+        //Something went wrong when saving the file 
+        return
+    }
+}
+</code></pre>
+<h3 id='controlling-the-camerasession' class='heading'>Controlling the CameraSession</h3>
+
+<p>The camera can be configured using the <a href="https://truemedinc.com/pharmaledger-sdk/documentation/Classes/CameraConfiguration.html">CameraConfiguration</a> class. Below is an example of how to configure the camera</p>
+<pre class="highlight plaintext"><code>func openCameraWithConfigurations(){
+    // option 1a - Initialize a fresh camera
+    // configuration with all default values and set
+    // the parameters independently
+    config:CameraConfiguration = CameraConfiguration.init()
+    config.setFlashMode("torch")
+
+    // option 1b - Initialize parameters in the init
+    // Any unnecessary parameters can be left out as nil
+    config:CameraConfiguration = CameraConfiguration.init(flash_mode: "torch", color_space: nil, auto_orientation: true)
+
+    // Initialize the camera with the configuration
+    cameraSession = CameraSession.init(cameraEventListener: self,cameraConfiguration: config)
+
+    // option 2 - Initialize camera without the
+    // configurations and get the current configuration from the cameraSession
+    cameraSession = CameraSession.init(cameraEventListener: self)
+    config = cameraSession.getConfig()
+}
+</code></pre>
+
+<p>To configure the Camera during session runtime (eg. when toggling the flash mode), call <strong>applyConfiguration</strong>. This will let the current camerasession know that the configurations have updated.</p>
+<pre class="highlight plaintext"><code>func setFlashModeOff(){
+    config.setFlashConfiguration(flash_mode: "off")
+    config.applyConfiguration()
+}
+</code></pre>
+<h3 id='handling-device-orientations' class='heading'>Handling device orientations</h3>
+
+<p>By default, the framework detects changes to the device orientation automatically. Orientation can also be managed manually as shown in the example below:</p>
+<pre class="highlight plaintext"><code>func initCameraSession(){
+    // init the session with auto orientation disabled:
+    config:CameraConfiguration = CameraConfiguration.init(flash_mode: nil, color_space: nil, auto_orientation: false)
+
+    cameraSession = CameraSession.init(cameraEventListener: self, cameraConfiguration: config)
+}
+
+public override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+    super.viewWillTransition(to: size, with: coordinator)
+
+    // Use updateOrientation() to attempt an
+    // automatic orientation detection
+    cameraSession.updateOrientation()
+
+    // Use below example to set the orientation manually
+    cameraSession.setOrientation(orientation: "landscapeRight")
+}
+</code></pre>
+<h2 id='development' class='heading'>Development</h2>
+<h3 id='building-documentation' class='heading'>Building Documentation</h3>
+
+<p>Currently documentation is generated using <a href="https://github.com/realm/jazzy">Jazzy</a>. To generate the documentation, run this command in the PharmaLedger Camera framework root folder (remember to replace VERSION_NUMBER with the version number of the build, eg. 0.2.0):</p>
+
+<p><code>jazzy --documentation=../*.md --output docs --copyright &quot;&quot; --author &quot;TrueMed Inc.&quot; --author_url https://truemedinc.com --module PharmaLedger_Camera --module-version VERSION_NUMBER --skip-undocumented --hide-documentation-coverage</code></p>
+
+<p>Before releasing, you can make sure documentation is up to date by not skipping undocumented code.</p>
+<h3 id='testing' class='heading'>Testing</h3>
+
+<p>Quickest way to test the Framework is to boot the sample project <strong>Camera Sample</strong>. Make sure that the Swift framework project is included in the project. This way you can quickly make changes to the source files while testing them in an application project. Make sure you don&rsquo;t have the Framework project open in another window.</p>
+<h3 id='releasing' class='heading'>Releasing</h3>
+
+<p>To build a release framework, open the <strong>PharmaLedger Camera</strong> project and select the release build scheme (create a new release scheme if there is none available). After this, build the project and find the release build in the project Output.</p>
+
+          </section>
+        </section>
+        <section id="footer">
+          
+          <p>Generated by <a class="link" href="https://github.com/realm/jazzy" target="_blank" rel="external">jazzy ♪♫ v0.13.7</a>, a <a class="link" href="https://realm.io" target="_blank" rel="external">Realm</a> project.</p>
+        </section>
+      </article>
+    </div>
+  </body>
+</div>
+</html>

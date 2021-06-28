@@ -17,6 +17,8 @@ protocol CameraConfigurationChangeListener {
 /// CameraConfiguration class that contains all the necessary configurations for the camera
 public class CameraConfiguration {
     
+    //MARK: Constants and variables
+    
     private var flash_configuration:String = "auto"
     private var torchmode:AVCaptureDevice.TorchMode = .auto
     private var flashmode:AVCaptureDevice.FlashMode = .auto
