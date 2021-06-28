@@ -26,21 +26,32 @@ public class CameraConfiguration {
     
     var delegate:CameraConfigurationChangeListener?
     
+    /** If true, the CameraSession will monitor device orientation changes and automatically swap the camera preview and photo capture orientation between "portrait", "landscapeLeft" and "landscapeRight"
+     
+     Default: true
+     
+     This variable should be defined
+     before the camera is initialized.
+     */
+    public var autoOrientationEnabled:Bool = true
+    
     //MARK: Initialization
     
     /// Initializes the camera confifugration with default values. To further customize the configuration, call any
     public init() {
         self.setFlashConfiguration(flash_mode: "auto")
         self.torchlevel = 1.0
+        self.autoOrientationEnabled = true
         print("camConfig","initialized")
     }
     
     /// Initialize the camera session with customizable configurations. Parameters that don't need to be configured can be left as nil.
     /// - Parameter flash_mode: Available modes are "torch", "flash", "off" and "auto"
     /// - Parameter color_space: Possible values are "sRGB", "P3_D65" or "HLG_BT2020".
-    public init(flash_mode: String?, color_space:String?) {
+    public init(flash_mode: String?, color_space:String?, auto_orienation_enabled:Bool) {
         self.setFlashConfiguration(flash_mode: flash_mode ?? self.flash_configuration)
         self.setPreferredColorSpace(color_space: color_space ?? "")
+        self.autoOrientationEnabled = auto_orienation_enabled
     }
     
     //MARK: Public functions

@@ -27,6 +27,7 @@ import UIKit
     private var photoOutput: AVCapturePhotoOutput?
     
     private let cameraConfiguration:CameraConfiguration
+    private let notificationCenter:NotificationCenter = NotificationCenter.init()
     
     private var cameraPermissionGranted = false
     
@@ -125,6 +126,9 @@ import UIKit
     
     /// Call this function after captureSession.startRunning
     private func configureRuntimeSettings(device:AVCaptureDevice){
+        if(cameraConfiguration.autoOrientationEnabled){
+            addDeviceOrientationObserver()
+        }
         do{
             print("camConfig","Try to set torch mode to \(cameraConfiguration.getFlashConfiguration() ?? "undefined") and torch level to \(cameraConfiguration.getTorchLevel())")
             try device.lockForConfiguration()
@@ -213,6 +217,7 @@ import UIKit
     @objc public func stopCamera(){
         captureSession?.stopRunning()
         sessionQueue.suspend()
+        notificationCenter.removeObserver(self)
     }
     
     /// Starts the camera session.
@@ -257,8 +262,10 @@ import UIKit
         }
     }
     
+    //MARK: Device orientation
+    
     /// Requests to update the camera orientation based on the current UIDevice orientation
-    public func updateOrientation(){
+    @objc public func updateOrientation(){
         guard let connection = self.previewCaptureConnection else {
             return
         }
@@ -283,18 +290,29 @@ import UIKit
     
     /// Sets the camera session video orientation to the desired value
     /// - Parameter orientation: Supported values are "landscapeRight", "landscapeLeft" and "portrait". Defaults to portrait for any unsupported values.
-    public func updateOrientation(orientation:String){
+    public func setOrientation(orientation:String){
         guard let connection = self.previewCaptureConnection else {
             return
         }
+        guard let capture_connection = self.photoCaptureConnection else {
+            return
+        }
+        
         switch orientation {
         case "landscapeLeft":
             connection.videoOrientation = .landscapeRight
+            capture_connection.videoOrientation = .landscapeRight
         case "landscapeRight":
             connection.videoOrientation = .landscapeLeft
+            capture_connection.videoOrientation = .landscapeLeft
         default:
             connection.videoOrientation = .portrait
+            capture_connection.videoOrientation = .portrait
         }
+    }
+    
+    private func addDeviceOrientationObserver(){
+        notificationCenter.addObserver(self, selector: #selector(updateOrientation), name: UIDevice.orientationDidChangeNotification, object: nil)
     }
     
     //MARK: Preview and capture callbacks

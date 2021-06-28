@@ -125,7 +125,7 @@ The camera can be configured using the [CameraConfiguration](https://truemedinc.
 
         // option 1b - Initialize parameters in the init
         // Any unnecessary parameters can be left out as nil
-        config:CameraConfiguration = CameraConfiguration.init(flash_mode: "torch", color_space:nil)
+        config:CameraConfiguration = CameraConfiguration.init(flash_mode: "torch", color_space: nil, auto_orientation: true)
 
         // Initialize the camera with the configuration
         cameraSession = CameraSession.init(cameraEventListener: self,cameraConfiguration: config)
@@ -145,7 +145,14 @@ To configure the Camera during session runtime (eg. when toggling the flash mode
 
 ### Handling device orientations
 
-Currently the SDK does not by itself change the orientation of the camera. Below is an example on how to change the orientation. Note that this does not change the preview view size and it will have to be handled outside the SDK.
+By default, the framework detects changes to the device orientation automatically. Orientation can also be managed manually as shown in the example below:
+
+    func initCameraSession(){
+        // init the session with auto orientation disabled:
+        config:CameraConfiguration = CameraConfiguration.init(flash_mode: nil, color_space: nil, auto_orientation: false)
+
+        cameraSession = CameraSession.init(cameraEventListener: self, cameraConfiguration: config)
+    }
 
     public override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
         super.viewWillTransition(to: size, with: coordinator)
@@ -155,7 +162,7 @@ Currently the SDK does not by itself change the orientation of the camera. Below
         cameraSession.updateOrientation()
 
         // Use below example to set the orientation manually
-        cameraSession.updateOrientation(orientation: "landscapeRight")
+        cameraSession.setOrientation(orientation: "landscapeRight")
     }
 
 ## Development

@@ -360,7 +360,7 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
         )
         
         setViewConstraints(orientation: UIDevice.current.orientation)
-        cameraSession?.updateOrientation()
+        //cameraSession?.updateOrientation()
         
     }
     
