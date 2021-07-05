@@ -20,11 +20,14 @@ import AVFoundation
      # Code
      ```
      func onPreviewFrame(sampleBuffer: CMSampleBuffer){
-        //Convert the sample buffer into an UI image so that it can be displayed in UIImage view
+        // Convert the sample buffer into an UI image so that it can be displayed in UIImage view
         guard let image:UIImage = sampleBuffer.bufferToUIImage(ciContext: self.ciContext) else {
              return
          }
-        mImageView.image = image
+        // Display the image without blocking the main thread
+        DispatchQueue.main.async {
+            self.mImageView.image = sampleBuffer.bufferToUIImage(ciContext: self.ciContext)
+        }
      }
      ```
      */

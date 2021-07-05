@@ -324,11 +324,7 @@ import UIKit
     //MARK: Preview and capture callbacks
     
     public func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection){
-        
-        DispatchQueue.main.async { [unowned self] in
-            self.cameraSessionDelegate.onPreviewFrame(sampleBuffer: sampleBuffer)
-        }
-        
+        self.cameraSessionDelegate.onPreviewFrame(sampleBuffer: sampleBuffer)
     }
     
     public func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {

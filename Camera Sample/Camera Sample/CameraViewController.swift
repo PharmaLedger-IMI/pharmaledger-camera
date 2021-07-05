@@ -51,7 +51,12 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
     }
     
     func onPreviewFrame(sampleBuffer: CMSampleBuffer) {
-        cameraImagePreview?.image = sampleBuffer.bufferToUIImage(ciContext: ciContext)
+        guard let image:UIImage = sampleBuffer.bufferToUIImage(ciContext: ciContext) else {
+             return
+         }
+        DispatchQueue.main.async {
+            self.cameraImagePreview?.image = image
+        }
     }
 
     func onCameraInitialized() {
