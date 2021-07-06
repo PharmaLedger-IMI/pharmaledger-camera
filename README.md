@@ -7,6 +7,7 @@
   - [Sample code](#sample-code)
     - [Capturing and saving a photo](#capturing-and-saving-a-photo)
     - [Controlling the CameraSession](#controlling-the-camerasession)
+    - [Capture session resolution and session presets](#capture-session-resolution-and-session-presets)
     - [Handling device orientations](#handling-device-orientations)
   - [Development](#development)
     - [Building Documentation](#building-documentation)
@@ -125,7 +126,7 @@ The camera can be configured using the [CameraConfiguration](https://truemedinc.
 
         // option 1b - Initialize parameters in the init
         // Any unnecessary parameters can be left out as nil
-        config:CameraConfiguration = CameraConfiguration.init(flash_mode: "torch", color_space: nil, auto_orientation: true)
+        config:CameraConfiguration = CameraConfiguration.init(flash_mode: "torch", color_space: nil, session_preset: nil, auto_orientation: true)
 
         // Initialize the camera with the configuration
         cameraSession = CameraSession.init(cameraEventListener: self,cameraConfiguration: config)
@@ -142,6 +143,36 @@ To configure the Camera during session runtime (eg. when toggling the flash mode
         config.setFlashConfiguration(flash_mode: "off")
         config.applyConfiguration()
     }
+
+### Capture session resolution and session presets
+
+Capture session preview resolution is controlled by using [session presets](https://developer.apple.com/documentation/avfoundation/avcapturesession/preset). To change the session preset, call the **setSessionPreset** method from the camera configuration class or predefine the value in the initializer.
+
+    // Predefining the session preset as "medium" in the initialization
+    config:CameraConfiguration = CameraConfiguration.init(flash_mode: nil, color_space: nil, session_preset: "medium", auto_orientation: true)
+
+    // Using the setSessionPreset method
+    config.setSessionPreset("medium")
+
+The aspect ratios for the different settings are as follows:
+
+4:3 parameters:
+- "photo"
+- "low"
+- "medium"
+- "vga640x480"
+
+16:9 parameters:
+- "high"
+- "inputPriority"
+- "hd1280x720"
+- "hd1920x1080"
+- "hd4K3840x2160"
+- "iFrame960x540"
+- "iFrame1280x720"
+
+11:9 parameters:
+- "cif352x288"
 
 ### Handling device orientations
 
@@ -169,7 +200,7 @@ By default, the framework detects changes to the device orientation automaticall
 
 ### Building Documentation
 
-Currently documentation is generated using [Jazzy](https://github.com/realm/jazzy). To generate the documentation, run this command in the PharmaLedger Camera framework root folder (remember to replace VERSION_NUMBER with the version number of the build, eg. 0.2.0):
+Currently documentation is generated using [Jazzy](https://github.com/realm/jazzy). To generate the documentation, run this command in the PharmaLedger Camera framework root folder (remember to replace VERSION_NUMBER with the version number of the build, eg. 0.3.0):
 
 `jazzy --documentation=../*.md --output docs --copyright "" --author "TrueMed Inc." --author_url https://truemedinc.com --module PharmaLedger_Camera --module-version VERSION_NUMBER --skip-undocumented --hide-documentation-coverage`
 

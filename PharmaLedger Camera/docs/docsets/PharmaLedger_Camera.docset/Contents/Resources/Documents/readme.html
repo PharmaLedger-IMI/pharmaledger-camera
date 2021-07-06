@@ -94,6 +94,7 @@
 <li><a href="#sample-code">Sample code</a></li>
 <li><a href="#capturing-and-saving-a-photo">Capturing and saving a photo</a></li>
 <li><a href="#controlling-the-camerasession">Controlling the CameraSession</a></li>
+<li><a href="#capture-session-resolution-and-session-presets">Capture session resolution and session presets</a></li>
 <li><a href="#handling-device-orientations">Handling device orientations</a></li>
 <li><a href="#development">Development</a></li>
 <li><a href="#building-documentation">Building Documentation</a></li>
@@ -212,7 +213,7 @@ func onPreviewFrame(sampleBuffer: CMSampleBuffer) {
 
     // option 1b - Initialize parameters in the init
     // Any unnecessary parameters can be left out as nil
-    config:CameraConfiguration = CameraConfiguration.init(flash_mode: "torch", color_space: nil, auto_orientation: true)
+    config:CameraConfiguration = CameraConfiguration.init(flash_mode: "torch", color_space: nil, session_preset: nil, auto_orientation: true)
 
     // Initialize the camera with the configuration
     cameraSession = CameraSession.init(cameraEventListener: self,cameraConfiguration: config)
@@ -230,6 +231,44 @@ func onPreviewFrame(sampleBuffer: CMSampleBuffer) {
     config.applyConfiguration()
 }
 </code></pre>
+<h3 id='capture-session-resolution-and-session-presets' class='heading'>Capture session resolution and session presets</h3>
+
+<p>Capture session preview resolution is controlled by using <a href="https://developer.apple.com/documentation/avfoundation/avcapturesession/preset">session presets</a>. To change the session preset, call the <strong>setSessionPreset</strong> method from the camera configuration class or predefine the value in the initializer.</p>
+<pre class="highlight plaintext"><code>// Predefining the session preset as "medium" in the initialization
+config:CameraConfiguration = CameraConfiguration.init(flash_mode: nil, color_space: nil, session_preset: "medium", auto_orientation: true)
+
+// Using the setSessionPreset method
+config.setSessionPreset("medium")
+</code></pre>
+
+<p>The aspect ratios for the different settings are as follows:</p>
+
+<p>4:3 parameters:</p>
+
+<ul>
+<li>&ldquo;photo&rdquo;</li>
+<li>&ldquo;low&rdquo;</li>
+<li>&ldquo;medium&rdquo;</li>
+<li>&ldquo;vga640x480&rdquo;</li>
+</ul>
+
+<p>16:9 parameters:</p>
+
+<ul>
+<li>&ldquo;high&rdquo;</li>
+<li>&ldquo;inputPriority&rdquo;</li>
+<li>&ldquo;hd1280x720&rdquo;</li>
+<li>&ldquo;hd1920x1080&rdquo;</li>
+<li>&ldquo;hd4K3840x2160&rdquo;</li>
+<li>&ldquo;iFrame960x540&rdquo;</li>
+<li>&ldquo;iFrame1280x720&rdquo;</li>
+</ul>
+
+<p>11:9 parameters:</p>
+
+<ul>
+<li>&ldquo;cif352x288&rdquo;</li>
+</ul>
 <h3 id='handling-device-orientations' class='heading'>Handling device orientations</h3>
 
 <p>By default, the framework detects changes to the device orientation automatically. Orientation can also be managed manually as shown in the example below:</p>
@@ -254,7 +293,7 @@ public override func viewWillTransition(to size: CGSize, with coordinator: UIVie
 <h2 id='development' class='heading'>Development</h2>
 <h3 id='building-documentation' class='heading'>Building Documentation</h3>
 
-<p>Currently documentation is generated using <a href="https://github.com/realm/jazzy">Jazzy</a>. To generate the documentation, run this command in the PharmaLedger Camera framework root folder (remember to replace VERSION_NUMBER with the version number of the build, eg. 0.2.0):</p>
+<p>Currently documentation is generated using <a href="https://github.com/realm/jazzy">Jazzy</a>. To generate the documentation, run this command in the PharmaLedger Camera framework root folder (remember to replace VERSION_NUMBER with the version number of the build, eg. 0.3.0):</p>
 
 <p><code>jazzy --documentation=../*.md --output docs --copyright &quot;&quot; --author &quot;TrueMed Inc.&quot; --author_url https://truemedinc.com --module PharmaLedger_Camera --module-version VERSION_NUMBER --skip-undocumented --hide-documentation-coverage</code></p>
 
