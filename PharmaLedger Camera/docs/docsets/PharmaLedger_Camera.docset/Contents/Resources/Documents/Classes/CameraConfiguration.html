@@ -17,7 +17,7 @@
     <a title="CameraConfiguration Class Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="../index.html">PharmaLedger_Camera 0.2.1 Docs</a></p>
+        <p><a href="../index.html">PharmaLedger_Camera 0.3.0 Docs</a></p>
         <p class="header-right">
           <form role="search" action="../search.json">
             <input type="text" placeholder="Search documentation" data-typeahead>
@@ -107,6 +107,33 @@
                 <li class="item">
                   <div>
                     <code>
+                    <a name="/s:19PharmaLedger_Camera0C13ConfigurationC21supportedAspectRatiosSay12CoreGraphics7CGFloatVGvp"></a>
+                    <a name="//apple_ref/swift/Property/supportedAspectRatios" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19PharmaLedger_Camera0C13ConfigurationC21supportedAspectRatiosSay12CoreGraphics7CGFloatVGvp">supportedAspectRatios</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>List of supported aspect ratios. 16/9 || 4/3 || 11/9</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="k">let</span> <span class="nv">supportedAspectRatios</span><span class="p">:</span> <span class="p">[</span><span class="kt">CGFloat</span><span class="p">]</span></code></pre>
+
+                        </div>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
                     <a name="/s:19PharmaLedger_Camera0C13ConfigurationC22autoOrientationEnabledSbvp"></a>
                     <a name="//apple_ref/swift/Property/autoOrientationEnabled" class="dashAnchor"></a>
                     <a class="token" href="#/s:19PharmaLedger_Camera0C13ConfigurationC22autoOrientationEnabledSbvp">autoOrientationEnabled</a>
@@ -179,9 +206,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:19PharmaLedger_Camera0C13ConfigurationC10flash_mode11color_space23auto_orienation_enabledACSSSg_AGSbtcfc"></a>
-                    <a name="//apple_ref/swift/Method/init(flash_mode:color_space:auto_orienation_enabled:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:19PharmaLedger_Camera0C13ConfigurationC10flash_mode11color_space23auto_orienation_enabledACSSSg_AGSbtcfc">init(flash_mode:<wbr>color_space:<wbr>auto_orienation_enabled:<wbr>)</a>
+                    <a name="/s:19PharmaLedger_Camera0C13ConfigurationC10flash_mode11color_space14session_preset23auto_orienation_enabledACSSSg_A2HSbtcfc"></a>
+                    <a name="//apple_ref/swift/Method/init(flash_mode:color_space:session_preset:auto_orienation_enabled:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19PharmaLedger_Camera0C13ConfigurationC10flash_mode11color_space14session_preset23auto_orienation_enabledACSSSg_A2HSbtcfc">init(flash_mode:<wbr>color_space:<wbr>session_preset:<wbr>auto_orienation_enabled:<wbr>)</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -196,7 +223,7 @@
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">flash_mode</span><span class="p">:</span> <span class="kt">String</span><span class="p">?,</span> <span class="nv">color_space</span><span class="p">:</span> <span class="kt">String</span><span class="p">?,</span> <span class="nv">auto_orienation_enabled</span><span class="p">:</span> <span class="kt">Bool</span><span class="p">)</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="nf">init</span><span class="p">(</span><span class="nv">flash_mode</span><span class="p">:</span> <span class="kt">String</span><span class="p">?,</span> <span class="nv">color_space</span><span class="p">:</span> <span class="kt">String</span><span class="p">?,</span> <span class="nv">session_preset</span><span class="p">:</span> <span class="kt">String</span><span class="p">?,</span> <span class="nv">auto_orienation_enabled</span><span class="p">:</span> <span class="kt">Bool</span><span class="p">)</span></code></pre>
 
                         </div>
                       </div>
@@ -225,6 +252,30 @@
                               <td>
                                 <div>
                                   <p>Possible values are &ldquo;sRGB&rdquo;, &ldquo;P3_D65&rdquo; or &ldquo;HLG_BT2020&rdquo;.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>session_preset</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Session preset in String format. See <strong>setSessionPreset</strong> for more information.</p>
+                                </div>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>auto_orienation_enabled</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>If set to true, camera session will attempt to automatically adjust the preview and capture orientation based on the device orientation</p>
                                 </div>
                               </td>
                             </tr>
@@ -625,6 +676,241 @@
                             </tr>
                           </tbody>
                         </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="task-group">
+              <div class="task-name-container">
+                <a name="/Session%20presets%20and%20aspect%20ratio"></a>
+                <a name="//apple_ref/swift/Section/Session presets and aspect ratio" class="dashAnchor"></a>
+                <div class="section-name-container">
+                  <a class="section-name-link" href="#/Session%20presets%20and%20aspect%20ratio"></a>
+                  <h3 class="section-name"><p>Session presets and aspect ratio</p>
+</h3>
+                </div>
+              </div>
+              <ul>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19PharmaLedger_Camera0C13ConfigurationC14setAspectRatio06aspectG0y12CoreGraphics7CGFloatV_tF"></a>
+                    <a name="//apple_ref/swift/Method/setAspectRatio(aspectRatio:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19PharmaLedger_Camera0C13ConfigurationC14setAspectRatio06aspectG0y12CoreGraphics7CGFloatV_tF">setAspectRatio(aspectRatio:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Sets the desired aspect ratio. If an unsupported aspect ratio is given, the closest possible aspect ratio will be selected</p>
+
+<p>Session preset will be assigned as follows:</p>
+
+<ul>
+<li>4/3: .photo</li>
+<li>16/9: .high</li>
+<li><p>11/9: .cif352x288</p></li>
+</ul>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">setAspectRatio</span><span class="p">(</span><span class="nv">aspectRatio</span><span class="p">:</span> <span class="kt">CGFloat</span><span class="p">)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>aspectRatio</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Supported values are 4/3, 16/9 and 11/9</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19PharmaLedger_Camera0C13ConfigurationC16setSessionPreset6presetySSSg_tF"></a>
+                    <a name="//apple_ref/swift/Method/setSessionPreset(preset:)" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19PharmaLedger_Camera0C13ConfigurationC16setSessionPreset6presetySSSg_tF">setSessionPreset(preset:<wbr>)</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Sets the session preset</p>
+
+<p>4:3 parameters:</p>
+
+<ul>
+<li>&ldquo;photo&rdquo;</li>
+<li>&ldquo;low&rdquo;</li>
+<li>&ldquo;medium&rdquo;</li>
+<li>&ldquo;vga640x480&rdquo;</li>
+</ul>
+
+<p>16:9 parameters:</p>
+
+<ul>
+<li>&ldquo;high&rdquo;</li>
+<li>&ldquo;inputPriority&rdquo;</li>
+<li>&ldquo;hd1280x720&rdquo;</li>
+<li>&ldquo;hd1920x1080&rdquo;</li>
+<li>&ldquo;hd4K3840x2160&rdquo;</li>
+<li>&ldquo;iFrame960x540&rdquo;</li>
+<li>&ldquo;iFrame1280x720&rdquo;</li>
+</ul>
+
+<p>11:9 parameters:</p>
+
+<ul>
+<li>&ldquo;cif352x288&rdquo;</li>
+</ul>
+
+<p>See <a href="https://developer.apple.com/documentation/avfoundation/avcapturesession/preset">AVCaptureSession.Preset documentation by Apple</a> for more information</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">setSessionPreset</span><span class="p">(</span><span class="nv">preset</span><span class="p">:</span> <span class="kt">String</span><span class="p">?)</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Parameters</h4>
+                        <table class="graybox">
+                          <tbody>
+                            <tr>
+                              <td>
+                                <code>
+                                <em>preset</em>
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <p>Session preset in String format.</p>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19PharmaLedger_Camera0C13ConfigurationC22getSessionPresetStringSSyF"></a>
+                    <a name="//apple_ref/swift/Method/getSessionPresetString()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19PharmaLedger_Camera0C13ConfigurationC22getSessionPresetStringSSyF">getSessionPresetString()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the current session preset</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">getSessionPresetString</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">String</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Session preset as String</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19PharmaLedger_Camera0C13ConfigurationC16getSessionPresetSo09AVCapturefG0ayF"></a>
+                    <a name="//apple_ref/swift/Method/getSessionPreset()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19PharmaLedger_Camera0C13ConfigurationC16getSessionPresetSo09AVCapturefG0ayF">getSessionPreset()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Returns the current session preset</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">getSessionPreset</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">AVCaptureSession</span><span class="o">.</span><span class="kt">Preset</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Session preset as <a href="https://developer.apple.com/documentation/avfoundation/avcapturesession/preset">AVCaptureSession.Preset</a> enum</p>
+                      </div>
+                    </section>
+                  </div>
+                </li>
+                <li class="item">
+                  <div>
+                    <code>
+                    <a name="/s:19PharmaLedger_Camera0C13ConfigurationC14getAspectRatio12CoreGraphics7CGFloatVyF"></a>
+                    <a name="//apple_ref/swift/Method/getAspectRatio()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:19PharmaLedger_Camera0C13ConfigurationC14getAspectRatio12CoreGraphics7CGFloatVyF">getAspectRatio()</a>
+                    </code>
+                  </div>
+                  <div class="height-container">
+                    <div class="pointer-container"></div>
+                    <section class="section">
+                      <div class="pointer"></div>
+                      <div class="abstract">
+                        <p>Get the current configuration aspect ratio</p>
+
+                      </div>
+                      <div class="declaration">
+                        <h4>Declaration</h4>
+                        <div class="language">
+                          <p class="aside-title">Swift</p>
+                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">getAspectRatio</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kt">CGFloat</span></code></pre>
+
+                        </div>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>Camera aspect ratio, eg. 4.0/3.0 (longer side divided by shorter side)</p>
                       </div>
                     </section>
                   </div>
