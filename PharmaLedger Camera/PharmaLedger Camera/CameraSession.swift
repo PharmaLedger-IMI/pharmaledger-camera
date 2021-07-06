@@ -12,8 +12,8 @@ import UIKit
 @objc public class CameraSession:NSObject, AVCaptureVideoDataOutputSampleBufferDelegate, AVCapturePhotoCaptureDelegate, CameraConfigurationChangeListener{
     
     //MARK: Constants and variables
-
-    /// The Active AVCaptureSession
+    
+    /// The Active [AVCaptureSession](https://developer.apple.com/documentation/avfoundation/avcapturesession)
     public var captureSession:AVCaptureSession?
     private var captureDevice:AVCaptureDevice?
     private var previewCaptureConnection:AVCaptureConnection?
@@ -23,6 +23,8 @@ import UIKit
     let discoverySession = AVCaptureDevice.DiscoverySession(deviceTypes:
         [.builtInTrueDepthCamera, .builtInDualCamera, .builtInWideAngleCamera],
         mediaType: .video, position: .back)
+    private var sessionPreset:AVCaptureSession.Preset = .photo
+    
     private let cameraSessionDelegate:CameraEventListener
     private var photoOutput: AVCapturePhotoOutput?
     
@@ -121,6 +123,15 @@ import UIKit
             captureSession?.automaticallyConfiguresCaptureDeviceForWideColor = true
         }
         
+        let preferredSessionPreset:AVCaptureSession.Preset = cameraConfiguration.getSessionPreset()
+        if(sessionPreset != preferredSessionPreset){
+            print("setting the preset to \(cameraConfiguration.getSessionPresetString())")
+            sessionPreset = preferredSessionPreset
+            captureSession?.sessionPreset = sessionPreset
+        }else{
+            print("session preset is already set to \(cameraConfiguration.getSessionPresetString())")
+        }
+        
         device.unlockForConfiguration()
     }
     
@@ -151,7 +162,7 @@ import UIKit
         
         guard cameraPermissionGranted else {return .permissionsDenied}
         captureSession?.beginConfiguration()
-        captureSession?.sessionPreset = .photo
+        captureSession?.sessionPreset = self.sessionPreset
         
         guard let captureDevice:AVCaptureDevice = selectDevice(in: .back) else {
             return .deviceDiscoveryFailure
@@ -169,6 +180,7 @@ import UIKit
         captureSession?.addInput(captureDeviceInput)
         
         let videoOutput = AVCaptureVideoDataOutput()
+        
         videoOutput.setSampleBufferDelegate(self, queue: DispatchQueue(label: "sampleBuffer"))
         
         guard (captureSession?.canAddOutput(videoOutput))! else {

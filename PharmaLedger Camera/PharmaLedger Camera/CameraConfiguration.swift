@@ -23,8 +23,13 @@ public class CameraConfiguration {
     private var torchmode:AVCaptureDevice.TorchMode = .auto
     private var flashmode:AVCaptureDevice.FlashMode = .auto
     private var torchlevel:Float = 1.0
+    private var sessionPreset:AVCaptureSession.Preset = .photo
+    private var aspectRatio:CGFloat = 4.0/3.0
     
     private var colorSpace:AVCaptureColorSpace?
+    
+    /// List of supported aspect ratios. 16/9 || 4/3 || 11/9
+    public let supportedAspectRatios:[CGFloat] = [16.0/9.0, 4.0/3.0, 11.0/9.0]
     
     var delegate:CameraConfigurationChangeListener?
     
@@ -50,10 +55,13 @@ public class CameraConfiguration {
     /// Initialize the camera session with customizable configurations. Parameters that don't need to be configured can be left as nil.
     /// - Parameter flash_mode: Available modes are "torch", "flash", "off" and "auto"
     /// - Parameter color_space: Possible values are "sRGB", "P3_D65" or "HLG_BT2020".
-    public init(flash_mode: String?, color_space:String?, auto_orienation_enabled:Bool) {
+    /// - Parameter session_preset: Session preset in String format. See **setSessionPreset** for more information.
+    /// - Parameter auto_orienation_enabled: If set to true, camera session will attempt to automatically adjust the preview and capture orientation based on the device orientation
+    public init(flash_mode: String?, color_space:String?, session_preset:String?, auto_orienation_enabled:Bool) {
         self.setFlashConfiguration(flash_mode: flash_mode ?? self.flash_configuration)
         self.setPreferredColorSpace(color_space: color_space ?? "")
         self.autoOrientationEnabled = auto_orienation_enabled
+        self.setSessionPreset(preset: session_preset)
     }
     
     //MARK: Public functions
@@ -104,11 +112,11 @@ public class CameraConfiguration {
             self.flashmode = .off
             break
         case "flash":
-            self.torchmode = .auto
+            self.torchmode = .off
             self.flashmode = .on
             break
         default:
-            self.torchmode = .auto
+            self.torchmode = .off
             self.flashmode = .auto
             break
         }
@@ -171,4 +179,136 @@ public class CameraConfiguration {
         }
     }
     
+    //MARK: Session presets and aspect ratio
+    
+    /**
+     Sets the desired aspect ratio. If an unsupported aspect ratio is given, the closest possible aspect ratio will be selected
+     
+     Session preset will be assigned as follows:
+     - 4/3: .photo
+     - 16/9: .high
+     - 11/9: .cif352x288
+     
+     - Parameter aspectRatio: Supported values are 4/3, 16/9 and 11/9
+     
+     */
+    public func setAspectRatio(aspectRatio:CGFloat){
+        var closestAspectRatio:CGFloat = 4.0/3.0
+        if(!supportedAspectRatios.contains(aspectRatio)){
+            //get the closest desired aspect ratio
+            var distanceToClosestAspectRatio:CGFloat = abs(aspectRatio - closestAspectRatio)
+            for ratio in supportedAspectRatios {
+                let distanceToAspectRatio = abs(aspectRatio - ratio)
+                if(distanceToAspectRatio < distanceToClosestAspectRatio){
+                    distanceToClosestAspectRatio = distanceToAspectRatio
+                    closestAspectRatio = ratio
+                }
+            }
+        }else{
+            closestAspectRatio = aspectRatio
+        }
+        self.aspectRatio = closestAspectRatio
+        if(self.aspectRatio == 4.0/3.0){
+            sessionPreset = .photo
+        }else if(self.aspectRatio == 16.0/9.0){
+            sessionPreset = .high
+        }else{
+            sessionPreset = .cif352x288
+        }
+    }
+    
+    /// Sets the session preset
+    /// - Parameter preset: Session preset in String format.
+    ///
+    /// 4:3 parameters:
+    /// - "photo"
+    /// - "low"
+    /// - "medium"
+    /// - "vga640x480"
+    ///
+    /// 16:9 parameters:
+    /// - "high"
+    /// - "inputPriority"
+    /// - "hd1280x720"
+    /// - "hd1920x1080"
+    /// - "hd4K3840x2160"
+    /// - "iFrame960x540"
+    /// - "iFrame1280x720"
+    ///
+    ///  11:9 parameters:
+    /// - "cif352x288"
+    ///
+    /// See [AVCaptureSession.Preset documentation by Apple](https://developer.apple.com/documentation/avfoundation/avcapturesession/preset) for more information
+    public func setSessionPreset(preset:String?){
+        switch preset {
+        case "low":
+            sessionPreset = .low
+            aspectRatio = 4.0/3.0
+        case "medium":
+            sessionPreset = .medium
+            aspectRatio = 4.0/3.0
+        case "high":
+            sessionPreset = .high
+            aspectRatio = 16.0/9.0
+        case "inputPriority":
+            sessionPreset = .inputPriority
+            aspectRatio = 16.0/9.0
+        case "hd1280x720":
+            sessionPreset = .hd1280x720
+            aspectRatio = 16.0/9.0
+        case "hd1920x1080":
+            sessionPreset = .hd1920x1080
+            aspectRatio = 16.0/9.0
+        case "hd4K3840x2160":
+            sessionPreset = .hd4K3840x2160
+            aspectRatio = 16.0/9.0
+        case "iFrame960x540":
+            sessionPreset = .iFrame960x540
+            aspectRatio = 16.0/9.0
+        case "iFrame1280x720":
+            sessionPreset = .iFrame1280x720
+            aspectRatio = 16.0/9.0
+        case "vga640x480":
+            sessionPreset = .vga640x480
+            aspectRatio = 4.0/3.0
+        case "cif352x288":
+            sessionPreset = .cif352x288
+            aspectRatio = 11.0/9.0
+        default://photo
+            sessionPreset = .photo
+            aspectRatio = 4.0/3.0
+        }
+    }
+    
+    /// Returns the current session preset
+    /// - Returns: Session preset as String
+    public func getSessionPresetString() -> String {
+        switch sessionPreset {
+        case .low: return "low"
+        case .high: return "high"
+        case .medium: return "medium"
+        case .inputPriority: return "inputPriority"
+        case .hd1280x720: return "hd1280x720"
+        case .hd1920x1080: return "hd1920x1080"
+        case .hd4K3840x2160: return "hd4K3840x2160"
+        case .iFrame960x540: return "iFrame960x540"
+        case .iFrame1280x720: return "iFrame1280x720"
+        case .vga640x480: return "vga640x480"
+        case .cif352x288: return "cif352x288"
+        case .photo: return "photo"
+        default: return ""
+        }
+    }
+    
+    /// Returns the current session preset
+    /// - Returns: Session preset as [AVCaptureSession.Preset](https://developer.apple.com/documentation/avfoundation/avcapturesession/preset) enum
+    public func getSessionPreset() -> AVCaptureSession.Preset {
+        return sessionPreset
+    }
+    
+    /// Get the current configuration aspect ratio
+    /// - Returns: Camera aspect ratio, eg. 4.0/3.0 (longer side divided by shorter side)
+    public func getAspectRatio() -> CGFloat{
+        return aspectRatio
+    }
 }

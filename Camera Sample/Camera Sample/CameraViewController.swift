@@ -12,6 +12,13 @@ import PharmaLedger_Camera
 import AVFoundation
 
 class CameraViewController: UIViewController, CameraEventListener, SettingsViewDelegate {
+    func onSessionPresetChanged(session_preset: String) {
+        cameraConfig?.setSessionPreset(preset: session_preset)
+        cameraConfig?.applyConfiguration()
+        readjustAspectRatio()
+        setViewConstraints(orientation: UIDevice.current.orientation)
+    }
+    
     
     //MARK: SettingsViewDelegate
     func onTorchLevelChanged(level: Float) {
@@ -39,6 +46,9 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
     //MARK: CameraEventListener
     func onCapture(imageData: Data) {
         print("captureCallback")
+        if let image = UIImage.init(data: imageData){
+            print("sessionPresets","capture size for preset \(cameraConfig?.getSessionPresetString() ?? "photo"): \(image.size)")
+        }
         if(saveMode == "files"){
             guard (imageData.savePhotoToFiles(fileName: "test") != nil) else {
                 //Something went wrong when saving the file
@@ -52,8 +62,12 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
     
     func onPreviewFrame(sampleBuffer: CMSampleBuffer) {
         guard let image:UIImage = sampleBuffer.bufferToUIImage(ciContext: ciContext) else {
-             return
-         }
+            return
+        }
+        if(lastPreviewSize != image.size){
+            lastPreviewSize = image.size
+            print("sessionPresets","Image size for preset \(cameraConfig?.getSessionPresetString() ?? "photo"): \(image.size), scale: \(image.scale)")
+        }
         DispatchQueue.main.async {
             self.cameraImagePreview?.image = image
         }
@@ -82,11 +96,12 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
     private let closeButton:UIButton = UIButton.init()
     private let settingsView:SettingsView = SettingsView.init()
     
-    private let cameraAspectRatio:CGFloat = 4.0/3.0
+    private var cameraAspectRatio:CGFloat = 4.0/3.0
     private var cameraViewHeight:CGFloat?
     private var cameraViewWidth:CGFloat?
     private var controlsHeight:CGFloat?
     public var saveMode:String = "files"
+    private var lastPreviewSize:CGSize?
     
     private let infoview:UILabel = UILabel.init()
     
@@ -122,26 +137,15 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
         //Setup the UI
         
         self.view.backgroundColor = UIColor.systemBackground
+        startCameraSession()
         
-        if(view.frame.width<view.frame.height){
-            cameraViewHeight = (view.frame.width)*cameraAspectRatio
-            cameraViewWidth = (view.frame.width)
-            controlsHeight = (view.frame.height)-cameraViewHeight!
-            controlsContainer.axis = .horizontal
-        }else{
-            cameraViewHeight = (view.frame.height)*cameraAspectRatio
-            cameraViewWidth = (view.frame.height)
-            controlsHeight = (view.frame.width)-cameraViewHeight!
-            controlsContainer.axis = .vertical
-        }
-        
+        readjustAspectRatio()
         controlsContainer.alignment = .center
         controlsContainer.distribution = .fillEqually
         controlsContainer.translatesAutoresizingMaskIntoConstraints = false
         controlsContainer.backgroundColor = UIColor.systemBackground
         
         view.addSubview(controlsContainer)
-        startCameraSession()
         
         captureButton.setImage(UIImage.init(named: "photo_camera"), for: .normal)
         captureButton.addTarget(self, action: #selector(captureButtonClick), for: .touchUpInside)
@@ -155,12 +159,6 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
         cameraToggleButton.translatesAutoresizingMaskIntoConstraints = false
         captureButton.translatesAutoresizingMaskIntoConstraints = false
         flashModeButton.translatesAutoresizingMaskIntoConstraints = false
-        
-        controlscontainer_widthconstraint = NSLayoutConstraint(item: controlsContainer, attribute: .width, relatedBy: .equal, toItem: view, attribute: .width, multiplier: 1, constant: 0)
-        controlscontainer_heightconstraint = NSLayoutConstraint(item: controlsContainer, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1, constant: controlsHeight!)
-        controlscontainer_bottomconstraint = NSLayoutConstraint(item: controlsContainer, attribute: .bottom, relatedBy: .equal, toItem: view, attribute: .bottom, multiplier: 1, constant: 0)
-        controlscontainer_leftconstraint = NSLayoutConstraint(item: controlsContainer, attribute: .left, relatedBy: .equal, toItem: view, attribute: .left, multiplier: 1, constant: 0)
-        controlscontainer_rightconstraint = NSLayoutConstraint(item: controlsContainer, attribute: .right, relatedBy: .greaterThanOrEqual, toItem: view, attribute: .right, multiplier: 1, constant: 0)
         
         infoButton.setImage(UIImage.init(named: "info"), for: .normal)
         infoButton.translatesAutoresizingMaskIntoConstraints = false
@@ -223,6 +221,7 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
         controlsContainer.addArrangedSubview(captureButton)
         controlsContainer.addArrangedSubview(cameraToggleButton)
         
+        
         setViewConstraints(orientation: UIDevice.current.orientation)
         print("camera view loaded")
     }
@@ -248,12 +247,46 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
             cameraSession = CameraSession.init(cameraEventListener: self,cameraConfiguration: cameraConfig!)
         }
         
-        //cameraImagePreview?.setNeedsUpdateConstraints()
+       
+    }
+    
+    func readjustAspectRatio(){
+        if(camerapreview_widthconstraint != nil){
+            NSLayoutConstraint.deactivate([
+                camerapreview_widthconstraint!,
+                camerapreview_heightconstraint!,
+                camerapreview_leftconstraint!,
+                camerapreview_topconstraint!,
+                controlscontainer_widthconstraint!,
+                controlscontainer_heightconstraint!,
+                controlscontainer_leftconstraint!,
+                controlscontainer_rightconstraint!,
+                controlscontainer_bottomconstraint!]
+            )
+        }
+        cameraAspectRatio = cameraConfig?.getAspectRatio() ?? 4.0/3.0
+        if(view.frame.width<view.frame.height){
+            cameraViewHeight = (view.frame.width)*cameraAspectRatio
+            cameraViewWidth = (view.frame.width)
+            controlsHeight = (view.frame.height)-cameraViewHeight!
+            controlsContainer.axis = .horizontal
+        }else{
+            cameraViewHeight = (view.frame.height)*cameraAspectRatio
+            cameraViewWidth = (view.frame.height)
+            controlsHeight = (view.frame.width)-cameraViewHeight!
+            controlsContainer.axis = .vertical
+        }
+        
         camerapreview_widthconstraint = NSLayoutConstraint(item: cameraImagePreview!, attribute: .width, relatedBy: .equal, toItem: view, attribute: .width, multiplier: 1, constant: 0)
         camerapreview_heightconstraint = NSLayoutConstraint(item: cameraImagePreview!, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1, constant: cameraViewHeight!)
         camerapreview_topconstraint = NSLayoutConstraint(item: cameraImagePreview!, attribute: .top, relatedBy: .equal, toItem: view, attribute: .top, multiplier: 1, constant: 0)
         camerapreview_leftconstraint = NSLayoutConstraint(item: cameraImagePreview!, attribute: .left, relatedBy: .equal, toItem: view, attribute: .left, multiplier: 1, constant: 0)
-       
+        
+        controlscontainer_widthconstraint = NSLayoutConstraint(item: controlsContainer, attribute: .width, relatedBy: .equal, toItem: view, attribute: .width, multiplier: 1, constant: 0)
+        controlscontainer_heightconstraint = NSLayoutConstraint(item: controlsContainer, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .notAnAttribute, multiplier: 1, constant: controlsHeight!)
+        controlscontainer_bottomconstraint = NSLayoutConstraint(item: controlsContainer, attribute: .bottom, relatedBy: .equal, toItem: view, attribute: .bottom, multiplier: 1, constant: 0)
+        controlscontainer_leftconstraint = NSLayoutConstraint(item: controlsContainer, attribute: .left, relatedBy: .equal, toItem: view, attribute: .left, multiplier: 1, constant: 0)
+        controlscontainer_rightconstraint = NSLayoutConstraint(item: controlsContainer, attribute: .right, relatedBy: .greaterThanOrEqual, toItem: view, attribute: .right, multiplier: 1, constant: 0)
     }
     
     @objc func captureButtonClick(){

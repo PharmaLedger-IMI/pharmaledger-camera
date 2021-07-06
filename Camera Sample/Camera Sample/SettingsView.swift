@@ -15,6 +15,7 @@ protocol SettingsViewDelegate {
     func onColorSpaceChanged(color_space:String)
     func onFlashModeChanged(flash_mode:String)
     func onSaveModeChanged(save_mode:String)
+    func onSessionPresetChanged(session_preset:String)
 }
 
 /// Scrollable view containing camera settings
@@ -33,6 +34,8 @@ class SettingsView:UIScrollView, UIPickerViewDelegate, UIPickerViewDataSource{
             return colorSpaceValues.count
         }else if(pickerView == saveModePicker){
             return saveModeValues.count
+        }else if(pickerView == sessionPresetPicker){
+            return sessionPresetValues.count
         }else{
             return 1
         }
@@ -45,6 +48,8 @@ class SettingsView:UIScrollView, UIPickerViewDelegate, UIPickerViewDataSource{
             return colorSpaceValues[row]
         }else if(pickerView == saveModePicker){
             return saveModeValues[row]
+        }else if(pickerView == sessionPresetPicker){
+            return sessionPresetValues[row]
         }else{
             return ""
         }
@@ -63,6 +68,9 @@ class SettingsView:UIScrollView, UIPickerViewDelegate, UIPickerViewDataSource{
             self.currentSaveMode = saveModeValues[row]
             self.settingsViewDelegate?.onSaveModeChanged(save_mode: self.currentSaveMode)
             print("current save mode: \(self.currentSaveMode)")
+        }else if(pickerView == sessionPresetPicker){
+            self.currentSessionPreset = sessionPresetValues[row]
+            self.settingsViewDelegate?.onSessionPresetChanged(session_preset: self.currentSessionPreset)
         }else{
             
         }
@@ -82,6 +90,9 @@ class SettingsView:UIScrollView, UIPickerViewDelegate, UIPickerViewDataSource{
     private let torchLevelLabel:UILabel = UILabel.init()
     private let torchLevelSlider:UISlider = UISlider.init()
     
+    private let sessionPresetLabel:UILabel = UILabel.init()
+    private let sessionPresetPicker:UIPickerView = UIPickerView.init()
+    
     private let colorSpaceValues:[String] = ["default", "sRGB", "P3_D65", "HLG_BT2020"]
     private var currentColorSpace = "default"
     
@@ -90,6 +101,20 @@ class SettingsView:UIScrollView, UIPickerViewDelegate, UIPickerViewDataSource{
     
     private let saveModeValues:[String] = ["files", "photos"]
     private var currentSaveMode = "files"
+    
+    private let sessionPresetValues:[String] = ["photo",
+                                                "low",
+                                                "medium",
+                                                "vga640x480",
+                                                "high",
+                                                "inputPriority",
+                                                "hd1280x720",
+                                                "hd1920x1080",
+                                                "hd4K3840x2160",
+                                                "iFrame960x540",
+                                                "iFrame1280x720",
+                                                "cif352x288"]
+    private var currentSessionPreset = "photo"
     
     private var torchLevel:Float = 1.0
     
@@ -139,12 +164,15 @@ class SettingsView:UIScrollView, UIPickerViewDelegate, UIPickerViewDataSource{
         torchLevelSlider.translatesAutoresizingMaskIntoConstraints = false
         saveModeLabel.translatesAutoresizingMaskIntoConstraints = false
         saveModePicker.translatesAutoresizingMaskIntoConstraints = false
+        sessionPresetLabel.translatesAutoresizingMaskIntoConstraints = false
+        sessionPresetPicker.translatesAutoresizingMaskIntoConstraints = false
         
         
         //labels
         flashModeLabel.text = "Flash mode:"
         colorSpaceLabel.text = "Color space:"
         saveModeLabel.text = "Save mode:"
+        sessionPresetLabel.text = "Session preset:"
         torchLevelLabel.text = "Torch level: \(torchLevel)"
         
         //torch level slider
@@ -161,6 +189,8 @@ class SettingsView:UIScrollView, UIPickerViewDelegate, UIPickerViewDataSource{
         colorSpacePicker.dataSource = self
         saveModePicker.delegate = self
         saveModePicker.dataSource = self
+        sessionPresetPicker.dataSource = self
+        sessionPresetPicker.delegate = self
         
         //add views to container
         containerView.addArrangedSubview(flashModeLabel)
@@ -171,6 +201,8 @@ class SettingsView:UIScrollView, UIPickerViewDelegate, UIPickerViewDataSource{
         containerView.addArrangedSubview(colorSpacePicker)
         containerView.addArrangedSubview(saveModeLabel)
         containerView.addArrangedSubview(saveModePicker)
+        containerView.addArrangedSubview(sessionPresetLabel)
+        containerView.addArrangedSubview(sessionPresetPicker)
         
         addSubview(containerView)
         containerView.translatesAutoresizingMaskIntoConstraints = false
@@ -186,6 +218,7 @@ class SettingsView:UIScrollView, UIPickerViewDelegate, UIPickerViewDataSource{
             flashmodePicker.widthAnchor.constraint(equalTo: containerView.widthAnchor, constant: widthmodifier),
             saveModePicker.widthAnchor.constraint(equalTo: containerView.widthAnchor, constant: widthmodifier),
             colorSpacePicker.widthAnchor.constraint(equalTo: containerView.widthAnchor, constant: widthmodifier),
+            sessionPresetPicker.widthAnchor.constraint(equalTo: containerView.widthAnchor, constant: widthmodifier),
         ])
     }
     

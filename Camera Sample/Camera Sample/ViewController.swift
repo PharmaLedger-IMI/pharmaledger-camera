@@ -10,6 +10,10 @@ import PharmaLedger_Camera
 import AVFoundation
 
 class ViewController: UIViewController,SettingsViewDelegate {
+    func onSessionPresetChanged(session_preset: String) {
+        cameraConfig.setSessionPreset(preset: session_preset)
+    }
+    
     func onTorchLevelChanged(level: Float) {
         cameraConfig.setTorchLevel(level: level)
     }
