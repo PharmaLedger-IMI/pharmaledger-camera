@@ -66,6 +66,7 @@ public class JsMessageHandler: CameraEventListener {
         let byteData = cgContext!.data?.assumingMemoryBound(to: UInt8.self)
         let array = Array(UnsafeMutableBufferPointer(start: byteData, count: Bpr * cgImage!.height))
         WebSocketVideoFrameServer.shared.storeFrame(frame: array)
+        WebSocketVideoFrameServer.shared.send();
     }
     
     public func onCapture(imageData: Data) {

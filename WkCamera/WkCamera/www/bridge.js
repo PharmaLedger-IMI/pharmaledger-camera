@@ -16,7 +16,6 @@ function startNativeCamera(onFrameGrabbedCallback) {
 }
 
 function stopNativeCamera() {
-    clearInterval(window.onGetFrameH)
     callNative("StopCamera")
 }
 

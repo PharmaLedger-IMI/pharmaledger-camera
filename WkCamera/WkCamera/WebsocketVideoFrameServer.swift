@@ -21,6 +21,10 @@ public class WebSocketVideoFrameServer {
     private init() {
     }
     
+    public func send() {
+        videoFrameHandler?.semaphore.signal();
+    }
+        
     public func start(completion: (() -> Void)?) {
         group = MultiThreadedEventLoopGroup(numberOfThreads: 5)
         videoFrameHandler = WebSocketVideoFrameHandler()
