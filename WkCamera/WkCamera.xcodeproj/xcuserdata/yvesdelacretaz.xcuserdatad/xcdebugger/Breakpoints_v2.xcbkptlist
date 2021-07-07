@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Bucket
+   uuid = "424DB77F-A047-4DC7-9A15-A80761CF71B1"
+   type = "1"
+   version = "2.0">
+   <Breakpoints>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "5CBD9E22-17DB-44AE-97B0-8F6656E31E5F"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "WkCamera/WebsocketVideoFrameServer.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "153"
+            endingLineNumber = "153"
+            landmarkName = "respond405(context:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "BC0CC6F0-F1E6-49A6-9348-AD69593E00C5"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "WkCamera/WebsocketVideoFrameServer.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "163"
+            endingLineNumber = "163"
+            landmarkName = "respond405(context:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "F633AF32-C501-48DA-9A44-62C1804C8FDC"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "WkCamera/WebsocketVideoFrameServer.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "149"
+            endingLineNumber = "149"
+            landmarkName = "channelRead(context:data:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "74F54FFC-4987-41F0-8435-5AC7C5CA3D2F"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "WkCamera/WebSocketVideoFrameHandler.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "107"
+            endingLineNumber = "107"
+            landmarkName = "receivedClose(context:frame:)"
+            landmarkType = "9">
+            <Locations>
+               <Location
+                  uuid = "74F54FFC-4987-41F0-8435-5AC7C5CA3D2F - bf094b56bdac692f"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "WkCamera.WebSocketVideoFrameHandler.receivedClose(context: NIO.ChannelHandlerContext, frame: NIOWebSocket.WebSocketFrame) -&gt; ()"
+                  moduleName = "WkCamera"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/yvesdelacretaz/src/pharmaledger/pharmaledger-camera/WkCamera/WkCamera/WebSocketVideoFrameHandler.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "107"
+                  endingLineNumber = "107"
+                  offsetFromSymbolStart = "940">
+               </Location>
+               <Location
+                  uuid = "74F54FFC-4987-41F0-8435-5AC7C5CA3D2F - c48073d2a503e91c"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 () -&gt; () in WkCamera.WebSocketVideoFrameHandler.receivedClose(context: NIO.ChannelHandlerContext, frame: NIOWebSocket.WebSocketFrame) -&gt; ()"
+                  moduleName = "WkCamera"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/yvesdelacretaz/src/pharmaledger/pharmaledger-camera/WkCamera/WkCamera/WebSocketVideoFrameHandler.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "108"
+                  endingLineNumber = "108"
+                  offsetFromSymbolStart = "28">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "72BBA4EF-F526-4F4B-8E21-43631545851D"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "WkCamera/JsMessageHandler.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "174"
+            endingLineNumber = "174"
+            landmarkName = "callJsAfterCameraStart()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "340F9EF0-246F-4032-A9E7-AAB5D7FC5E1A"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "WkCamera/JsMessageHandler.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "152"
+            endingLineNumber = "152"
+            landmarkName = "handleCameraStart(onCameraInitializedJsCallback:)"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "340F9EF0-246F-4032-A9E7-AAB5D7FC5E1A - b5a3d90d80791e98"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "WkCamera.JsMessageHandler.handleCameraStart(onCameraInitializedJsCallback: Swift.Optional&lt;Swift.String&gt;) -&gt; ()"
+                  moduleName = "WkCamera"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/yvesdelacretaz/src/pharmaledger/jscamera/WkCamera/WkCamera/JsMessageHandler.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "158"
+                  endingLineNumber = "158"
+                  offsetFromSymbolStart = "520">
+               </Location>
+               <Location
+                  uuid = "340F9EF0-246F-4032-A9E7-AAB5D7FC5E1A - 99499b55056a4866"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 () -&gt; () in WkCamera.JsMessageHandler.handleCameraStart(onCameraInitializedJsCallback: Swift.Optional&lt;Swift.String&gt;) -&gt; ()"
+                  moduleName = "WkCamera"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/yvesdelacretaz/src/pharmaledger/jscamera/WkCamera/WkCamera/JsMessageHandler.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "158"
+                  endingLineNumber = "158"
+                  offsetFromSymbolStart = "24">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "8BB382F7-777E-4763-9AC4-A46238A72643"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "WkCamera/JsMessageHandler.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "163"
+            endingLineNumber = "163"
+            landmarkName = "handleCameraStop()"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "5AF9C071-E900-47AA-BA89-F1B708058338"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "WkCamera/JsMessageHandler.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "66"
+            endingLineNumber = "66"
+            landmarkName = "onPreviewFrame(sampleBuffer:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+   </Breakpoints>
+</Bucket>

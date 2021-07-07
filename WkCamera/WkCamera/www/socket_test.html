@@ -1,0 +1,24 @@
+<!-- test-io-client.html -->
+<html>
+<head>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io("http://localhost:3000");
+        document.addEventListener("DOMContentLoaded", () => {
+            document.getElementById('test_btn').addEventListener('click', () => {
+                socket.on("frame", (data) => {
+                    let uint8Data = new Uint8ClampedArray(data)
+                    document.getElementById('p1').innerHTML = "R length: " + uint8Data.byteLength + ", data[0] = " + uint8Data[0];
+                }); 
+            });
+        });
+    </script>
+</head>
+<body>
+    <h2>Socket.io Test</h2>
+    <button id="test_btn">test on frame</button>
+    <div id="output">
+        <p id="p1"></p>
+    </div>
+</body>
+</html>
