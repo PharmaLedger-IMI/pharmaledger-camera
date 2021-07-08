@@ -14,34 +14,18 @@ public enum MessageNames: String, CaseIterable {
     case SayHello = "SayHelloFromSwift"
     case StartCamera = "StartCamera"
     case StopCamera = "StopCamera"
-    case GrabFrame = "GrabFrame"
 }
 
 public class JsMessageHandler: CameraEventListener {
-    public func onCameraPermissionDenied() {
-        print("Permission denied")
-    }
-    
     // MARK: public vars
     public var cameraSession: CameraSession?
     public var cameraConfiguration: CameraConfiguration?
     
-    
-    func createJsonForJavaScript(for data: [String : Any]) -> String {
-        var jsonString : String?
-        do {
-            let jsonData = try JSONSerialization.data(withJSONObject: data,       options: .prettyPrinted)
-            // here "jsonData" is the dictionary encoded in JSON data .
-            jsonString = String(data: jsonData, encoding: .utf8)!
-            
-            jsonString = jsonString?.replacingOccurrences(of: "\n", with: "").replacingOccurrences(of: "\\", with: "")
-        }  catch {
-            print(error.localizedDescription)
-        }
-        return jsonString!
+    // MARK: CameraEventListener
+    public func onCameraPermissionDenied() {
+        print("Permission denied")
     }
     
-    // MARK: CameraEventListener
     public func onPreviewFrame(sampleBuffer: CMSampleBuffer) {
         guard let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {
             print("Cannot get imageBuffer")
@@ -53,12 +37,10 @@ public class JsMessageHandler: CameraEventListener {
         let bpc = cgImage!.bitsPerComponent
         let Bpr = cgImage!.bytesPerRow
         let cgContext = CGContext(data: nil, width: cgImage!.width, height: cgImage!.height, bitsPerComponent: bpc, bytesPerRow: Bpr, space: colorspace, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
-
         cgContext?.draw(cgImage!, in: CGRect(x: 0, y: 0, width: cgImage!.width, height: cgImage!.height))
         let byteData = cgContext!.data?.assumingMemoryBound(to: UInt8.self)
         let array = Array(UnsafeMutableBufferPointer(start: byteData, count: Bpr * cgImage!.height))
-        WebSocketVideoFrameServer.shared.storeFrame(frame: array)
-        WebSocketVideoFrameServer.shared.send();
+        WebSocketVideoFrameServer.shared.sendFrame(frame: array)
     }
     
     public func onCapture(imageData: Data) {
@@ -74,14 +56,11 @@ public class JsMessageHandler: CameraEventListener {
     private var webview: WKWebView
     private var onGrabFrameJsCallBack: String?
     private let ciContext = CIContext()
-    private let swapFilter: MetalFilterSwapBandR
-    private var frameJsonString: String?
     private var onCameraInitializedJsCallback: String?
 
     // MARK: public methods
     public init(webview: WKWebView) {
         self.webview = webview
-        self.swapFilter = MetalFilterSwapBandR()
     }
     
     public func handleMessage(message: MessageNames, args: [String: AnyObject]? = nil, jsCallback: String? = nil, completion: ( (Any?) -> Void )? = nil) {
@@ -93,12 +72,6 @@ public class JsMessageHandler: CameraEventListener {
             handleCameraStart(onCameraInitializedJsCallback: args?["onInitializedJsCallback"] as? String)
         case .StopCamera:
             handleCameraStop()
-        case .GrabFrame:
-            if self.frameJsonString != nil {
-                jsonString = self.frameJsonString!
-            } else {
-                print("jsonString was nil")
-            }
         }
         if let callback = jsCallback {
             if !callback.isEmpty {

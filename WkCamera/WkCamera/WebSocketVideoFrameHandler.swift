@@ -12,13 +12,18 @@ import Foundation
 public class WebSocketVideoFrameHandler: ChannelInboundHandler {
     public typealias InboundIn = WebSocketFrame
     public typealias OutboundOut = WebSocketFrame
-
+    
     private var awaitingClose: Bool = false
     public var currentFrame: [UInt8]?
     public let semaphore = DispatchSemaphore(value: 1)
 
     public func handlerAdded(context: ChannelHandlerContext) {
+        print("handler added")
         self.sendFrame(context: context)
+    }
+    
+    public func channelActive(context: ChannelHandlerContext) {
+        print("channel active")
     }
 
     public func channelRead(context: ChannelHandlerContext, data: NIOAny) {

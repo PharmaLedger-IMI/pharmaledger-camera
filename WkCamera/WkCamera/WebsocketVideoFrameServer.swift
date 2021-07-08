@@ -18,13 +18,10 @@ public class WebSocketVideoFrameServer {
     private var upgrader: HTTPServerProtocolUpgrader?
     private var bootstrap: ServerBootstrap?
     private var channel: Channel?
+    
     private init() {
     }
     
-    public func send() {
-        videoFrameHandler?.semaphore.signal();
-    }
-        
     public func start(completion: (() -> Void)?) {
         group = MultiThreadedEventLoopGroup(numberOfThreads: 5)
         guard group != nil else {
@@ -36,11 +33,6 @@ public class WebSocketVideoFrameServer {
             print("videoFrameHandler was nil")
             return
         }
-        upgrader = NIOWebSocketServerUpgrader(shouldUpgrade: {(channel: Channel, head: HTTPRequestHead) in
-            channel.eventLoop.makeSucceededFuture(HTTPHeaders())
-        }, upgradePipelineHandler: {(channel: Channel, _: HTTPRequestHead) in
-            channel.pipeline.addHandler(self.videoFrameHandler!)
-        })
         /// TODO: find a way to get rid of http upgrade, should be smthg like the below (taken from the doc of ServerBootstrap class)
 //        bootstrap = ServerBootstrap(group: group!)
 //            .serverChannelOption(ChannelOptions.backlog, value: 256)
@@ -53,7 +45,14 @@ public class WebSocketVideoFrameServer {
 //            .childChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: 1)
 //            .childChannelOption(ChannelOptions.maxMessagesPerRead, value: 16)
 //            .childChannelOption(ChannelOptions.recvAllocator, value: AdaptiveRecvByteBufferAllocator())
+
         
+        upgrader = NIOWebSocketServerUpgrader(shouldUpgrade: {(channel: Channel, head: HTTPRequestHead) in
+            channel.eventLoop.makeSucceededFuture(HTTPHeaders())
+        }, upgradePipelineHandler: {(channel: Channel, _: HTTPRequestHead) in
+            channel.pipeline.addHandler(self.videoFrameHandler!)
+        })
+
         bootstrap = ServerBootstrap(group: group!)
             .serverChannelOption(ChannelOptions.backlog, value: 256)
             .serverChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: 1)
@@ -105,9 +104,10 @@ public class WebSocketVideoFrameServer {
         }
     }
     
-    public func storeFrame(frame: [UInt8]) {
+    public func sendFrame(frame: [UInt8]) {
         if let vfh = videoFrameHandler {
             vfh.currentFrame = frame
+            vfh.semaphore.signal()
         }
     }
 }
@@ -117,7 +117,7 @@ public class WebSocketVideoFrameServer {
 /// TODO: remove http handler and connect directly via ws://
 private final class HTTPHandler: ChannelInboundHandler, RemovableChannelHandler {
     private let websocketResponse = "" // just use this first request for upgrade
-    
+
     typealias InboundIn = HTTPServerRequestPart
     typealias OutboundOut = HTTPServerResponsePart
 
