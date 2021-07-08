@@ -27,19 +27,27 @@ public class WebSocketVideoFrameServer {
         
     public func start(completion: (() -> Void)?) {
         group = MultiThreadedEventLoopGroup(numberOfThreads: 5)
+        guard group != nil else {
+            print("group was nil")
+            return
+        }
         videoFrameHandler = WebSocketVideoFrameHandler()
+        guard videoFrameHandler != nil else {
+            print("videoFrameHandler was nil")
+            return
+        }
         upgrader = NIOWebSocketServerUpgrader(shouldUpgrade: {(channel: Channel, head: HTTPRequestHead) in
             channel.eventLoop.makeSucceededFuture(HTTPHeaders())
         }, upgradePipelineHandler: {(channel: Channel, _: HTTPRequestHead) in
             channel.pipeline.addHandler(self.videoFrameHandler!)
         })
         /// TODO: find a way to get rid of http upgrade, should be smthg like the below (taken from the doc of ServerBootstrap class)
-//        bootstrap = ServerBootstrap(group: group)
+//        bootstrap = ServerBootstrap(group: group!)
 //            .serverChannelOption(ChannelOptions.backlog, value: 256)
 //            .serverChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: 1)
 //            .childChannelInitializer({channel in
 //                channel.pipeline.addHandler(BackPressureHandler()).flatMap({() in
-//                    channel.pipeline.addHandler(WebSocketVideoFrameHandler())
+//                    channel.pipeline.addHandler(self.videoFrameHandler!)
 //                })
 //            })
 //            .childChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: 1)

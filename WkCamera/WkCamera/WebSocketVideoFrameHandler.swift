@@ -18,7 +18,6 @@ public class WebSocketVideoFrameHandler: ChannelInboundHandler {
     public let semaphore = DispatchSemaphore(value: 1)
 
     public func handlerAdded(context: ChannelHandlerContext) {
-//        self.sendTime(context: context)
         self.sendFrame(context: context)
     }
 
@@ -41,33 +40,12 @@ public class WebSocketVideoFrameHandler: ChannelInboundHandler {
             // Unknown frames are errors.
             self.closeOnError(context: context)
         }
-//        print("hello")
     }
 
     public func channelReadComplete(context: ChannelHandlerContext) {
         context.flush()
     }
 
-    private func sendTime(context: ChannelHandlerContext) {
-        guard context.channel.isActive else { return }
-
-        // We can't send if we sent a close message.
-        guard !self.awaitingClose else { return }
-
-        // We can't really check for error here, but it's also not the purpose of the
-        // example so let's not worry about it.
-        let theTime = NIODeadline.now().uptimeNanoseconds
-        var buffer = context.channel.allocator.buffer(capacity: 12)
-        buffer.writeString("\(theTime)")
-
-        let frame = WebSocketFrame(fin: true, opcode: .text, data: buffer)
-        context.writeAndFlush(self.wrapOutboundOut(frame)).map {
-            context.eventLoop.scheduleTask(in: .seconds(1), { self.sendTime(context: context) })
-        }.whenFailure { (_: Error) in
-            context.close(promise: nil)
-        }
-    }
-    
     public func sendFrame(context: ChannelHandlerContext) {
         semaphore.wait();
         guard context.channel.isActive else {
@@ -91,11 +69,6 @@ public class WebSocketVideoFrameHandler: ChannelInboundHandler {
         }.whenFailure { (_: Error) in
             context.close(promise: nil)
         }
-//        context.writeAndFlush(self.wrapOutboundOut(frame)).map {
-//            context.eventLoop.scheduleTask(in: .microseconds(Int64(1e6*1.0/25.0)), { self.sendFrame(context: context) })
-//        }.whenFailure { (_: Error) in
-//            context.close(promise: nil)
-//        }
     }
 
     private func receivedClose(context: ChannelHandlerContext, frame: WebSocketFrame) {

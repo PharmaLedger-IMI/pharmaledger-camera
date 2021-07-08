@@ -47,20 +47,12 @@ public class JsMessageHandler: CameraEventListener {
             print("Cannot get imageBuffer")
             return
         }
-        var ciImage: CIImage = .init(cvImageBuffer: imageBuffer)
-//        let resizeFilter = CIFilter(name: "CILanczosScaleTransform")!
-//        resizeFilter.setValue(ciImage, forKey: kCIInputImageKey)
-//        resizeFilter.setValue(0.2, forKey: kCIInputScaleKey)
-//        ciImage = resizeFilter.outputImage!
-        // swap R and G (because image is BGRA but js wants RGBA in imageData)
-        swapFilter.inputImage = ciImage
-        ciImage = swapFilter.outputImage()!
-        //
+        let ciImage: CIImage = .init(cvImageBuffer: imageBuffer)
         let cgImage = ciContext.createCGImage(ciImage, from: ciImage.extent)
         let colorspace = CGColorSpaceCreateDeviceRGB()
         let bpc = cgImage!.bitsPerComponent
         let Bpr = cgImage!.bytesPerRow
-        let cgContext = CGContext(data: nil, width: cgImage!.width, height: cgImage!.height, bitsPerComponent: bpc, bytesPerRow: Bpr, space: colorspace, bitmapInfo: CGBitmapInfo.byteOrder32Little.rawValue | CGImageAlphaInfo.premultipliedFirst.rawValue)
+        let cgContext = CGContext(data: nil, width: cgImage!.width, height: cgImage!.height, bitsPerComponent: bpc, bytesPerRow: Bpr, space: colorspace, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
 
         cgContext?.draw(cgImage!, in: CGRect(x: 0, y: 0, width: cgImage!.width, height: cgImage!.height))
         let byteData = cgContext!.data?.assumingMemoryBound(to: UInt8.self)
@@ -141,7 +133,6 @@ public class JsMessageHandler: CameraEventListener {
     private func handleCameraStart(onCameraInitializedJsCallback: String?) {
         self.onCameraInitializedJsCallback = onCameraInitializedJsCallback
         if self.cameraSession == nil {
-//            self.cameraSession = .init(cameraEventListener: self)
             self.cameraConfiguration = .init(flash_mode: nil, color_space: nil, session_preset: "hd1280x720", auto_orienation_enabled: false)
             self.cameraSession = .init(cameraEventListener: self, cameraConfiguration: self.cameraConfiguration!)
             return
