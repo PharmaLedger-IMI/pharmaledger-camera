@@ -11,7 +11,6 @@ import AVFoundation
 import PharmaLedger_Camera
 
 public enum MessageNames: String, CaseIterable {
-    case SayHello = "SayHelloFromSwift"
     case StartCamera = "StartCamera"
     case StopCamera = "StopCamera"
 }
@@ -64,14 +63,15 @@ public class JsMessageHandler: CameraEventListener {
     }
     
     public func handleMessage(message: MessageNames, args: [String: AnyObject]? = nil, jsCallback: String? = nil, completion: ( (Any?) -> Void )? = nil) {
+        // string used as returned argument that can be passed back to js with the callback
         var jsonString: String = ""
         switch message {
-        case .SayHello:
-            jsonString = self.handleSayHello(args: args)
         case .StartCamera:
-            handleCameraStart(onCameraInitializedJsCallback: args?["onInitializedJsCallback"] as? String)
+            handleCameraStart(onCameraInitializedJsCallback: args?["onInitializedJsCallback"] as? String, sessionPreset: args?["sessionPreset"] as! String)
+            jsonString = ""
         case .StopCamera:
             handleCameraStop()
+            jsonString = ""
         }
         if let callback = jsCallback {
             if !callback.isEmpty {
@@ -92,32 +92,12 @@ public class JsMessageHandler: CameraEventListener {
     }
     
     // MARK: private methods
-    private func handleSayHello(args: [String: AnyObject]?) -> String {
-        var mess = "Hello. Args were: <br/>"
-        guard args != nil else {
-            return mess
-        }
-        for (k, v) in args! {
-            mess = mess + "\(k): \(v) <br/>"
-        }
-        return mess
-    }
-    
-    private func handleCameraStart(onCameraInitializedJsCallback: String?) {
+    private func handleCameraStart(onCameraInitializedJsCallback: String?, sessionPreset: String) {
+        self.cameraSession = nil
         self.onCameraInitializedJsCallback = onCameraInitializedJsCallback
-        if self.cameraSession == nil {
-            self.cameraConfiguration = .init(flash_mode: nil, color_space: nil, session_preset: "hd1280x720", auto_orienation_enabled: false)
-            self.cameraSession = .init(cameraEventListener: self, cameraConfiguration: self.cameraConfiguration!)
-            return
-        }
-        if let cameraSession = cameraSession {
-            if let captureSession = cameraSession.captureSession {
-                if captureSession.isRunning == false {
-                    cameraSession.startCamera()
-                    WebSocketVideoFrameServer.shared.start(completion: { self.callJsAfterCameraStart() })
-                }
-            }
-        }
+        self.cameraConfiguration = .init(flash_mode: nil, color_space: nil, session_preset: sessionPreset, auto_orienation_enabled: false)
+        self.cameraSession = .init(cameraEventListener: self, cameraConfiguration: self.cameraConfiguration!)
+        return
     }
     
     private func handleCameraStop() {

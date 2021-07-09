@@ -1,4 +1,10 @@
 class SessionPreset {
+  
+    /**
+     * @param  {String} name SessionPresetName, must match native one
+     * @param  {number} width
+     * @param  {number} height
+     */
     constructor(name, width, height) {
         this.name = name;
         this.height = height;

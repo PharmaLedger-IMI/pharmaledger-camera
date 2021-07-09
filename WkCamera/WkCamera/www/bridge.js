@@ -9,10 +9,17 @@ function callNative(api, args, callback) {
     }
     handle.postMessage(payload)
 }
-
-function startNativeCamera(onFrameGrabbedCallback) {
+/**
+ * @param  {function} onFrameGrabbedCallback callBack for each native frame. Data are received as a blob.
+ * @param  {SessionPreset} sessionPreset one of the session presets available in DictSessionPreset
+ */
+function startNativeCamera(onFrameGrabbedCallback, sessionPreset) {
     window.onFrameGrabbedCallback = onFrameGrabbedCallback;
-    callNative("StartCamera", {"onInitializedJsCallback": onNativeCameraInitialized.name});
+    let params = {
+        "onInitializedJsCallback": onNativeCameraInitialized.name,
+        "sessionPreset": sessionPreset.name
+    }
+    callNative("StartCamera", params);
 }
 
 function stopNativeCamera() {
@@ -20,10 +27,6 @@ function stopNativeCamera() {
 }
 
 function onNativeCameraInitialized() {
-    // window.onGetFrameH = setInterval(() => {
-    //     callNative("GrabFrame", {}, onFrameGrabbed)
-    // }, 1000/25);
-    //
     var ws = new WebSocket("ws://localhost:8888");
     ws.onopen = function() {
         console.log('ws opened');

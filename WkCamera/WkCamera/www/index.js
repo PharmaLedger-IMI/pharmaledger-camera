@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
     w = canvasgl.clientWidth;
     h = canvasgl.clientHeight;
 
-    sessionPreset = DictSessionPreset.hd1280x720;
+    sessionPreset = DictSessionPreset.vga640x480;
 
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(75, w/h, 0.1, 10000);
@@ -54,7 +54,7 @@ document.addEventListener("DOMContentLoaded", () => {
     scene.add(plane);
     
     document.getElementById('startCameraButton').addEventListener('click', function(e) {
-        startNativeCamera(onFrameGrabbed)
+        startNativeCamera(onFrameGrabbed, sessionPreset)
     })
     document.getElementById('stopCameraButton').addEventListener('click', function(e) {
         stopNativeCamera();
@@ -76,7 +76,9 @@ function animate() {
     window.requestAnimationFrame(() => animate());
     renderer.render(scene, camera);
 }
-
+/**
+ * @param  {Blob} aBlob data coming from native camera. Can be used to create a new Uin8Array
+ */
 function onFrameGrabbed(aBlob) {
     var frame = new Uint8Array(aBlob);
     material.map = new THREE.DataTexture(frame, sessionPreset.height, sessionPreset.width, formatTexture, THREE.UnsignedByteType);
