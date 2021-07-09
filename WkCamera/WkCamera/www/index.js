@@ -27,7 +27,22 @@ document.addEventListener("DOMContentLoaded", () => {
     w = canvasgl.clientWidth;
     h = canvasgl.clientHeight;
 
-    sessionPreset = DictSessionPreset.vga640x480;
+    select_preset = document.getElementById('select_preset')
+    let i = 0
+    for (preset_key of Object.keys(DictSessionPreset)) {
+        let preset = DictSessionPreset[preset_key]
+        var p_i = new Option(preset.name, preset.name)
+        select_preset.options.add(p_i);
+        i++;
+    }
+    for (let i = 0; i < select_preset.options.length; i++) {
+        if (select_preset.options[i].value === 'vga640x480') {
+            select_preset.selectedIndex = i;
+            break;
+        }
+    }
+    sessionPreset = getSessionPresetFromName(select_preset.options[select_preset.selectedIndex].value);
+    document.getElementById('status_test').innerHTML = sessionPreset.name;
 
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(75, w/h, 0.1, 10000);
@@ -41,7 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
     controls.enableRotate = false;
 
     const dataTexture = new Uint8Array(sessionPreset.width*sessionPreset.height*bytePerChannel);
-    for (var i=0; i<sessionPreset.width*sessionPreset.height*bytePerChannel; i++)
+    for (let i=0; i<sessionPreset.width*sessionPreset.height*bytePerChannel; i++)
         dataTexture[i] = 128;
     const frameTexture = new THREE.DataTexture(dataTexture, sessionPreset.height, sessionPreset.width, formatTexture, THREE.UnsignedByteType);
     frameTexture.needsUpdate = true;
@@ -54,15 +69,26 @@ document.addEventListener("DOMContentLoaded", () => {
     scene.add(plane);
     
     document.getElementById('startCameraButton').addEventListener('click', function(e) {
+        document.getElementById('select_preset').disabled = true;
         startNativeCamera(onFrameGrabbed, sessionPreset)
     })
     document.getElementById('stopCameraButton').addEventListener('click', function(e) {
         stopNativeCamera();
+        document.getElementById('select_preset').disabled = false;
     })
 
     fpshtml = document.getElementById('fps');
     animate();
 });
+
+function getSessionPresetFromName(name) {
+    for (preset_key of Object.keys(DictSessionPreset)) {
+        let preset = DictSessionPreset[preset_key]
+        if (preset.name === name) {
+            return preset
+        }
+    }
+}
 
 function computeSize() {
     w = canvasgl.clientWidth;
@@ -76,6 +102,12 @@ function animate() {
     window.requestAnimationFrame(() => animate());
     renderer.render(scene, camera);
 }
+
+function ChangePresetList() {
+    sessionPreset = getSessionPresetFromName(select_preset.options[select_preset.selectedIndex].value);
+    document.getElementById('status_test').innerHTML = sessionPreset.name;
+}
+
 /**
  * @param  {Blob} aBlob data coming from native camera. Can be used to create a new Uin8Array
  */

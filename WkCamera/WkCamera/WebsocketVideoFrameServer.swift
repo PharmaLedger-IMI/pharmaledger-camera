@@ -90,18 +90,18 @@ public class WebSocketVideoFrameServer {
     }
     
     public func stop() {
-        do {
-            try group!.syncShutdownGracefully()
-            print("websocket server stopped")
-            channel = nil
-            bootstrap = nil
-            upgrader = nil
-            videoFrameHandler = nil
-            group = nil
-            
-        } catch {
-            print(error)
-        }
+        group!.shutdownGracefully({err in
+            if let error = err {
+                print(error)
+            } else {
+                print("websocket server stopped")
+            }
+            self.channel = nil
+            self.bootstrap = nil
+            self.upgrader = nil
+            self.videoFrameHandler = nil
+            self.group = nil
+        })
     }
     
     public func sendFrame(frame: [UInt8]) {

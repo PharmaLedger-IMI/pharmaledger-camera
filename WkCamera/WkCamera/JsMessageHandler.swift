@@ -93,7 +93,6 @@ public class JsMessageHandler: CameraEventListener {
     
     // MARK: private methods
     private func handleCameraStart(onCameraInitializedJsCallback: String?, sessionPreset: String) {
-        self.cameraSession = nil
         self.onCameraInitializedJsCallback = onCameraInitializedJsCallback
         self.cameraConfiguration = .init(flash_mode: nil, color_space: nil, session_preset: sessionPreset, auto_orienation_enabled: false)
         self.cameraSession = .init(cameraEventListener: self, cameraConfiguration: self.cameraConfiguration!)
@@ -109,6 +108,7 @@ public class JsMessageHandler: CameraEventListener {
                 }
             }
         }
+        self.cameraSession = nil
     }
     
     private func callJsAfterCameraStart() {
