@@ -10,26 +10,7 @@ import AVFoundation
 import UIKit
 import WebKit
 
-public class CameraWebViewController: UIViewController, WKScriptMessageHandler {
-    // MARK: WKScriptMessageHandler
-    public func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
-        var args: [String: AnyObject]? = nil
-        var jsCallback: String? = nil
-        if let messageName = MessageNames(rawValue: message.name) {
-            if let bodyDict = message.body as? [String: AnyObject] {
-                args = bodyDict["args"] as? [String: AnyObject]
-                jsCallback = bodyDict["callback"] as? String
-            }
-            messageHandler?.handleMessage(message: messageName, args: args, jsCallback: jsCallback, completion: {result in
-                if let result = result {
-                    print("result from js: \(result)")
-                }
-            })
-        } else {
-            print("Unrecognized message")
-        }
-    }
-    
+public class CameraWebViewController: UIViewController /*, WKScriptMessageHandler*/ {
     // MARK: Privates
     private var webview: WKWebView?
     private let htmlBootstrap = "www/bootstrap.html"
@@ -37,15 +18,9 @@ public class CameraWebViewController: UIViewController, WKScriptMessageHandler {
     private var messageHandler: JsMessageHandler?
     
     func load() {
-        let configuration = WKWebViewConfiguration()
-        configuration.userContentController = WKUserContentController()
-        // add all messages defined in MessageNames
-        for m in MessageNames.allCases {
-            configuration.userContentController.add(self, name: m.rawValue)
-        }
-        self.webview = WKWebView(frame: self.view.frame, configuration: configuration)
+        self.messageHandler = JsMessageHandler()
+        self.webview = messageHandler?.getWebview(frame: self.view.frame)
         if let webview = webview {
-            self.messageHandler = JsMessageHandler(webview: webview)
             let fileUrl = URL(fileURLWithPath: Bundle.main.path(forResource: self.htmlBootstrap, ofType: nil)!)
             webview.loadFileURL(fileUrl, allowingReadAccessTo: fileUrl.deletingLastPathComponent())
             self.view.addSubview(webview)

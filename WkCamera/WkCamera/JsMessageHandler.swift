@@ -15,10 +15,29 @@ public enum MessageNames: String, CaseIterable {
     case StopCamera = "StopCamera"
 }
 
-public class JsMessageHandler: CameraEventListener {
+public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHandler {
     // MARK: public vars
     public var cameraSession: CameraSession?
     public var cameraConfiguration: CameraConfiguration?
+    
+    // MARK: WKScriptMessageHandler
+    public func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
+        var args: [String: AnyObject]? = nil
+        var jsCallback: String? = nil
+        if let messageName = MessageNames(rawValue: message.name) {
+            if let bodyDict = message.body as? [String: AnyObject] {
+                args = bodyDict["args"] as? [String: AnyObject]
+                jsCallback = bodyDict["callback"] as? String
+            }
+            self.handleMessage(message: messageName, args: args, jsCallback: jsCallback, completion: {result in
+                if let result = result {
+                    print("result from js: \(result)")
+                }
+            })
+        } else {
+            print("Unrecognized message")
+        }
+    }
     
     // MARK: CameraEventListener
     public func onCameraPermissionDenied() {
@@ -52,17 +71,32 @@ public class JsMessageHandler: CameraEventListener {
     }
     
     // MARK: privates vars
-    private var webview: WKWebView
+    private var webview: WKWebView? = nil
     private var onGrabFrameJsCallBack: String?
     private let ciContext = CIContext()
     private var onCameraInitializedJsCallback: String?
 
     // MARK: public methods
-    public init(webview: WKWebView) {
-        self.webview = webview
+    public override init() {
+        
+    }
+    
+    public func getWebview(frame: CGRect) -> WKWebView {
+        let configuration = WKWebViewConfiguration()
+        configuration.userContentController = WKUserContentController()
+        // add all messages defined in MessageNames
+        for m in MessageNames.allCases {
+            configuration.userContentController.add(self, name: m.rawValue)
+        }
+        self.webview = WKWebView(frame: frame, configuration: configuration)
+        return self.webview!
     }
     
     public func handleMessage(message: MessageNames, args: [String: AnyObject]? = nil, jsCallback: String? = nil, completion: ( (Any?) -> Void )? = nil) {
+        guard let webview = self.webview else {
+            print("WebView was nil")
+            return
+        }
         // string used as returned argument that can be passed back to js with the callback
         var jsonString: String = ""
         switch message {
@@ -77,7 +111,7 @@ public class JsMessageHandler: CameraEventListener {
             if !callback.isEmpty {
                 DispatchQueue.main.async {
                     let js = "\(callback)(\(jsonString))"
-                    self.webview.evaluateJavaScript(js, completionHandler: {result, error in
+                    webview.evaluateJavaScript(js, completionHandler: {result, error in
                         guard error == nil else {
                             print(error!)
                             return
@@ -113,8 +147,12 @@ public class JsMessageHandler: CameraEventListener {
     
     private func callJsAfterCameraStart() {
         if let jsCallback = self.onCameraInitializedJsCallback {
+            guard let webview = self.webview else {
+                print("WebView was nil")
+                return
+            }
             DispatchQueue.main.async {
-                self.webview.evaluateJavaScript("\(jsCallback)(\(WebSocketVideoFrameServer.shared.serverPort))", completionHandler: {result, error in
+                webview.evaluateJavaScript("\(jsCallback)(\(WebSocketVideoFrameServer.shared.serverPort))", completionHandler: {result, error in
                     guard error == nil else {
                         print(error!)
                         return

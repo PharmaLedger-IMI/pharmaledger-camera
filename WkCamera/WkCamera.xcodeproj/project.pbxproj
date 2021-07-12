@@ -22,9 +22,7 @@
 		D2DA5A242693A6E2006B8C4E /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D2DA5A222693A6E2006B8C4E /* LaunchScreen.storyboard */; };
 		D2DA5A382693A804006B8C4E /* CameraWebViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2DA5A342693A804006B8C4E /* CameraWebViewController.swift */; };
 		D2DA5A392693A804006B8C4E /* CameraWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2DA5A362693A804006B8C4E /* CameraWebView.swift */; };
-		D2DA5A3A2693A804006B8C4E /* MetalFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2DA5A372693A804006B8C4E /* MetalFilter.swift */; };
 		D2DA5A3C2693A940006B8C4E /* JsMessageHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2DA5A3B2693A940006B8C4E /* JsMessageHandler.swift */; };
-		D2DA5A422693A9C9006B8C4E /* swapBandR.metal in Sources */ = {isa = PBXBuildFile; fileRef = D2DA5A412693A9C9006B8C4E /* swapBandR.metal */; };
 		D2DA5A462693AB3F006B8C4E /* www in Resources */ = {isa = PBXBuildFile; fileRef = D2DA5A452693AB3F006B8C4E /* www */; };
 /* End PBXBuildFile section */
 
@@ -66,9 +64,7 @@
 		D2DA5A252693A6E2006B8C4E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D2DA5A342693A804006B8C4E /* CameraWebViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CameraWebViewController.swift; sourceTree = "<group>"; };
 		D2DA5A362693A804006B8C4E /* CameraWebView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CameraWebView.swift; sourceTree = "<group>"; };
-		D2DA5A372693A804006B8C4E /* MetalFilter.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MetalFilter.swift; sourceTree = "<group>"; };
 		D2DA5A3B2693A940006B8C4E /* JsMessageHandler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JsMessageHandler.swift; sourceTree = "<group>"; };
-		D2DA5A412693A9C9006B8C4E /* swapBandR.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = swapBandR.metal; sourceTree = "<group>"; };
 		D2DA5A452693AB3F006B8C4E /* www */ = {isa = PBXFileReference; lastKnownFileType = folder; path = www; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -117,17 +113,15 @@
 			isa = PBXGroup;
 			children = (
 				D2DA5A452693AB3F006B8C4E /* www */,
-				D2DA5A3B2693A940006B8C4E /* JsMessageHandler.swift */,
 				D2DA5A362693A804006B8C4E /* CameraWebView.swift */,
 				D2DA5A342693A804006B8C4E /* CameraWebViewController.swift */,
-				D2DA5A372693A804006B8C4E /* MetalFilter.swift */,
-				D2DA5A412693A9C9006B8C4E /* swapBandR.metal */,
 				D2DA5A172693A6E1006B8C4E /* AppDelegate.swift */,
 				D2DA5A192693A6E1006B8C4E /* SceneDelegate.swift */,
 				D2DA5A1B2693A6E1006B8C4E /* ContentView.swift */,
 				D2DA5A1D2693A6E2006B8C4E /* Assets.xcassets */,
 				D2DA5A222693A6E2006B8C4E /* LaunchScreen.storyboard */,
 				D2DA5A252693A6E2006B8C4E /* Info.plist */,
+				D2DA5A3B2693A940006B8C4E /* JsMessageHandler.swift */,
 				D2C0B4972694441900946074 /* WebsocketVideoFrameServer.swift */,
 				D2C0B4A326945ADE00946074 /* WebSocketVideoFrameHandler.swift */,
 				D2DA5A1F2693A6E2006B8C4E /* Preview Content */,
@@ -247,8 +241,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				D2DA5A392693A804006B8C4E /* CameraWebView.swift in Sources */,
-				D2DA5A3A2693A804006B8C4E /* MetalFilter.swift in Sources */,
-				D2DA5A422693A9C9006B8C4E /* swapBandR.metal in Sources */,
 				D2C0B4982694441900946074 /* WebsocketVideoFrameServer.swift in Sources */,
 				D2DA5A182693A6E1006B8C4E /* AppDelegate.swift in Sources */,
 				D2DA5A1A2693A6E1006B8C4E /* SceneDelegate.swift in Sources */,
