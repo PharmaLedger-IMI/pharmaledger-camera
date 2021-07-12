@@ -26,8 +26,8 @@ function stopNativeCamera() {
     callNative("StopCamera")
 }
 
-function onNativeCameraInitialized() {
-    var ws = new WebSocket("ws://localhost:8888");
+function onNativeCameraInitialized(wsPort) {
+    var ws = new WebSocket(`ws://localhost:${wsPort}`);
     ws.onopen = function() {
         console.log('ws opened');
     }

@@ -114,7 +114,7 @@ public class JsMessageHandler: CameraEventListener {
     private func callJsAfterCameraStart() {
         if let jsCallback = self.onCameraInitializedJsCallback {
             DispatchQueue.main.async {
-                self.webview.evaluateJavaScript("\(jsCallback)()", completionHandler: {result, error in
+                self.webview.evaluateJavaScript("\(jsCallback)(\(WebSocketVideoFrameServer.shared.serverPort))", completionHandler: {result, error in
                     guard error == nil else {
                         print(error!)
                         return

@@ -18,6 +18,7 @@ public class WebSocketVideoFrameServer {
     private var upgrader: HTTPServerProtocolUpgrader?
     private var bootstrap: ServerBootstrap?
     private var channel: Channel?
+    private var port = 0
     
     private init() {
     }
@@ -33,20 +34,7 @@ public class WebSocketVideoFrameServer {
             print("videoFrameHandler was nil")
             return
         }
-        /// TODO: find a way to get rid of http upgrade, should be smthg like the below (taken from the doc of ServerBootstrap class)
-//        bootstrap = ServerBootstrap(group: group!)
-//            .serverChannelOption(ChannelOptions.backlog, value: 256)
-//            .serverChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: 1)
-//            .childChannelInitializer({channel in
-//                channel.pipeline.addHandler(BackPressureHandler()).flatMap({() in
-//                    channel.pipeline.addHandler(self.videoFrameHandler!)
-//                })
-//            })
-//            .childChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: 1)
-//            .childChannelOption(ChannelOptions.maxMessagesPerRead, value: 16)
-//            .childChannelOption(ChannelOptions.recvAllocator, value: AdaptiveRecvByteBufferAllocator())
-
-        
+        /// TODO: find a way to get rid of http upgrade
         upgrader = NIOWebSocketServerUpgrader(shouldUpgrade: {(channel: Channel, head: HTTPRequestHead) in
             channel.eventLoop.makeSucceededFuture(HTTPHeaders())
         }, upgradePipelineHandler: {(channel: Channel, _: HTTPRequestHead) in
@@ -72,8 +60,10 @@ public class WebSocketVideoFrameServer {
             // Enable SO_REUSEADDR for the accepted Channels
             .childChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: 1)
         
+        
+        port = WebSocketVideoFrameServer.findFreePort()
         if let bootstrap = bootstrap {
-            let channelEvtFutureLoop = bootstrap.bind(host: "localhost", port: 8888)
+            let channelEvtFutureLoop = bootstrap.bind(host: "localhost", port: port)
             channelEvtFutureLoop.whenSuccess({channel in
                 self.channel = channel
                 print("server started at \(channel.localAddress!)")
@@ -88,6 +78,8 @@ public class WebSocketVideoFrameServer {
             print("Failed to create server bootstrap")
         }
     }
+    
+    public var serverPort: Int { return port }
     
     public func stop() {
         group!.shutdownGracefully({err in
@@ -109,6 +101,72 @@ public class WebSocketVideoFrameServer {
             vfh.currentFrame = frame
             vfh.semaphore.signal()
         }
+    }
+    
+    public static func findFreePort() -> Int {
+        var port: UInt16 = 8000;
+        
+        let socketFD = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        if socketFD == -1 {
+            //print("Error creating socket: \(errno)")
+            return Int(port);
+        }
+        
+        var hints = addrinfo(
+            ai_flags: AI_PASSIVE,
+            ai_family: AF_INET,
+            ai_socktype: SOCK_STREAM,
+            ai_protocol: 0,
+            ai_addrlen: 0,
+            ai_canonname: nil,
+            ai_addr: nil,
+            ai_next: nil
+        );
+        
+        var addressInfo: UnsafeMutablePointer<addrinfo>? = nil;
+        var result = getaddrinfo(nil, "0", &hints, &addressInfo);
+        if result != 0 {
+            //print("Error getting address info: \(errno)")
+            close(socketFD);
+            
+            return Int(port);
+        }
+        
+        result = Darwin.bind(socketFD, addressInfo!.pointee.ai_addr, socklen_t(addressInfo!.pointee.ai_addrlen));
+        if result == -1 {
+            //print("Error binding socket to an address: \(errno)")
+            close(socketFD);
+            
+            return Int(port);
+        }
+        
+        result = Darwin.listen(socketFD, 1);
+        if result == -1 {
+            //print("Error setting socket to listen: \(errno)")
+            close(socketFD);
+            
+            return Int(port);
+        }
+        
+        var addr_in = sockaddr_in();
+        addr_in.sin_len = UInt8(MemoryLayout.size(ofValue: addr_in));
+        addr_in.sin_family = sa_family_t(AF_INET);
+        
+        var len = socklen_t(addr_in.sin_len);
+        result = withUnsafeMutablePointer(to: &addr_in, {
+            $0.withMemoryRebound(to: sockaddr.self, capacity: 1) {
+                return Darwin.getsockname(socketFD, $0, &len);
+            }
+        });
+        
+        if result == 0 {
+            port = addr_in.sin_port;
+        }
+        
+        Darwin.shutdown(socketFD, SHUT_RDWR);
+        close(socketFD);
+        
+        return Int(port);
     }
 }
 
