@@ -25,6 +25,12 @@ function startNativeCamera(onFrameGrabbedCallback, sessionPreset) {
 function stopNativeCamera() {
     callNative("StopCamera")
 }
+/**
+ * @param  {function} onCaptureCallback callback reached when the picture is taken
+ */
+function takePictureNativeCamera(onCaptureCallback) {
+    callNative("TakePicture", {"onCaptureJsCallback": onCaptureCallback.name});
+}
 
 function onNativeCameraInitialized(wsPort) {
     var ws = new WebSocket(`ws://localhost:${wsPort}`);

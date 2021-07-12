@@ -77,6 +77,10 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById('select_preset').disabled = false;
     })
 
+    document.getElementById('takePictureButton').addEventListener('click', function(e) {
+        takePictureNativeCamera(onPictureTaken)
+    });
+
     fpshtml = document.getElementById('fps');
     animate();
 });
@@ -117,4 +121,9 @@ function onFrameGrabbed(aBlob) {
     material.map.flipY = true;
     material.needsUpdate = true;
     stats.update();
+}
+
+function onPictureTaken(base64ImageData) {
+    console.log(`Inside onPictureTaken`)
+    document.getElementById('snapshotImage').src = base64ImageData
 }

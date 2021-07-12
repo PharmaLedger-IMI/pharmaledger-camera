@@ -13,6 +13,7 @@ import PharmaLedger_Camera
 public enum MessageNames: String, CaseIterable {
     case StartCamera = "StartCamera"
     case StopCamera = "StopCamera"
+    case TakePicture = "TakePicture"
 }
 
 public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHandler {
@@ -62,7 +63,26 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
     }
     
     public func onCapture(imageData: Data) {
-        /// TODO
+        print("captureCallback")
+//        if let image = UIImage.init(data: imageData){
+//            print("image acquired \(image.size.width)x\(image.size.height)")
+//        }
+        if let jsCallback = self.onCaptureJsCallback {
+            guard let webview = self.webview else {
+                print("WebView was nil")
+                return
+            }
+            let base64 = "data:image/jpeg;base64, " + imageData.base64EncodedString()
+            let js = "\(jsCallback)(\"\(base64)\")"
+            DispatchQueue.main.async {
+                webview.evaluateJavaScript(js, completionHandler: {result, error in
+                    guard error == nil else {
+                        print(error!)
+                        return
+                    }
+                })
+            }
+        }
     }
     
     public func onCameraInitialized() {
@@ -75,6 +95,7 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
     private var onGrabFrameJsCallBack: String?
     private let ciContext = CIContext()
     private var onCameraInitializedJsCallback: String?
+    private var onCaptureJsCallback: String?
 
     // MARK: public methods
     public override init() {
@@ -106,6 +127,8 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
         case .StopCamera:
             handleCameraStop()
             jsonString = ""
+        case .TakePicture:
+            handleTakePicture(onCaptureJsCallback: args?["onCaptureJsCallback"] as? String)
         }
         if let callback = jsCallback {
             if !callback.isEmpty {
@@ -143,6 +166,11 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
             }
         }
         self.cameraSession = nil
+    }
+    
+    private func handleTakePicture(onCaptureJsCallback: String?) {
+        self.onCaptureJsCallback = onCaptureJsCallback
+        self.cameraSession?.takePicture()
     }
     
     private func callJsAfterCameraStart() {

@@ -4,3 +4,7 @@
 }
 
 .top-buffer { margin-top:10px; }
+
+#snapshotImage {
+    width: 100%;
+}

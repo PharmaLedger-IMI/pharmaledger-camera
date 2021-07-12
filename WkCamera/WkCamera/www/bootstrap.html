@@ -18,7 +18,7 @@
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 </head>
 <body>
-<h1>Camera Test</h1>
+<h2>Camera Test</h2>
 
 <div class="container-fluid">
     <div class="row">
@@ -27,10 +27,13 @@
             </select>
         </div>
         <div class="col">
-            <button type="button" class="btn btn-primary" id='startCameraButton'>Start</button>
+            <button type="button" class="btn btn-primary btn-sm" id='startCameraButton'>Start</button>
         </div>
         <div class="col">
-            <button type="button" class="btn btn-danger" id='stopCameraButton'>Stop</button><br/>
+            <button type="button" class="btn btn-danger btn-sm" id='stopCameraButton'>Stop</button><br/>
+        </div>
+        <div class="col">
+            <button type="button" class="btn btn-primary btn-sm" id="takePictureButton" >Picture</button>
         </div>
     </div>
     <div class="row top-buffer">
@@ -38,6 +41,9 @@
     </div>
     <div class="row top-buffer">
         <p id='status_test'>Test Text</p>
+    </div>
+    <div class="row top-buffer">
+        <img id='snapshotImage'/>
     </div>
 </div>
 
