@@ -8,6 +8,7 @@ stats.showPanel( 0 ); // fps
 var controls;
 const bytePerChannel = 4;
 var formatTexture;
+var flashMode = 'off'
 
 document.addEventListener("DOMContentLoaded", () => {
     // FPS
@@ -70,7 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
     
     document.getElementById('startCameraButton').addEventListener('click', function(e) {
         document.getElementById('select_preset').disabled = true;
-        startNativeCamera(onFrameGrabbed, sessionPreset)
+        startNativeCamera(onFrameGrabbed, sessionPreset, flashMode)
     })
     document.getElementById('stopCameraButton').addEventListener('click', function(e) {
         stopNativeCamera();
@@ -83,7 +84,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
     fpshtml = document.getElementById('fps');
     animate();
+
+    document.getElementById('flashButton').addEventListener('click', function(e) {
+        switch (flashMode) {
+            case 'off':
+                flashMode = 'flash';
+                break;
+            case 'flash':
+                flashMode = 'torch';
+                break;
+            case 'torch':
+                flashMode = 'off';
+                break;
+            default:
+                break;
+        }
+        document.getElementById('flashButton').innerHTML = `T ${flashMode}`;
+        setFlashModeNativeCamera(flashMode);
+    });
 });
+
+stop
 
 function getSessionPresetFromName(name) {
     for (preset_key of Object.keys(DictSessionPreset)) {

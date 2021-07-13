@@ -14,6 +14,7 @@ public enum MessageNames: String, CaseIterable {
     case StartCamera = "StartCamera"
     case StopCamera = "StopCamera"
     case TakePicture = "TakePicture"
+    case SetFlashMode = "SetFlashMode"
 }
 
 public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHandler {
@@ -122,13 +123,17 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
         var jsonString: String = ""
         switch message {
         case .StartCamera:
-            handleCameraStart(onCameraInitializedJsCallback: args?["onInitializedJsCallback"] as? String, sessionPreset: args?["sessionPreset"] as! String)
+            handleCameraStart(onCameraInitializedJsCallback: args?["onInitializedJsCallback"] as? String,
+                              sessionPreset: args?["sessionPreset"] as! String,
+                              flash_mode: args?["flashMode"] as? String)
             jsonString = ""
         case .StopCamera:
             handleCameraStop()
             jsonString = ""
         case .TakePicture:
             handleTakePicture(onCaptureJsCallback: args?["onCaptureJsCallback"] as? String)
+        case .SetFlashMode:
+            handleSetFlashMode(mode: args?["mode"] as? String)
         }
         if let callback = jsCallback {
             if !callback.isEmpty {
@@ -149,9 +154,9 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
     }
     
     // MARK: private methods
-    private func handleCameraStart(onCameraInitializedJsCallback: String?, sessionPreset: String) {
+    private func handleCameraStart(onCameraInitializedJsCallback: String?, sessionPreset: String, flash_mode: String?) {
         self.onCameraInitializedJsCallback = onCameraInitializedJsCallback
-        self.cameraConfiguration = .init(flash_mode: nil, color_space: nil, session_preset: sessionPreset, auto_orienation_enabled: false)
+        self.cameraConfiguration = .init(flash_mode: flash_mode, color_space: nil, session_preset: sessionPreset, auto_orienation_enabled: false)
         self.cameraSession = .init(cameraEventListener: self, cameraConfiguration: self.cameraConfiguration!)
         return
     }
@@ -171,6 +176,13 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
     private func handleTakePicture(onCaptureJsCallback: String?) {
         self.onCaptureJsCallback = onCaptureJsCallback
         self.cameraSession?.takePicture()
+    }
+    
+    private func handleSetFlashMode(mode: String?) {
+        guard let mode = mode, let cameraConfiguration = cameraConfiguration else {
+            return
+        }
+        cameraConfiguration.setFlashConfiguration(flash_mode: mode)
     }
     
     private func callJsAfterCameraStart() {
