@@ -100,7 +100,6 @@ public class WebSocketVideoFrameServer {
         if let vfh = videoFrameHandler {
             if let frame = frame {
                 vfh.currentFrame = frame
-                vfh.semaphore.signal()
             }
         }
     }
