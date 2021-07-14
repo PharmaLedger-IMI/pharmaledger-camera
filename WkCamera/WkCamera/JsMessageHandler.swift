@@ -9,6 +9,7 @@ import Foundation
 import WebKit
 import AVFoundation
 import PharmaLedger_Camera
+import Accelerate
 
 public enum MessageNames: String, CaseIterable {
     case StartCamera = "StartCamera"
@@ -46,13 +47,15 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
         print("Permission denied")
     }
     
-    private var dataBuffer: UnsafeMutableRawPointer? = nil
+    private var dataBufferRGBA: UnsafeMutableRawPointer? = nil
+    private var dataBufferRGB: UnsafeMutableRawPointer? = nil
+    private var dataBufferYUV: UnsafeMutableRawPointer? = nil
     public func onPreviewFrame(sampleBuffer: CMSampleBuffer) {
         guard let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {
             print("Cannot get imageBuffer")
             return
         }
-        let data = prepareRGBAData(imageBuffer: imageBuffer)
+        let data = prepareRGBData(imageBuffer: imageBuffer)
 //        let data = prepareYUVData(img: imageBuffer)
         if let data = data {
             WebSocketVideoFrameServer.shared.sendFrame(frame: data)
@@ -76,20 +79,20 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
         let  yBuf = CVPixelBufferGetBaseAddressOfPlane(img, 0)!
         let uvBuf = CVPixelBufferGetBaseAddressOfPlane(img, 1)!
         
-        if dataBuffer == nil {
-            dataBuffer = malloc(yRow*yHeight+uvRow*uvHeight)
+        if dataBufferYUV == nil {
+            dataBufferYUV = malloc(yRow*yHeight+uvRow*uvHeight)
         }
-        memcpy(dataBuffer!, yBuf, yRow*yHeight)
-        let offset = dataBuffer!.assumingMemoryBound(to: UInt8.self).advanced(by: yRow*yHeight)
+        memcpy(dataBufferYUV!, yBuf, yRow*yHeight)
+        let offset = dataBufferYUV!.assumingMemoryBound(to: UInt8.self).advanced(by: yRow*yHeight)
         memcpy(offset, uvBuf, uvRow*uvHeight)
-        let data = Data(bytesNoCopy: dataBuffer!, count: yRow*yHeight+uvRow*uvHeight, deallocator: .none)
+        let data = Data(bytesNoCopy: dataBufferYUV!, count: yRow*yHeight+uvRow*uvHeight, deallocator: .none)
         
         CVPixelBufferUnlockBaseAddress(img, flag)
         
         return data
     }
     
-    public func prepareRGBAData(imageBuffer: CVImageBuffer) -> Data? {
+    public func prepareRGBData(imageBuffer: CVImageBuffer) -> Data? {
         guard cameraSession != nil else {
             return nil
         }
@@ -98,13 +101,28 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
         let colorspace = CGColorSpaceCreateDeviceRGB()
         let bpc = cgImage!.bitsPerComponent
         let Bpr = cgImage!.bytesPerRow
-        if dataBuffer == nil {
-            dataBuffer = malloc(Bpr * cgImage!.height)
+        if dataBufferRGBA == nil {
+            dataBufferRGBA = malloc(Bpr * cgImage!.height)
         }
-        let cgContext = CGContext(data: dataBuffer!
+        if dataBufferRGB == nil {
+            dataBufferRGB = malloc(cgImage!.width*3 * cgImage!.height)
+        }
+        let cgContext = CGContext(data: dataBufferRGBA!
                                   , width: cgImage!.width, height: cgImage!.height, bitsPerComponent: bpc, bytesPerRow: Bpr, space: colorspace, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
         cgContext?.draw(cgImage!, in: CGRect(x: 0, y: 0, width: cgImage!.width, height: cgImage!.height))
-        let data = Data(bytesNoCopy: dataBuffer!, count: Bpr * cgImage!.height, deallocator: .none)
+        var inBuffer = vImage_Buffer(
+            data: dataBufferRGBA!,
+            height: vImagePixelCount(cgImage!.height),
+            width: vImagePixelCount(cgImage!.width),
+            rowBytes: cgImage!.bytesPerRow)
+        var outBuffer = vImage_Buffer(
+            data: dataBufferRGB,
+            height: vImagePixelCount(cgImage!.height),
+            width: vImagePixelCount(cgImage!.width),
+            rowBytes: 3*cgImage!.width)
+        vImageConvert_RGBA8888toRGB888(&inBuffer, &outBuffer, UInt32(kvImageNoFlags))
+        
+        let data = Data(bytesNoCopy: dataBufferRGB!, count: 3*cgImage!.width * cgImage!.height, deallocator: .none)
         return data
     }
     
@@ -216,9 +234,17 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
             }
         }
         self.cameraSession = nil
-        if dataBuffer != nil {
-            free(dataBuffer!)
-            dataBuffer = nil
+        if dataBufferRGBA != nil {
+            free(dataBufferRGBA!)
+            dataBufferRGBA = nil
+        }
+        if dataBufferRGB != nil {
+            free(dataBufferRGB)
+            dataBufferRGB = nil
+        }
+        if dataBufferYUV != nil {
+            free(dataBufferYUV)
+            dataBufferYUV = nil
         }
     }
     

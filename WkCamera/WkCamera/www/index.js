@@ -6,7 +6,7 @@ var sessionPreset;
 var stats = new Stats();
 stats.showPanel( 0 ); // fps
 var controls;
-const bytePerChannel = 4;
+const bytePerChannel = 3;
 var formatTexture;
 var flashMode = 'off'
 
