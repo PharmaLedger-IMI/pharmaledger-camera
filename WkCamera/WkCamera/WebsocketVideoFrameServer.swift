@@ -24,7 +24,7 @@ public class WebSocketVideoFrameServer {
     }
     
     public func start(completion: (() -> Void)?) {
-        group = MultiThreadedEventLoopGroup(numberOfThreads: 5)
+        group = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         guard group != nil else {
             print("group was nil")
             return
@@ -42,7 +42,7 @@ public class WebSocketVideoFrameServer {
         })
 
         bootstrap = ServerBootstrap(group: group!)
-            .serverChannelOption(ChannelOptions.backlog, value: 256)
+            .serverChannelOption(ChannelOptions.backlog, value: 1)
             .serverChannelOption(ChannelOptions.socketOption(.so_reuseaddr), value: 1)
              // Set the handlers that are applied to the accepted Channels
             .childChannelInitializer({ channel in
@@ -96,10 +96,12 @@ public class WebSocketVideoFrameServer {
         })
     }
     
-    public func sendFrame(frame: [UInt8]) {
+    public func sendFrame(frame: Data?) {
         if let vfh = videoFrameHandler {
-            vfh.currentFrame = frame
-            vfh.semaphore.signal()
+            if let frame = frame {
+                vfh.currentFrame = frame
+                vfh.semaphore.signal()
+            }
         }
     }
     

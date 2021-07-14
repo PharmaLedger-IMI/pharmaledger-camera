@@ -46,21 +46,66 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
         print("Permission denied")
     }
     
+    private var dataBuffer: UnsafeMutableRawPointer? = nil
     public func onPreviewFrame(sampleBuffer: CMSampleBuffer) {
         guard let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {
             print("Cannot get imageBuffer")
             return
+        }
+        let data = prepareRGBAData(imageBuffer: imageBuffer)
+//        let data = prepareYUVData(img: imageBuffer)
+        if let data = data {
+            WebSocketVideoFrameServer.shared.sendFrame(frame: data)
+        }
+    }
+    
+    public func prepareYUVData(img: CVImageBuffer) -> Data? {
+        let flag = CVPixelBufferLockFlags.readOnly
+        
+        CVPixelBufferLockBaseAddress(img, flag)
+        
+        let  yRow = CVPixelBufferGetBytesPerRowOfPlane(img, 0)
+        let uvRow = CVPixelBufferGetBytesPerRowOfPlane(img, 1)
+        
+        let  yWidth = CVPixelBufferGetWidthOfPlane(img, 0)
+        let uvWidth = CVPixelBufferGetWidthOfPlane(img, 1)
+        
+        let  yHeight = CVPixelBufferGetHeightOfPlane(img, 0)
+        let uvHeight = CVPixelBufferGetHeightOfPlane(img, 1)
+        
+        let  yBuf = CVPixelBufferGetBaseAddressOfPlane(img, 0)!
+        let uvBuf = CVPixelBufferGetBaseAddressOfPlane(img, 1)!
+        
+        if dataBuffer == nil {
+            dataBuffer = malloc(yRow*yHeight+uvRow*uvHeight)
+        }
+        memcpy(dataBuffer!, yBuf, yRow*yHeight)
+        let offset = dataBuffer!.assumingMemoryBound(to: UInt8.self).advanced(by: yRow*yHeight)
+        memcpy(offset, uvBuf, uvRow*uvHeight)
+        let data = Data(bytesNoCopy: dataBuffer!, count: yRow*yHeight+uvRow*uvHeight, deallocator: .none)
+        
+        CVPixelBufferUnlockBaseAddress(img, flag)
+        
+        return data
+    }
+    
+    public func prepareRGBAData(imageBuffer: CVImageBuffer) -> Data? {
+        guard cameraSession != nil else {
+            return nil
         }
         let ciImage: CIImage = .init(cvImageBuffer: imageBuffer)
         let cgImage = ciContext.createCGImage(ciImage, from: ciImage.extent)
         let colorspace = CGColorSpaceCreateDeviceRGB()
         let bpc = cgImage!.bitsPerComponent
         let Bpr = cgImage!.bytesPerRow
-        let cgContext = CGContext(data: nil, width: cgImage!.width, height: cgImage!.height, bitsPerComponent: bpc, bytesPerRow: Bpr, space: colorspace, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        if dataBuffer == nil {
+            dataBuffer = malloc(Bpr * cgImage!.height)
+        }
+        let cgContext = CGContext(data: dataBuffer!
+                                  , width: cgImage!.width, height: cgImage!.height, bitsPerComponent: bpc, bytesPerRow: Bpr, space: colorspace, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
         cgContext?.draw(cgImage!, in: CGRect(x: 0, y: 0, width: cgImage!.width, height: cgImage!.height))
-        let byteData = cgContext!.data?.assumingMemoryBound(to: UInt8.self)
-        let array = Array(UnsafeMutableBufferPointer(start: byteData, count: Bpr * cgImage!.height))
-        WebSocketVideoFrameServer.shared.sendFrame(frame: array)
+        let data = Data(bytesNoCopy: dataBuffer!, count: Bpr * cgImage!.height, deallocator: .none)
+        return data
     }
     
     public func onCapture(imageData: Data) {
@@ -97,7 +142,7 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
     private let ciContext = CIContext()
     private var onCameraInitializedJsCallback: String?
     private var onCaptureJsCallback: String?
-
+    
     // MARK: public methods
     public override init() {
         
@@ -171,6 +216,10 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
             }
         }
         self.cameraSession = nil
+        if dataBuffer != nil {
+            free(dataBuffer!)
+            dataBuffer = nil
+        }
     }
     
     private func handleTakePicture(onCaptureJsCallback: String?) {

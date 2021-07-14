@@ -14,7 +14,7 @@ public class WebSocketVideoFrameHandler: ChannelInboundHandler {
     public typealias OutboundOut = WebSocketFrame
     
     private var awaitingClose: Bool = false
-    public var currentFrame: [UInt8]?
+    public var currentFrame: Data?
     public let semaphore = DispatchSemaphore(value: 1)
 
     public func handlerAdded(context: ChannelHandlerContext) {
@@ -62,17 +62,15 @@ public class WebSocketVideoFrameHandler: ChannelInboundHandler {
             return
         }
 
-        var buffer: ByteBuffer?
-        if currentFrame != nil {
-            buffer = context.channel.allocator.buffer(bytes: currentFrame!)
+        if let currentFrame = currentFrame {
+            let frame = WebSocketFrame(fin: true, opcode: .binary, data: ByteBuffer(bytes: currentFrame))
+            context.writeAndFlush(self.wrapOutboundOut(frame)).map {
+                self.sendFrame(context: context)
+            }.whenFailure { (_: Error) in
+                context.close(promise: nil)
+            }
         } else {
-            buffer = context.channel.allocator.buffer(bytes: [UInt8(0)])
-        }
-        let frame = WebSocketFrame(fin: true, opcode: .binary, data: buffer!)
-        context.writeAndFlush(self.wrapOutboundOut(frame)).map {
-            self.sendFrame(context: context)
-        }.whenFailure { (_: Error) in
-            context.close(promise: nil)
+            context.flush()
         }
     }
 
