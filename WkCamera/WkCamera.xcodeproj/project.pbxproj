@@ -395,7 +395,7 @@
 				DEVELOPMENT_TEAM = DBWXNH8PAN;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = WkCamera/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -417,7 +417,7 @@
 				DEVELOPMENT_TEAM = DBWXNH8PAN;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = WkCamera/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 14.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

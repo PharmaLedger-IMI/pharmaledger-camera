@@ -166,6 +166,23 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
         
     }
     
+    deinit {
+        if let webview = webview {
+            if let cameraSession = self.cameraSession {
+                if let captureSession = cameraSession.captureSession {
+                    if captureSession.isRunning {
+                        cameraSession.stopCamera()
+                    }
+                }
+                self.cameraSession = nil
+            }
+            for m in MessageNames.allCases {
+                webview.configuration.userContentController.removeScriptMessageHandler(forName: m.rawValue)
+            }
+            self.webview = nil
+        }
+    }
+    
     public func getWebview(frame: CGRect) -> WKWebView {
         let configuration = WKWebViewConfiguration()
         configuration.userContentController = WKUserContentController()

@@ -40,20 +40,8 @@ public class CameraWebViewController: UIViewController /*, WKScriptMessageHandle
     
     public func removeWebview() {
         if let webview = webview {
-            if let messageHandler = self.messageHandler {
-                if let cameraSession = messageHandler.cameraSession {
-                    if let captureSession = cameraSession.captureSession {
-                        if captureSession.isRunning {
-                            cameraSession.stopCamera()
-                        }
-                    }
-                    messageHandler.cameraSession = nil
-                }
-            }
-            webview.configuration.userContentController.removeAllScriptMessageHandlers()
-            self.messageHandler = nil
             webview.removeFromSuperview()
-            self.webview = nil
         }
+        messageHandler = nil
     }
 }
