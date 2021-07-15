@@ -12,6 +12,7 @@ var flashMode = 'off'
 
 document.addEventListener("DOMContentLoaded", () => {
     // FPS
+    document.getElementById('stopCameraButton').disabled = true
     stats.domElement.style.position = 'absolute';
     stats.domElement.style.right = '0';
     stats.domElement.style.left = 'unset';
@@ -71,11 +72,15 @@ document.addEventListener("DOMContentLoaded", () => {
     
     document.getElementById('startCameraButton').addEventListener('click', function(e) {
         document.getElementById('select_preset').disabled = true;
+        document.getElementById('startCameraButton').disabled = true
+        document.getElementById('stopCameraButton').disabled = false
         startNativeCamera(onFrameGrabbed, sessionPreset, flashMode)
     })
     document.getElementById('stopCameraButton').addEventListener('click', function(e) {
         stopNativeCamera();
         document.getElementById('select_preset').disabled = false;
+        document.getElementById('startCameraButton').disabled = false
+        document.getElementById('stopCameraButton').disabled = true
     })
 
     document.getElementById('takePictureButton').addEventListener('click', function(e) {
