@@ -82,6 +82,9 @@ public class WebSocketVideoFrameServer {
     public var serverPort: Int { return port }
     
     public func stop() {
+        if let channel = self.channel {
+            channel.pipeline.close(mode: .all, promise: nil)
+        }
         group!.shutdownGracefully({err in
             if let error = err {
                 print(error)
@@ -100,6 +103,7 @@ public class WebSocketVideoFrameServer {
         if let vfh = videoFrameHandler {
             if let frame = frame {
                 vfh.currentFrame = frame
+                vfh.semaphore.signal()
             }
         }
     }

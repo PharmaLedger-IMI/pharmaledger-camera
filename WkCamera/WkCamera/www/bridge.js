@@ -55,7 +55,9 @@ function onNativeCameraInitialized(wsPort) {
     }
     ws.onmessage = function(evt) {
         evt.data.arrayBuffer().then(b => {
-            window.onFrameGrabbedCallback(b);
+            if (b.byteLength > 1) {
+                window.onFrameGrabbedCallback(b);
+            }
         });
     }
     ws.onclose = function() {

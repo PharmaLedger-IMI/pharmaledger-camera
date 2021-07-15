@@ -15,6 +15,8 @@ public class WebSocketVideoFrameHandler: ChannelInboundHandler {
     
     private var awaitingClose: Bool = false
     public var currentFrame: Data?
+    public let semaphore = DispatchSemaphore(value: 1)
+
     
     public func handlerAdded(context: ChannelHandlerContext) {
         print("handler added")
@@ -37,7 +39,7 @@ public class WebSocketVideoFrameHandler: ChannelInboundHandler {
             var data = frame.unmaskedData
             let text = data.readString(length: data.readableBytes) ?? ""
             print(text)
-        case .binary, .continuation, .pong:
+       case .binary, .continuation, .pong:
             // We ignore these frames.
             break
         default:
@@ -51,6 +53,7 @@ public class WebSocketVideoFrameHandler: ChannelInboundHandler {
     }
 
     public func sendFrame(context: ChannelHandlerContext) {
+        semaphore.wait();
         guard context.channel.isActive else {
             return
         }
@@ -59,21 +62,24 @@ public class WebSocketVideoFrameHandler: ChannelInboundHandler {
         guard !self.awaitingClose else {
             return
         }
-
-        if let currentFrame = currentFrame {
-            let frame = WebSocketFrame(fin: true, opcode: .binary, data: ByteBuffer(bytes: currentFrame))
-            context.channel.writeAndFlush(self.wrapOutboundOut(frame)).whenComplete({res in
-                switch res {
-                case .success():
-                    self.sendFrame(context: context)
-                case .failure(let err):
-                    print(err)
-                    context.close(promise: nil)
-                }
-            })
+        
+        var byteBuffer: ByteBuffer?
+        if let aFrame = currentFrame {
+             byteBuffer = context.channel.allocator.buffer(bytes: aFrame)
         } else {
-            context.flush()
+            byteBuffer = context.channel.allocator.buffer(bytes: [UInt8(0)])
         }
+        let frame = WebSocketFrame(fin: true, opcode: .binary, data: byteBuffer!)
+        context.channel.writeAndFlush(self.wrapOutboundOut(frame)).whenComplete({res in
+            switch res {
+            case .success():
+                self.sendFrame(context: context)
+//                context.eventLoop.scheduleTask(in: .microseconds(Int64(1e6*1.0/25.0)), { self.sendFrame(context: context) })
+            case .failure(let err):
+                print(err)
+                context.close(promise: nil)
+            }
+        })
     }
 
     private func receivedClose(context: ChannelHandlerContext, frame: WebSocketFrame) {
