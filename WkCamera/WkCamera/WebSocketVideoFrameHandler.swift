@@ -73,8 +73,8 @@ public class WebSocketVideoFrameHandler: ChannelInboundHandler {
         context.channel.writeAndFlush(self.wrapOutboundOut(frame)).whenComplete({res in
             switch res {
             case .success():
-                self.sendFrame(context: context)
-//                context.eventLoop.scheduleTask(in: .microseconds(Int64(1e6*1.0/25.0)), { self.sendFrame(context: context) })
+//                self.sendFrame(context: context)
+                context.eventLoop.scheduleTask(in: .microseconds(Int64(1e6*1.0/20.0)), { self.sendFrame(context: context) })
             case .failure(let err):
                 print(err)
                 context.close(promise: nil)

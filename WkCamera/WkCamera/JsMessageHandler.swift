@@ -51,6 +51,7 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
     private var dataBufferRGB: UnsafeMutableRawPointer? = nil
     private var dataBufferYUV: UnsafeMutableRawPointer? = nil
     public func onPreviewFrame(sampleBuffer: CMSampleBuffer) {
+        print(sampleBuffer.formatDescription!)
         guard let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {
             print("Cannot get imageBuffer")
             return
@@ -93,36 +94,35 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
     }
     
     public func prepareRGBData(imageBuffer: CVImageBuffer) -> Data? {
-        guard cameraSession != nil else {
-            return nil
-        }
-        let ciImage: CIImage = .init(cvImageBuffer: imageBuffer)
-        let cgImage = ciContext.createCGImage(ciImage, from: ciImage.extent)
-        let colorspace = CGColorSpaceCreateDeviceRGB()
-        let bpc = cgImage!.bitsPerComponent
-        let Bpr = cgImage!.bytesPerRow
+        let flag = CVPixelBufferLockFlags.readOnly
+        CVPixelBufferLockBaseAddress(imageBuffer, flag)
+        let  rowBytes = CVPixelBufferGetBytesPerRow(imageBuffer)
+        let w = CVPixelBufferGetWidth(imageBuffer)
+        let h = CVPixelBufferGetHeight(imageBuffer)
+        let buf = CVPixelBufferGetBaseAddress(imageBuffer)!
+        
         if dataBufferRGBA == nil {
-            dataBufferRGBA = malloc(Bpr * cgImage!.height)
+            dataBufferRGBA = malloc(rowBytes*h)
         }
         if dataBufferRGB == nil {
-            dataBufferRGB = malloc(cgImage!.width*3 * cgImage!.height)
+            dataBufferRGB = malloc(3*w*h)
         }
-        let cgContext = CGContext(data: dataBufferRGBA!
-                                  , width: cgImage!.width, height: cgImage!.height, bitsPerComponent: bpc, bytesPerRow: Bpr, space: colorspace, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
-        cgContext?.draw(cgImage!, in: CGRect(x: 0, y: 0, width: cgImage!.width, height: cgImage!.height))
+        memcpy(dataBufferRGBA!, buf, rowBytes*h)
+        CVPixelBufferUnlockBaseAddress(imageBuffer, flag)
+        
         var inBuffer = vImage_Buffer(
             data: dataBufferRGBA!,
-            height: vImagePixelCount(cgImage!.height),
-            width: vImagePixelCount(cgImage!.width),
-            rowBytes: cgImage!.bytesPerRow)
+            height: vImagePixelCount(h),
+            width: vImagePixelCount(w),
+            rowBytes: rowBytes)
         var outBuffer = vImage_Buffer(
             data: dataBufferRGB,
-            height: vImagePixelCount(cgImage!.height),
-            width: vImagePixelCount(cgImage!.width),
-            rowBytes: 3*cgImage!.width)
-        vImageConvert_RGBA8888toRGB888(&inBuffer, &outBuffer, UInt32(kvImageNoFlags))
+            height: vImagePixelCount(h),
+            width: vImagePixelCount(w),
+            rowBytes: 3*w)
+        vImageConvert_BGRA8888toRGB888(&inBuffer, &outBuffer, UInt32(kvImageNoFlags))
         
-        let data = Data(bytesNoCopy: dataBufferRGB!, count: 3*cgImage!.width * cgImage!.height, deallocator: .none)
+        let data = Data(bytesNoCopy: dataBufferRGB!, count: 3*w*h, deallocator: .none)
         return data
     }
     
