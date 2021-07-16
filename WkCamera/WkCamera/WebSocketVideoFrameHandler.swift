@@ -14,6 +14,8 @@ public class WebSocketVideoFrameHandler: ChannelInboundHandler {
     public typealias OutboundOut = WebSocketFrame
     
     private var awaitingClose: Bool = false
+    private let bandwidthLimit = 45.0*1024.0*1024.0 // in B/s
+    
     public var currentFrame: Data?
     public let semaphore = DispatchSemaphore(value: 1)
 
@@ -64,8 +66,10 @@ public class WebSocketVideoFrameHandler: ChannelInboundHandler {
         }
         
         var byteBuffer: ByteBuffer?
+        var nextDelay = 50000.0
         if let aFrame = currentFrame {
-             byteBuffer = context.channel.allocator.buffer(bytes: aFrame)
+            byteBuffer = context.channel.allocator.buffer(bytes: aFrame)
+            nextDelay = Double(aFrame.count) / bandwidthLimit * 1e6 * 0.9 // <-- empirical adaptation factor
         } else {
             byteBuffer = context.channel.allocator.buffer(bytes: [UInt8(0)])
         }
@@ -74,7 +78,7 @@ public class WebSocketVideoFrameHandler: ChannelInboundHandler {
             switch res {
             case .success():
 //                self.sendFrame(context: context)
-                context.eventLoop.scheduleTask(in: .microseconds(Int64(1e6*1.0/20.0)), { self.sendFrame(context: context) })
+                context.eventLoop.scheduleTask(in: .microseconds(Int64(nextDelay)), { self.sendFrame(context: context) })
             case .failure(let err):
                 print(err)
                 context.close(promise: nil)

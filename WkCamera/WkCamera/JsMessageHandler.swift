@@ -51,7 +51,6 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
     private var dataBufferRGB: UnsafeMutableRawPointer? = nil
     private var dataBufferYUV: UnsafeMutableRawPointer? = nil
     public func onPreviewFrame(sampleBuffer: CMSampleBuffer) {
-        print(sampleBuffer.formatDescription!)
         guard let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {
             print("Cannot get imageBuffer")
             return
