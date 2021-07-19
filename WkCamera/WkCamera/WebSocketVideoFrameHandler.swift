@@ -14,7 +14,7 @@ public class WebSocketVideoFrameHandler: ChannelInboundHandler {
     public typealias OutboundOut = WebSocketFrame
     
     private var awaitingClose: Bool = false
-    private let bandwidthLimit = 45.0*1024.0*1024.0 // in B/s
+    private let bandwidthLimit = 42.0*1024.0*1024.0 // in B/s
     
     public var currentFrame: Data?
     public let semaphore = DispatchSemaphore(value: 1)
