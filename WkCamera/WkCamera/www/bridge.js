@@ -1,3 +1,6 @@
+var grabHandle = 0;
+var onFrameGrabbedCallbackRef = undefined;
+
 function callNative(api, args, callback) {
     let handle = window.webkit.messageHandlers[api]
     let payload = {}
@@ -16,7 +19,7 @@ function callNative(api, args, callback) {
  * @param  {string} flashMode can be `torch`, `flash`, or `off`, all other values will be treated as `auto`
  */
 function startNativeCamera(onFrameGrabbedCallback, sessionPreset, flashMode) {
-    window.onFrameGrabbedCallback = onFrameGrabbedCallback;
+    onFrameGrabbedCallbackRef = onFrameGrabbedCallback;
     let params = {
         "onInitializedJsCallback": onNativeCameraInitialized.name,
         "sessionPreset": sessionPreset.name,
@@ -29,6 +32,7 @@ function startNativeCamera(onFrameGrabbedCallback, sessionPreset, flashMode) {
  * Stops the native camera
  */
 function stopNativeCamera() {
+    clearInterval(grabHandle)
     callNative("StopCamera")
 }
 
@@ -49,18 +53,33 @@ function setFlashModeNativeCamera(mode) {
 }
 
 function onNativeCameraInitialized(wsPort) {
-    var ws = new WebSocket(`ws://localhost:${wsPort}`);
-    ws.onopen = function() {
-        console.log('ws opened');
-    }
-    ws.onmessage = function(evt) {
-        evt.data.arrayBuffer().then(b => {
-            if (b.byteLength > 1) {
-                window.onFrameGrabbedCallback(b);
-            }
-        });
-    }
-    ws.onclose = function() {
-        console.log('ws closed');
-    }
+    grabHandle = setInterval(() => {
+        let target = `http://localhost:${wsPort}`
+        fetch(`${target}/rawframe`)
+        .then(response => {
+            response.blob().then( b => {
+                b.arrayBuffer().then(a => {
+                    if (a.byteLength > 1) {
+                        onFrameGrabbedCallbackRef(a);
+                    }
+                })
+            })
+        })
+    }, 1000/25);
+
+
+    // var ws = new WebSocket(`ws://localhost:${wsPort}`);
+    // ws.onopen = function() {
+    //     console.log('ws opened');
+    // }
+    // ws.onmessage = function(evt) {
+    //     evt.data.arrayBuffer().then(b => {
+    //         if (b.byteLength > 1) {
+    //             window.onFrameGrabbedCallback(b);
+    //         }
+    //     });
+    // }
+    // ws.onclose = function() {
+    //     console.log('ws closed');
+    // }
 }

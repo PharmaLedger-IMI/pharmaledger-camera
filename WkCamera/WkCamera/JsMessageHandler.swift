@@ -10,6 +10,7 @@ import WebKit
 import AVFoundation
 import PharmaLedger_Camera
 import Accelerate
+import GCDWebServers
 
 public enum MessageNames: String, CaseIterable {
     case StartCamera = "StartCamera"
@@ -50,19 +51,17 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
     private var dataBufferRGBA: UnsafeMutableRawPointer? = nil
     private var dataBufferRGB: UnsafeMutableRawPointer? = nil
     private var dataBufferYUV: UnsafeMutableRawPointer? = nil
+    private var rawData = Data()
     public func onPreviewFrame(sampleBuffer: CMSampleBuffer) {
         guard let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {
             print("Cannot get imageBuffer")
             return
         }
-        let data = prepareRGBData(imageBuffer: imageBuffer)
-//        let data = prepareYUVData(img: imageBuffer)
-        if let data = data {
-            WebSocketVideoFrameServer.shared.sendFrame(frame: data)
-        }
+        self.rawData = prepareRGBData(imageBuffer: imageBuffer)
+//        aelf.rawData = prepareYUVData(img: imageBuffer)
     }
     
-    public func prepareYUVData(img: CVImageBuffer) -> Data? {
+    public func prepareYUVData(img: CVImageBuffer) -> Data {
         let flag = CVPixelBufferLockFlags.readOnly
         
         CVPixelBufferLockBaseAddress(img, flag)
@@ -92,7 +91,7 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
         return data
     }
     
-    public func prepareRGBData(imageBuffer: CVImageBuffer) -> Data? {
+    public func prepareRGBData(imageBuffer: CVImageBuffer) -> Data {
         let flag = CVPixelBufferLockFlags.readOnly
         CVPixelBufferLockBaseAddress(imageBuffer, flag)
         let  rowBytes = CVPixelBufferGetBytesPerRow(imageBuffer)
@@ -150,7 +149,9 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
     
     public func onCameraInitialized() {
         print("Camera initialized")
-        WebSocketVideoFrameServer.shared.start(completion: { self.callJsAfterCameraStart() })
+        DispatchQueue.main.async {
+            self.callJsAfterCameraStart()
+        }
     }
     
     // MARK: privates vars
@@ -159,10 +160,39 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
     private let ciContext = CIContext()
     private var onCameraInitializedJsCallback: String?
     private var onCaptureJsCallback: String?
+    let webserver = GCDWebServer()
+    
     
     // MARK: public methods
     public override init() {
-        
+        super.init()
+        webserver.addDefaultHandler(forMethod: "OPTIONS", request: GCDWebServerRequest.classForCoder()) { (req) -> GCDWebServerResponse? in
+            let resp = GCDWebServerResponse().applyCORSHeaders()
+            return resp
+        }
+        let dirPath = Bundle.main.path(forResource: "www", ofType: nil)
+        webserver.addGETHandler(forBasePath: "/", directoryPath: dirPath!, indexFilename: nil, cacheAge: 0, allowRangeRequests: false)
+        webserver.addHandler(forMethod: "GET",
+                             path: "/rawframe",
+                             request: GCDWebServerRequest.self,
+                             processBlock: { request in
+//                                let data = "Hello from GCDWebserver".data(using: .utf8)!
+//                                let contentType = "text/html"
+                                let data = self.rawData
+                                let contentType = "application/octet-stream"
+                                let response = GCDWebServerDataResponse(data: data, contentType: contentType)
+                                let response2 = response.applyCORSHeaders()
+                                return response2
+                             })
+        let options: [String: Any] = [
+            GCDWebServerOption_Port: findFreePort(),
+            GCDWebServerOption_BindToLocalhost: true
+        ]
+        do {
+            try self.webserver.start(options: options)
+        } catch {
+            print(error)
+        }
     }
     
     deinit {
@@ -179,6 +209,8 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
                 webview.configuration.userContentController.removeScriptMessageHandler(forName: m.rawValue)
             }
             self.webview = nil
+            webserver.stop()
+            webserver.removeAllHandlers()
         }
     }
     
@@ -245,7 +277,6 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
             if let captureSession = cameraSession.captureSession {
                 if captureSession.isRunning {
                     cameraSession.stopCamera()
-                    WebSocketVideoFrameServer.shared.stop()
                 }
             }
         }
@@ -283,7 +314,7 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
                 return
             }
             DispatchQueue.main.async {
-                webview.evaluateJavaScript("\(jsCallback)(\(WebSocketVideoFrameServer.shared.serverPort))", completionHandler: {result, error in
+                webview.evaluateJavaScript("\(jsCallback)(\(self.webserver.port))", completionHandler: {result, error in
                     guard error == nil else {
                         print(error!)
                         return
@@ -291,5 +322,22 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
                 })
             }
         }
+    }
+}
+
+extension GCDWebServerResponse {
+    func applyCORSHeaders() -> Self {
+        let resp = self
+        resp.setValue("*", forAdditionalHeader: "Access-Control-Allow-Origin")
+        resp.setValue("*", forAdditionalHeader: "Access-Control-Allow-Methods")
+        resp.setValue("*", forAdditionalHeader: "Access-Control-Allow-Headers")
+        resp.setValue("true", forAdditionalHeader: "Access-Control-Allow-Credentials")
+        return self
+    }
+    
+    func applyStreamHeader() -> Self {
+        let resp = self;
+        resp.setValue("*", forAdditionalHeader: "X-Stream-Header")
+        return self;
     }
 }

@@ -13,16 +13,17 @@ import WebKit
 public class CameraWebViewController: UIViewController /*, WKScriptMessageHandler*/ {
     // MARK: Privates
     private var webview: WKWebView?
-    private let htmlBootstrap = "www/bootstrap.html"
-//    private let htmlBootstrap = "www/socket_test2.html"
-    private var messageHandler: JsMessageHandler?
+    private var messageHandler = JsMessageHandler()
     
     func load() {
-        self.messageHandler = JsMessageHandler()
-        self.webview = messageHandler?.getWebview(frame: self.view.frame)
+        self.webview = messageHandler.getWebview(frame: self.view.frame)
         if let webview = webview {
-            let fileUrl = URL(fileURLWithPath: Bundle.main.path(forResource: self.htmlBootstrap, ofType: nil)!)
-            webview.loadFileURL(fileUrl, allowingReadAccessTo: fileUrl.deletingLastPathComponent())
+//            let fileUrl = URL(fileURLWithPath: Bundle.main.path(forResource: "www/bootstrap.html", ofType: nil)!)
+//            webview.loadFileURL(fileUrl, allowingReadAccessTo: fileUrl.deletingLastPathComponent())
+            
+            let url = URL(string: "http://localhost:\(self.messageHandler.webserver.port)/bootstrap.html")!
+            webview.load(URLRequest(url: url))
+            
             self.view.addSubview(webview)
         }
     }
@@ -42,6 +43,5 @@ public class CameraWebViewController: UIViewController /*, WKScriptMessageHandle
         if let webview = webview {
             webview.removeFromSuperview()
         }
-        messageHandler = nil
     }
 }

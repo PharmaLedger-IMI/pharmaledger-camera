@@ -3,17 +3,15 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 52;
+	objectVersion = 50;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		D20B6E1026959326001F6876 /* PharmaLedger_Camera.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D20B6E0F2695930E001F6876 /* PharmaLedger_Camera.framework */; };
 		D20B6E1126959326001F6876 /* PharmaLedger_Camera.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D20B6E0F2695930E001F6876 /* PharmaLedger_Camera.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		D2C0B4982694441900946074 /* WebsocketVideoFrameServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2C0B4972694441900946074 /* WebsocketVideoFrameServer.swift */; };
-		D2C0B49C2694448500946074 /* NIOHTTP1 in Frameworks */ = {isa = PBXBuildFile; productRef = D2C0B49B2694448500946074 /* NIOHTTP1 */; };
-		D2C0B49E2694448500946074 /* NIOWebSocket in Frameworks */ = {isa = PBXBuildFile; productRef = D2C0B49D2694448500946074 /* NIOWebSocket */; };
-		D2C0B4A02694448500946074 /* NIO in Frameworks */ = {isa = PBXBuildFile; productRef = D2C0B49F2694448500946074 /* NIO */; };
-		D2C0B4A426945ADE00946074 /* WebSocketVideoFrameHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2C0B4A326945ADE00946074 /* WebSocketVideoFrameHandler.swift */; };
+		D2A0501826A5BA88004F7B09 /* GCDWebServers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D2A0501326A5BA72004F7B09 /* GCDWebServers.framework */; };
+		D2A0501926A5BA89004F7B09 /* GCDWebServers.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D2A0501326A5BA72004F7B09 /* GCDWebServers.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D2A0501B26A5BBCA004F7B09 /* Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2A0501A26A5BBCA004F7B09 /* Utilities.swift */; };
 		D2DA5A182693A6E1006B8C4E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2DA5A172693A6E1006B8C4E /* AppDelegate.swift */; };
 		D2DA5A1A2693A6E1006B8C4E /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2DA5A192693A6E1006B8C4E /* SceneDelegate.swift */; };
 		D2DA5A1C2693A6E1006B8C4E /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2DA5A1B2693A6E1006B8C4E /* ContentView.swift */; };
@@ -34,6 +32,55 @@
 			remoteGlobalIDString = B57070DD266DEC5700E917B2;
 			remoteInfo = "PharmaLedger Camera";
 		};
+		D2A0500A26A5BA72004F7B09 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D2A04FFF26A5BA72004F7B09 /* GCDWebServer.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 8DD76FB20486AB0100D96B5E;
+			remoteInfo = "GCDWebServer (Mac)";
+		};
+		D2A0500C26A5BA72004F7B09 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D2A04FFF26A5BA72004F7B09 /* GCDWebServer.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = E2DDD1F61BE69EE4002CE867;
+			remoteInfo = "GCDWebServer (iOS)";
+		};
+		D2A0500E26A5BA72004F7B09 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D2A04FFF26A5BA72004F7B09 /* GCDWebServer.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = E2DDD1C71BE698A8002CE867;
+			remoteInfo = "GCDWebServer (tvOS)";
+		};
+		D2A0501026A5BA72004F7B09 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D2A04FFF26A5BA72004F7B09 /* GCDWebServer.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = CEE28CD11AE004D800F4023C;
+			remoteInfo = "GCDWebServers (Mac)";
+		};
+		D2A0501226A5BA72004F7B09 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D2A04FFF26A5BA72004F7B09 /* GCDWebServer.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = CEE28CEF1AE0051F00F4023C;
+			remoteInfo = "GCDWebServers (iOS)";
+		};
+		D2A0501426A5BA72004F7B09 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D2A04FFF26A5BA72004F7B09 /* GCDWebServer.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = E2DDD18B1BE69404002CE867;
+			remoteInfo = "GCDWebServers (tvOS)";
+		};
+		D2A0501626A5BA72004F7B09 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = D2A04FFF26A5BA72004F7B09 /* GCDWebServer.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = E24039251BA09207000B7089;
+			remoteInfo = "Tests (Mac)";
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -44,6 +91,7 @@
 			dstSubfolderSpec = 10;
 			files = (
 				D20B6E1126959326001F6876 /* PharmaLedger_Camera.framework in Embed Frameworks */,
+				D2A0501926A5BA89004F7B09 /* GCDWebServers.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -52,8 +100,8 @@
 
 /* Begin PBXFileReference section */
 		D20B6E0A2695930E001F6876 /* PharmaLedger Camera.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "PharmaLedger Camera.xcodeproj"; path = "../PharmaLedger Camera/PharmaLedger Camera.xcodeproj"; sourceTree = "<group>"; };
-		D2C0B4972694441900946074 /* WebsocketVideoFrameServer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebsocketVideoFrameServer.swift; sourceTree = "<group>"; };
-		D2C0B4A326945ADE00946074 /* WebSocketVideoFrameHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSocketVideoFrameHandler.swift; sourceTree = "<group>"; };
+		D2A04FFF26A5BA72004F7B09 /* GCDWebServer.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = GCDWebServer.xcodeproj; path = ../GCDWebServer/GCDWebServer.xcodeproj; sourceTree = "<group>"; };
+		D2A0501A26A5BBCA004F7B09 /* Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utilities.swift; sourceTree = "<group>"; };
 		D2DA5A142693A6E1006B8C4E /* WkCamera.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WkCamera.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D2DA5A172693A6E1006B8C4E /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		D2DA5A192693A6E1006B8C4E /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -73,10 +121,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D2C0B4A02694448500946074 /* NIO in Frameworks */,
 				D20B6E1026959326001F6876 /* PharmaLedger_Camera.framework in Frameworks */,
-				D2C0B49C2694448500946074 /* NIOHTTP1 in Frameworks */,
-				D2C0B49E2694448500946074 /* NIOWebSocket in Frameworks */,
+				D2A0501826A5BA88004F7B09 /* GCDWebServers.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -91,9 +137,24 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		D2A0500026A5BA72004F7B09 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D2A0500B26A5BA72004F7B09 /* GCDWebServer */,
+				D2A0500D26A5BA72004F7B09 /* GCDWebServer.app */,
+				D2A0500F26A5BA72004F7B09 /* GCDWebServer.app */,
+				D2A0501126A5BA72004F7B09 /* GCDWebServers.framework */,
+				D2A0501326A5BA72004F7B09 /* GCDWebServers.framework */,
+				D2A0501526A5BA72004F7B09 /* GCDWebServers.framework */,
+				D2A0501726A5BA72004F7B09 /* Tests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		D2DA5A0B2693A6E1006B8C4E = {
 			isa = PBXGroup;
 			children = (
+				D2A04FFF26A5BA72004F7B09 /* GCDWebServer.xcodeproj */,
 				D20B6E0A2695930E001F6876 /* PharmaLedger Camera.xcodeproj */,
 				D2DA5A162693A6E1006B8C4E /* WkCamera */,
 				D2DA5A152693A6E1006B8C4E /* Products */,
@@ -122,9 +183,8 @@
 				D2DA5A222693A6E2006B8C4E /* LaunchScreen.storyboard */,
 				D2DA5A252693A6E2006B8C4E /* Info.plist */,
 				D2DA5A3B2693A940006B8C4E /* JsMessageHandler.swift */,
-				D2C0B4972694441900946074 /* WebsocketVideoFrameServer.swift */,
-				D2C0B4A326945ADE00946074 /* WebSocketVideoFrameHandler.swift */,
 				D2DA5A1F2693A6E2006B8C4E /* Preview Content */,
+				D2A0501A26A5BBCA004F7B09 /* Utilities.swift */,
 			);
 			path = WkCamera;
 			sourceTree = "<group>";
@@ -162,9 +222,6 @@
 			);
 			name = WkCamera;
 			packageProductDependencies = (
-				D2C0B49B2694448500946074 /* NIOHTTP1 */,
-				D2C0B49D2694448500946074 /* NIOWebSocket */,
-				D2C0B49F2694448500946074 /* NIO */,
 			);
 			productName = WkCamera;
 			productReference = D2DA5A142693A6E1006B8C4E /* WkCamera.app */;
@@ -194,11 +251,14 @@
 			);
 			mainGroup = D2DA5A0B2693A6E1006B8C4E;
 			packageReferences = (
-				D2C0B49A2694448500946074 /* XCRemoteSwiftPackageReference "swift-nio" */,
 			);
 			productRefGroup = D2DA5A152693A6E1006B8C4E /* Products */;
 			projectDirPath = "";
 			projectReferences = (
+				{
+					ProductGroup = D2A0500026A5BA72004F7B09 /* Products */;
+					ProjectRef = D2A04FFF26A5BA72004F7B09 /* GCDWebServer.xcodeproj */;
+				},
 				{
 					ProductGroup = D20B6E0B2695930E001F6876 /* Products */;
 					ProjectRef = D20B6E0A2695930E001F6876 /* PharmaLedger Camera.xcodeproj */;
@@ -217,6 +277,55 @@
 			fileType = wrapper.framework;
 			path = PharmaLedger_Camera.framework;
 			remoteRef = D20B6E0E2695930E001F6876 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D2A0500B26A5BA72004F7B09 /* GCDWebServer */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = GCDWebServer;
+			remoteRef = D2A0500A26A5BA72004F7B09 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D2A0500D26A5BA72004F7B09 /* GCDWebServer.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = GCDWebServer.app;
+			remoteRef = D2A0500C26A5BA72004F7B09 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D2A0500F26A5BA72004F7B09 /* GCDWebServer.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = GCDWebServer.app;
+			remoteRef = D2A0500E26A5BA72004F7B09 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D2A0501126A5BA72004F7B09 /* GCDWebServers.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = GCDWebServers.framework;
+			remoteRef = D2A0501026A5BA72004F7B09 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D2A0501326A5BA72004F7B09 /* GCDWebServers.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = GCDWebServers.framework;
+			remoteRef = D2A0501226A5BA72004F7B09 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D2A0501526A5BA72004F7B09 /* GCDWebServers.framework */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.framework;
+			path = GCDWebServers.framework;
+			remoteRef = D2A0501426A5BA72004F7B09 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		D2A0501726A5BA72004F7B09 /* Tests.xctest */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.cfbundle;
+			path = Tests.xctest;
+			remoteRef = D2A0501626A5BA72004F7B09 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -241,10 +350,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				D2DA5A392693A804006B8C4E /* CameraWebView.swift in Sources */,
-				D2C0B4982694441900946074 /* WebsocketVideoFrameServer.swift in Sources */,
 				D2DA5A182693A6E1006B8C4E /* AppDelegate.swift in Sources */,
+				D2A0501B26A5BBCA004F7B09 /* Utilities.swift in Sources */,
 				D2DA5A1A2693A6E1006B8C4E /* SceneDelegate.swift in Sources */,
-				D2C0B4A426945ADE00946074 /* WebSocketVideoFrameHandler.swift in Sources */,
 				D2DA5A382693A804006B8C4E /* CameraWebViewController.swift in Sources */,
 				D2DA5A3C2693A940006B8C4E /* JsMessageHandler.swift in Sources */,
 				D2DA5A1C2693A6E1006B8C4E /* ContentView.swift in Sources */,
@@ -451,35 +559,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		D2C0B49A2694448500946074 /* XCRemoteSwiftPackageReference "swift-nio" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/apple/swift-nio.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.30.0;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		D2C0B49B2694448500946074 /* NIOHTTP1 */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = D2C0B49A2694448500946074 /* XCRemoteSwiftPackageReference "swift-nio" */;
-			productName = NIOHTTP1;
-		};
-		D2C0B49D2694448500946074 /* NIOWebSocket */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = D2C0B49A2694448500946074 /* XCRemoteSwiftPackageReference "swift-nio" */;
-			productName = NIOWebSocket;
-		};
-		D2C0B49F2694448500946074 /* NIO */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = D2C0B49A2694448500946074 /* XCRemoteSwiftPackageReference "swift-nio" */;
-			productName = NIO;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = D2DA5A0C2693A6E1006B8C4E /* Project object */;
 }

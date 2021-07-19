@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html>
+   <head>
+      <script type = "text/javascript">
+        document.addEventListener("DOMContentLoaded", () => {
+            document.getElementById("get_frame").addEventListener("click", function(e) {
+                let target = "http://172.30.2.149:5555/"
+                headers = new Headers()
+                headers.append('Access-Control-Allow-Origin', target);
+                let options = { 
+                    method: 'GET',
+                    headers: headers
+                }
+                fetch(`${target}rawframe`, options)
+                .then(response => {
+                    response.blob().then( b => {
+                        b.arrayBuffer().then(a => {
+                            let arrayData = new Uint8Array(a)
+                            console.log(arrayData.byteLength)
+                        })
+                    })
+                })
+            })
+        });
+      </script>
+   </head>
+   <body>
+    <button id="get_frame">get frame</button>
+   </body>
+</html>
