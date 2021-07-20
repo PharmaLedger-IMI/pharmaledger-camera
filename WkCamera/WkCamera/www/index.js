@@ -139,10 +139,10 @@ function ChangePresetList() {
 }
 
 /**
- * @param  {Blob} aBlob data coming from native camera. Can be used to create a new Uin8Array
+ * @param  {ArrayBuffer} buffer data coming from native camera. Can be used to create a new Uint8Array
  */
-function onFrameGrabbed(aBlob) {
-    var frame = new Uint8Array(aBlob);
+function onFrameGrabbed(buffer) {
+    var frame = new Uint8Array(buffer);
     material.map = new THREE.DataTexture(frame, sessionPreset.height, sessionPreset.width, formatTexture, THREE.UnsignedByteType);
     material.map.flipY = true;
     material.needsUpdate = true;
