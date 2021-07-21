@@ -50,45 +50,16 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
     
     private var dataBufferRGBA: UnsafeMutableRawPointer? = nil
     private var dataBufferRGB: UnsafeMutableRawPointer? = nil
-    private var dataBufferYUV: UnsafeMutableRawPointer? = nil
+    private var dataBufferRGBsmall: UnsafeMutableRawPointer? = nil
     private var rawData = Data()
+    private var previewData = Data()
     public func onPreviewFrame(sampleBuffer: CMSampleBuffer) {
         guard let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {
             print("Cannot get imageBuffer")
             return
         }
         self.rawData = prepareRGBData(imageBuffer: imageBuffer)
-//        aelf.rawData = prepareYUVData(img: imageBuffer)
-    }
-    
-    public func prepareYUVData(img: CVImageBuffer) -> Data {
-        let flag = CVPixelBufferLockFlags.readOnly
-        
-        CVPixelBufferLockBaseAddress(img, flag)
-        
-        let  yRow = CVPixelBufferGetBytesPerRowOfPlane(img, 0)
-        let uvRow = CVPixelBufferGetBytesPerRowOfPlane(img, 1)
-        
-        let  yWidth = CVPixelBufferGetWidthOfPlane(img, 0)
-        let uvWidth = CVPixelBufferGetWidthOfPlane(img, 1)
-        
-        let  yHeight = CVPixelBufferGetHeightOfPlane(img, 0)
-        let uvHeight = CVPixelBufferGetHeightOfPlane(img, 1)
-        
-        let  yBuf = CVPixelBufferGetBaseAddressOfPlane(img, 0)!
-        let uvBuf = CVPixelBufferGetBaseAddressOfPlane(img, 1)!
-        
-        if dataBufferYUV == nil {
-            dataBufferYUV = malloc(yRow*yHeight+uvRow*uvHeight)
-        }
-        memcpy(dataBufferYUV!, yBuf, yRow*yHeight)
-        let offset = dataBufferYUV!.assumingMemoryBound(to: UInt8.self).advanced(by: yRow*yHeight)
-        memcpy(offset, uvBuf, uvRow*uvHeight)
-        let data = Data(bytesNoCopy: dataBufferYUV!, count: yRow*yHeight+uvRow*uvHeight, deallocator: .none)
-        
-        CVPixelBufferUnlockBaseAddress(img, flag)
-        
-        return data
+        self.previewData = preparePreviewData(imageBuffer: imageBuffer)
     }
     
     public func prepareRGBData(imageBuffer: CVImageBuffer) -> Data {
@@ -121,6 +92,40 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
         vImageConvert_BGRA8888toRGB888(&inBuffer, &outBuffer, UInt32(kvImageNoFlags))
         
         let data = Data(bytesNoCopy: dataBufferRGB!, count: 3*w*h, deallocator: .none)
+        return data
+    }
+    
+    public func preparePreviewData(imageBuffer: CVImageBuffer) -> Data {
+        var ciImage: CIImage = .init(cvImageBuffer: imageBuffer)
+        let resizeFilter = CIFilter(name: "CILanczosScaleTransform")!
+        resizeFilter.setValue(ciImage, forKey: kCIInputImageKey)
+        let scale = CGFloat(self.previewWidth) / CGFloat(CVPixelBufferGetWidth(imageBuffer))
+        resizeFilter.setValue(scale, forKey: kCIInputScaleKey)
+        ciImage = resizeFilter.outputImage!
+        //
+        let cgImage = ciContext.createCGImage(ciImage, from: ciImage.extent)
+        let colorspace = CGColorSpaceCreateDeviceRGB()
+        let bpc = cgImage!.bitsPerComponent
+        let Bpr = cgImage!.bytesPerRow
+        let cgContext = CGContext(data: nil, width: cgImage!.width, height: cgImage!.height, bitsPerComponent: bpc, bytesPerRow: Bpr, space: colorspace, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+
+
+        cgContext?.draw(cgImage!, in: CGRect(x: 0, y: 0, width: cgImage!.width, height: cgImage!.height))
+        if dataBufferRGBsmall == nil {
+            dataBufferRGBsmall = malloc(3*cgImage!.height*cgImage!.width)
+        }
+        var inBufferSmall = vImage_Buffer(
+            data: cgContext!.data!,
+            height: vImagePixelCount(cgImage!.height),
+            width: vImagePixelCount(cgImage!.width),
+            rowBytes: Bpr)
+        var outBufferSmall = vImage_Buffer(
+            data: dataBufferRGBsmall,
+            height: vImagePixelCount(cgImage!.height),
+            width: vImagePixelCount(cgImage!.width),
+            rowBytes: 3*cgImage!.width)
+        vImageConvert_RGBA8888toRGB888(&inBufferSmall, &outBufferSmall, UInt32(kvImageNoFlags))
+        let data = Data(bytesNoCopy: dataBufferRGBsmall!, count: 3*cgImage!.width*cgImage!.height, deallocator: .none)
         return data
     }
     
@@ -158,6 +163,7 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
     private var webview: WKWebView? = nil
     private var onGrabFrameJsCallBack: String?
     private let ciContext = CIContext()
+    private var previewWidth = 640;
     private var onCameraInitializedJsCallback: String?
     private var onCaptureJsCallback: String?
     let webserver = GCDWebServer()
@@ -166,10 +172,10 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
     // MARK: public methods
     public override init() {
         super.init()
-        webserver.addDefaultHandler(forMethod: "OPTIONS", request: GCDWebServerRequest.classForCoder()) { (req) -> GCDWebServerResponse? in
-            let resp = GCDWebServerResponse().applyCORSHeaders()
-            return resp
-        }
+//        webserver.addDefaultHandler(forMethod: "OPTIONS", request: GCDWebServerRequest.classForCoder()) { (req) -> GCDWebServerResponse? in
+//            let resp = GCDWebServerResponse().applyCORSHeaders()
+//            return resp
+//        }
         let dirPath = Bundle.main.path(forResource: "www", ofType: nil)
         webserver.addGETHandler(forBasePath: "/", directoryPath: dirPath!, indexFilename: nil, cacheAge: 0, allowRangeRequests: false)
         webserver.addHandler(forMethod: "GET",
@@ -181,8 +187,18 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
                                 let data = self.rawData
                                 let contentType = "application/octet-stream"
                                 let response = GCDWebServerDataResponse(data: data, contentType: contentType)
-                                let response2 = response.applyCORSHeaders()
-                                return response2
+                                return response
+                             })
+        webserver.addHandler(forMethod: "GET",
+                             path: "/previewframe",
+                             request: GCDWebServerRequest.self,
+                             processBlock: { request in
+//                                let data = "Hello from GCDWebserver".data(using: .utf8)!
+//                                let contentType = "text/html"
+                                let data = self.previewData
+                                let contentType = "application/octet-stream"
+                                let response = GCDWebServerDataResponse(data: data, contentType: contentType)
+                                return response
                              })
         let options: [String: Any] = [
             GCDWebServerOption_Port: findFreePort(),
@@ -234,6 +250,9 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
         var jsonString: String = ""
         switch message {
         case .StartCamera:
+            if let pWidth = args?["previewWidth"] as? Int {
+                self.previewWidth = pWidth
+            }
             handleCameraStart(onCameraInitializedJsCallback: args?["onInitializedJsCallback"] as? String,
                               sessionPreset: args?["sessionPreset"] as! String,
                               flash_mode: args?["flashMode"] as? String)
@@ -289,9 +308,9 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
             free(dataBufferRGB)
             dataBufferRGB = nil
         }
-        if dataBufferYUV != nil {
-            free(dataBufferYUV)
-            dataBufferYUV = nil
+        if dataBufferRGBsmall != nil {
+            free(dataBufferRGBsmall)
+            dataBufferRGBsmall = nil
         }
     }
     
@@ -322,22 +341,5 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
                 })
             }
         }
-    }
-}
-
-extension GCDWebServerResponse {
-    func applyCORSHeaders() -> Self {
-        let resp = self
-        resp.setValue("*", forAdditionalHeader: "Access-Control-Allow-Origin")
-        resp.setValue("*", forAdditionalHeader: "Access-Control-Allow-Methods")
-        resp.setValue("*", forAdditionalHeader: "Access-Control-Allow-Headers")
-        resp.setValue("true", forAdditionalHeader: "Access-Control-Allow-Credentials")
-        return self
-    }
-    
-    func applyStreamHeader() -> Self {
-        let resp = self;
-        resp.setValue("*", forAdditionalHeader: "X-Stream-Header")
-        return self;
     }
 }
