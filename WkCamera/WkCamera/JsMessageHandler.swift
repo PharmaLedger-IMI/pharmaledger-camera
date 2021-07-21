@@ -10,6 +10,7 @@ import WebKit
 import AVFoundation
 import PharmaLedger_Camera
 import Accelerate
+import GCDWebServers
 
 public enum MessageNames: String, CaseIterable {
     case StartCamera = "StartCamera"
@@ -49,50 +50,19 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
     
     private var dataBufferRGBA: UnsafeMutableRawPointer? = nil
     private var dataBufferRGB: UnsafeMutableRawPointer? = nil
-    private var dataBufferYUV: UnsafeMutableRawPointer? = nil
+    private var dataBufferRGBsmall: UnsafeMutableRawPointer? = nil
+    private var rawData = Data()
+    private var previewData = Data()
     public func onPreviewFrame(sampleBuffer: CMSampleBuffer) {
         guard let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {
             print("Cannot get imageBuffer")
             return
         }
-        let data = prepareRGBData(imageBuffer: imageBuffer)
-//        let data = prepareYUVData(img: imageBuffer)
-        if let data = data {
-            WebSocketVideoFrameServer.shared.sendFrame(frame: data)
-        }
+        self.rawData = prepareRGBData(imageBuffer: imageBuffer)
+        self.previewData = preparePreviewData(imageBuffer: imageBuffer)
     }
     
-    public func prepareYUVData(img: CVImageBuffer) -> Data? {
-        let flag = CVPixelBufferLockFlags.readOnly
-        
-        CVPixelBufferLockBaseAddress(img, flag)
-        
-        let  yRow = CVPixelBufferGetBytesPerRowOfPlane(img, 0)
-        let uvRow = CVPixelBufferGetBytesPerRowOfPlane(img, 1)
-        
-        let  yWidth = CVPixelBufferGetWidthOfPlane(img, 0)
-        let uvWidth = CVPixelBufferGetWidthOfPlane(img, 1)
-        
-        let  yHeight = CVPixelBufferGetHeightOfPlane(img, 0)
-        let uvHeight = CVPixelBufferGetHeightOfPlane(img, 1)
-        
-        let  yBuf = CVPixelBufferGetBaseAddressOfPlane(img, 0)!
-        let uvBuf = CVPixelBufferGetBaseAddressOfPlane(img, 1)!
-        
-        if dataBufferYUV == nil {
-            dataBufferYUV = malloc(yRow*yHeight+uvRow*uvHeight)
-        }
-        memcpy(dataBufferYUV!, yBuf, yRow*yHeight)
-        let offset = dataBufferYUV!.assumingMemoryBound(to: UInt8.self).advanced(by: yRow*yHeight)
-        memcpy(offset, uvBuf, uvRow*uvHeight)
-        let data = Data(bytesNoCopy: dataBufferYUV!, count: yRow*yHeight+uvRow*uvHeight, deallocator: .none)
-        
-        CVPixelBufferUnlockBaseAddress(img, flag)
-        
-        return data
-    }
-    
-    public func prepareRGBData(imageBuffer: CVImageBuffer) -> Data? {
+    public func prepareRGBData(imageBuffer: CVImageBuffer) -> Data {
         let flag = CVPixelBufferLockFlags.readOnly
         CVPixelBufferLockBaseAddress(imageBuffer, flag)
         let  rowBytes = CVPixelBufferGetBytesPerRow(imageBuffer)
@@ -125,6 +95,40 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
         return data
     }
     
+    public func preparePreviewData(imageBuffer: CVImageBuffer) -> Data {
+        var ciImage: CIImage = .init(cvImageBuffer: imageBuffer)
+        let resizeFilter = CIFilter(name: "CILanczosScaleTransform")!
+        resizeFilter.setValue(ciImage, forKey: kCIInputImageKey)
+        let scale = CGFloat(self.previewWidth) / CGFloat(CVPixelBufferGetWidth(imageBuffer))
+        resizeFilter.setValue(scale, forKey: kCIInputScaleKey)
+        ciImage = resizeFilter.outputImage!
+        //
+        let cgImage = ciContext.createCGImage(ciImage, from: ciImage.extent)
+        let colorspace = CGColorSpaceCreateDeviceRGB()
+        let bpc = cgImage!.bitsPerComponent
+        let Bpr = cgImage!.bytesPerRow
+        let cgContext = CGContext(data: nil, width: cgImage!.width, height: cgImage!.height, bitsPerComponent: bpc, bytesPerRow: Bpr, space: colorspace, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+
+
+        cgContext?.draw(cgImage!, in: CGRect(x: 0, y: 0, width: cgImage!.width, height: cgImage!.height))
+        if dataBufferRGBsmall == nil {
+            dataBufferRGBsmall = malloc(3*cgImage!.height*cgImage!.width)
+        }
+        var inBufferSmall = vImage_Buffer(
+            data: cgContext!.data!,
+            height: vImagePixelCount(cgImage!.height),
+            width: vImagePixelCount(cgImage!.width),
+            rowBytes: Bpr)
+        var outBufferSmall = vImage_Buffer(
+            data: dataBufferRGBsmall,
+            height: vImagePixelCount(cgImage!.height),
+            width: vImagePixelCount(cgImage!.width),
+            rowBytes: 3*cgImage!.width)
+        vImageConvert_RGBA8888toRGB888(&inBufferSmall, &outBufferSmall, UInt32(kvImageNoFlags))
+        let data = Data(bytesNoCopy: dataBufferRGBsmall!, count: 3*cgImage!.width*cgImage!.height, deallocator: .none)
+        return data
+    }
+    
     public func onCapture(imageData: Data) {
         print("captureCallback")
 //        if let image = UIImage.init(data: imageData){
@@ -150,19 +154,61 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
     
     public func onCameraInitialized() {
         print("Camera initialized")
-        WebSocketVideoFrameServer.shared.start(completion: { self.callJsAfterCameraStart() })
+        DispatchQueue.main.async {
+            self.callJsAfterCameraStart()
+        }
     }
     
     // MARK: privates vars
     private var webview: WKWebView? = nil
     private var onGrabFrameJsCallBack: String?
     private let ciContext = CIContext()
+    private var previewWidth = 640;
     private var onCameraInitializedJsCallback: String?
     private var onCaptureJsCallback: String?
+    let webserver = GCDWebServer()
+    
     
     // MARK: public methods
     public override init() {
-        
+        super.init()
+//        webserver.addDefaultHandler(forMethod: "OPTIONS", request: GCDWebServerRequest.classForCoder()) { (req) -> GCDWebServerResponse? in
+//            let resp = GCDWebServerResponse().applyCORSHeaders()
+//            return resp
+//        }
+        let dirPath = Bundle.main.path(forResource: "www", ofType: nil)
+        webserver.addGETHandler(forBasePath: "/", directoryPath: dirPath!, indexFilename: nil, cacheAge: 0, allowRangeRequests: false)
+        webserver.addHandler(forMethod: "GET",
+                             path: "/rawframe",
+                             request: GCDWebServerRequest.self,
+                             processBlock: { request in
+//                                let data = "Hello from GCDWebserver".data(using: .utf8)!
+//                                let contentType = "text/html"
+                                let data = self.rawData
+                                let contentType = "application/octet-stream"
+                                let response = GCDWebServerDataResponse(data: data, contentType: contentType)
+                                return response
+                             })
+        webserver.addHandler(forMethod: "GET",
+                             path: "/previewframe",
+                             request: GCDWebServerRequest.self,
+                             processBlock: { request in
+//                                let data = "Hello from GCDWebserver".data(using: .utf8)!
+//                                let contentType = "text/html"
+                                let data = self.previewData
+                                let contentType = "application/octet-stream"
+                                let response = GCDWebServerDataResponse(data: data, contentType: contentType)
+                                return response
+                             })
+        let options: [String: Any] = [
+            GCDWebServerOption_Port: findFreePort(),
+            GCDWebServerOption_BindToLocalhost: true
+        ]
+        do {
+            try self.webserver.start(options: options)
+        } catch {
+            print(error)
+        }
     }
     
     deinit {
@@ -179,6 +225,8 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
                 webview.configuration.userContentController.removeScriptMessageHandler(forName: m.rawValue)
             }
             self.webview = nil
+            webserver.stop()
+            webserver.removeAllHandlers()
         }
     }
     
@@ -202,6 +250,9 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
         var jsonString: String = ""
         switch message {
         case .StartCamera:
+            if let pWidth = args?["previewWidth"] as? Int {
+                self.previewWidth = pWidth
+            }
             handleCameraStart(onCameraInitializedJsCallback: args?["onInitializedJsCallback"] as? String,
                               sessionPreset: args?["sessionPreset"] as! String,
                               flash_mode: args?["flashMode"] as? String)
@@ -245,7 +296,6 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
             if let captureSession = cameraSession.captureSession {
                 if captureSession.isRunning {
                     cameraSession.stopCamera()
-                    WebSocketVideoFrameServer.shared.stop()
                 }
             }
         }
@@ -258,9 +308,9 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
             free(dataBufferRGB)
             dataBufferRGB = nil
         }
-        if dataBufferYUV != nil {
-            free(dataBufferYUV)
-            dataBufferYUV = nil
+        if dataBufferRGBsmall != nil {
+            free(dataBufferRGBsmall)
+            dataBufferRGBsmall = nil
         }
     }
     
@@ -283,7 +333,7 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
                 return
             }
             DispatchQueue.main.async {
-                webview.evaluateJavaScript("\(jsCallback)(\(WebSocketVideoFrameServer.shared.serverPort))", completionHandler: {result, error in
+                webview.evaluateJavaScript("\(jsCallback)(\(self.webserver.port))", completionHandler: {result, error in
                     guard error == nil else {
                         print(error!)
                         return

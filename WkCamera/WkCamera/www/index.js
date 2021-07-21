@@ -3,21 +3,30 @@ var material;
 var w = 320;
 var h = 240;
 var sessionPreset;
-var stats = new Stats();
-stats.showPanel( 0 ); // fps
+var previewWidth = 360;
+var previewHeight = undefined;
+var targetPreviewFPS = 25;
+var fpsMeasurementInterval = 5;
+var previewFramesCounter = 0;
+var previewFramesElapsedSum = 0;
+var previewFramesMeasuredFPS = 0;
+var targetRawFPS = 10;
+var rawFramesCounter = 0;
+var rawFramesElapsedSum = 0;
+var rawFramesMeasuredFPS = 0;
+var elapsed = 0
 var controls;
 const bytePerChannel = 3;
 var formatTexture;
 var flashMode = 'off'
 
+
 document.addEventListener("DOMContentLoaded", () => {
-    // FPS
     document.getElementById('stopCameraButton').disabled = true
-    stats.domElement.style.position = 'absolute';
-    stats.domElement.style.right = '0';
-    stats.domElement.style.left = 'unset';
-    stats.domElement.style.top = '0';
-    document.body.appendChild( stats.dom );
+    status_test = document.getElementById('status_test');
+    // FPS
+    status_fps_preview = document.getElementById('status_fps_preview');
+    status_fps_raw = document.getElementById('status_fps_raw');
 
     if (bytePerChannel === 4) {
         formatTexture = THREE.RGBAFormat;
@@ -44,37 +53,15 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
     sessionPreset = getSessionPresetFromName(select_preset.options[select_preset.selectedIndex].value);
-    document.getElementById('status_test').innerHTML = sessionPreset.name;
+    status_test.innerHTML = sessionPreset.name;
 
-    scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(75, w/h, 0.1, 10000);
-    renderer = new THREE.WebGLRenderer({ canvas: canvasgl, antialias: true });
-
-    computeSize();
-
-    controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.enablePan = false;
-    controls.enableZoom = true;
-    controls.enableRotate = false;
-
-    const dataTexture = new Uint8Array(sessionPreset.width*sessionPreset.height*bytePerChannel);
-    for (let i=0; i<sessionPreset.width*sessionPreset.height*bytePerChannel; i++)
-        dataTexture[i] = 128;
-    const frameTexture = new THREE.DataTexture(dataTexture, sessionPreset.height, sessionPreset.width, formatTexture, THREE.UnsignedByteType);
-    frameTexture.needsUpdate = true;
-    const planeGeo = new THREE.PlaneBufferGeometry(sessionPreset.height, sessionPreset.width);
-    material = new THREE.MeshBasicMaterial({
-        map: frameTexture,
-    });
-    material.map.flipY = true;
-    const plane = new THREE.Mesh(planeGeo, material);
-    scene.add(plane);
-    
     document.getElementById('startCameraButton').addEventListener('click', function(e) {
         document.getElementById('select_preset').disabled = true;
         document.getElementById('startCameraButton').disabled = true
         document.getElementById('stopCameraButton').disabled = false
-        startNativeCamera(onFrameGrabbed, sessionPreset, flashMode)
+        previewHeight = Math.round(previewWidth / sessionPreset.height * sessionPreset.width) // w<-> because landscape
+        setupGLView();
+        startNativeCamera(sessionPreset, flashMode, onFramePreview, targetPreviewFPS, previewWidth, onFrameGrabbed, targetRawFPS)
     })
     document.getElementById('stopCameraButton').addEventListener('click', function(e) {
         stopNativeCamera();
@@ -86,9 +73,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('takePictureButton').addEventListener('click', function(e) {
         takePictureNativeCamera(onPictureTaken)
     });
-
-    fpshtml = document.getElementById('fps');
-    animate();
 
     document.getElementById('flashButton').addEventListener('click', function(e) {
         switch (flashMode) {
@@ -109,8 +93,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 
-stop
-
 function getSessionPresetFromName(name) {
     for (preset_key of Object.keys(DictSessionPreset)) {
         let preset = DictSessionPreset[preset_key]
@@ -120,10 +102,38 @@ function getSessionPresetFromName(name) {
     }
 }
 
+function setupGLView() {
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(75, w/h, 0.1, 10000);
+    renderer = new THREE.WebGLRenderer({ canvas: canvasgl, antialias: true });
+
+    computeSize();
+
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enablePan = false;
+    controls.enableZoom = true;
+    controls.enableRotate = false;
+
+    const dataTexture = new Uint8Array(previewWidth*previewHeight*bytePerChannel);
+    for (let i=0; i<previewWidth*previewHeight*bytePerChannel; i++)
+        dataTexture[i] = 128;
+    const frameTexture = new THREE.DataTexture(dataTexture, previewHeight, previewWidth, formatTexture, THREE.UnsignedByteType);
+    frameTexture.needsUpdate = true;
+    const planeGeo = new THREE.PlaneBufferGeometry(previewWidth, previewHeight);
+    material = new THREE.MeshBasicMaterial({
+        map: frameTexture,
+    });
+    material.map.flipY = true;
+    const plane = new THREE.Mesh(planeGeo, material);
+    scene.add(plane);
+
+    animate();
+}
+
 function computeSize() {
     w = canvasgl.clientWidth;
     h = canvasgl.clientHeight;
-    cameraHeight = sessionPreset.width/2/Math.tan(camera.fov/2*(Math.PI/180))
+    cameraHeight = previewHeight/2/Math.tan(camera.fov/2*(Math.PI/180))
     camera.position.set(0,0,cameraHeight);
     renderer.setSize(w,h);
 }
@@ -135,18 +145,50 @@ function animate() {
 
 function ChangePresetList() {
     sessionPreset = getSessionPresetFromName(select_preset.options[select_preset.selectedIndex].value);
-    document.getElementById('status_test').innerHTML = sessionPreset.name;
+    status_test.innerHTML = sessionPreset.name;
+}
+
+
+
+
+/**
+ * @param {ArrayBuffer} buffer preview data coming from native camera. Can be used to create a new Uint8Array
+ * @param {number} elapsedTime time in ms elapsed to get the preview frame
+ */
+function onFramePreview(buffer, elapsedTime) {
+    var frame = new Uint8Array(buffer);
+    material.map = new THREE.DataTexture(frame, previewWidth, previewHeight, formatTexture, THREE.UnsignedByteType);
+    material.map.flipY = true;
+    material.needsUpdate = true;
+
+    if (previewFramesCounter !== 0 && previewFramesCounter%(fpsMeasurementInterval-1) === 0) {
+        previewFramesMeasuredFPS = 1000/previewFramesElapsedSum * fpsMeasurementInterval;
+        previewFramesCounter = 0;
+        previewFramesElapsedSum = 0;
+    } else {
+        previewFramesCounter += 1;
+        previewFramesElapsedSum += elapsedTime;
+    }
+    status_fps_preview.innerHTML = `preview ${Math.round(elapsedTime)} ms (max FPS=${Math.round(previewFramesMeasuredFPS)})`
 }
 
 /**
- * @param  {Blob} aBlob data coming from native camera. Can be used to create a new Uin8Array
+ * @param {ArrayBuffer} buffer raw data coming from native camera. Can be used to create a new Uint8Array
+ * @param {number} elapsedTime time in ms elapsed to get the raw frame
  */
-function onFrameGrabbed(aBlob) {
-    var frame = new Uint8Array(aBlob);
-    material.map = new THREE.DataTexture(frame, sessionPreset.height, sessionPreset.width, formatTexture, THREE.UnsignedByteType);
-    material.map.flipY = true;
-    material.needsUpdate = true;
-    stats.update();
+function onFrameGrabbed(buffer, elapsedTime) {
+    var rawframe = new Uint8Array(buffer);
+    status_test.innerHTML = `${sessionPreset.name}, p(${previewWidth}x${previewHeight}), p FPS:${targetPreviewFPS}, raw FPS:${targetRawFPS}<br/> raw frame length: ${Math.round(10*rawframe.byteLength/1024/1024)/10}MB, [0]=${rawframe[0]}, [1]=${rawframe[1]}`
+
+    if (rawFramesCounter !== 0 && rawFramesCounter%(fpsMeasurementInterval-1) === 0) {
+        rawFramesMeasuredFPS = 1000/rawFramesElapsedSum * fpsMeasurementInterval;
+        rawFramesCounter = 0;
+        rawFramesElapsedSum = 0;
+    } else {
+        rawFramesCounter += 1;
+        rawFramesElapsedSum += elapsedTime;
+    }
+    status_fps_raw.innerHTML = `raw ${Math.round(elapsedTime)} ms (max FPS=${Math.round(rawFramesMeasuredFPS)})`
 }
 
 function onPictureTaken(base64ImageData) {
