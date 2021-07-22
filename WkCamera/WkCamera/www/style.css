@@ -8,3 +8,7 @@
 #snapshotImage {
     width: 100%;
 }
+
+#stream_preview {
+    width: 80vw;
+}

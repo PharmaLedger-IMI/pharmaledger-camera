@@ -19,6 +19,14 @@ public enum MessageNames: String, CaseIterable {
     case SetFlashMode = "SetFlashMode"
 }
 
+enum StreamResponseError: Error {
+    case cannotCreateCIImage
+    case cannotCreateCGImage
+    case cannotCreateFrameHeadersData
+    case cannotReadCameraSession
+    case cannotReadCaptureSession
+}
+
 public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHandler {
     // MARK: public vars
     public var cameraSession: CameraSession?
@@ -53,32 +61,31 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
     private var dataBufferRGBsmall: UnsafeMutableRawPointer? = nil
     private var rawData = Data()
     private var previewData = Data()
+    private var currentCIImage: CIImage? = nil
     public func onPreviewFrame(sampleBuffer: CMSampleBuffer) {
         guard let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {
             print("Cannot get imageBuffer")
             return
         }
-        self.rawData = prepareRGBData(imageBuffer: imageBuffer)
-        self.previewData = preparePreviewData(imageBuffer: imageBuffer)
+        currentCIImage = CIImage(cvImageBuffer: imageBuffer, options: nil)
     }
     
-    public func prepareRGBData(imageBuffer: CVImageBuffer) -> Data {
-        let flag = CVPixelBufferLockFlags.readOnly
-        CVPixelBufferLockBaseAddress(imageBuffer, flag)
-        let  rowBytes = CVPixelBufferGetBytesPerRow(imageBuffer)
-        let w = CVPixelBufferGetWidth(imageBuffer)
-        let h = CVPixelBufferGetHeight(imageBuffer)
-        let buf = CVPixelBufferGetBaseAddress(imageBuffer)!
-        
+    public func prepareRGBData(ciImage: CIImage) -> Data {
+        let cgImage = ciContext.createCGImage(ciImage, from: ciImage.extent)
+        let colorspace = CGColorSpaceCreateDeviceRGB()
+        let rowBytes = cgImage!.bytesPerRow
+        let bpc = cgImage!.bitsPerComponent
+        let w = cgImage!.width
+        let h = cgImage!.height
         if dataBufferRGBA == nil {
             dataBufferRGBA = malloc(rowBytes*h)
         }
         if dataBufferRGB == nil {
             dataBufferRGB = malloc(3*w*h)
         }
-        memcpy(dataBufferRGBA!, buf, rowBytes*h)
-        CVPixelBufferUnlockBaseAddress(imageBuffer, flag)
+        let cgContext = CGContext(data: dataBufferRGBA, width: w, height: h, bitsPerComponent: bpc, bytesPerRow: rowBytes, space: colorspace, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
         
+        cgContext?.draw(cgImage!, in: CGRect(x: 0, y: 0, width: w, height: h))
         var inBuffer = vImage_Buffer(
             data: dataBufferRGBA!,
             height: vImagePixelCount(h),
@@ -89,21 +96,20 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
             height: vImagePixelCount(h),
             width: vImagePixelCount(w),
             rowBytes: 3*w)
-        vImageConvert_BGRA8888toRGB888(&inBuffer, &outBuffer, UInt32(kvImageNoFlags))
+        vImageConvert_RGBA8888toRGB888(&inBuffer, &outBuffer, UInt32(kvImageNoFlags))
         
         let data = Data(bytesNoCopy: dataBufferRGB!, count: 3*w*h, deallocator: .none)
         return data
     }
     
-    public func preparePreviewData(imageBuffer: CVImageBuffer) -> Data {
-        var ciImage: CIImage = .init(cvImageBuffer: imageBuffer)
+    public func preparePreviewData(ciImage: CIImage) -> Data {
         let resizeFilter = CIFilter(name: "CILanczosScaleTransform")!
         resizeFilter.setValue(ciImage, forKey: kCIInputImageKey)
-        let scale = CGFloat(self.previewWidth) / CGFloat(CVPixelBufferGetWidth(imageBuffer))
+        let scale = CGFloat(self.previewWidth) / ciImage.extent.width
         resizeFilter.setValue(scale, forKey: kCIInputScaleKey)
-        ciImage = resizeFilter.outputImage!
+        let ciImageRescaled = resizeFilter.outputImage!
         //
-        let cgImage = ciContext.createCGImage(ciImage, from: ciImage.extent)
+        let cgImage = ciContext.createCGImage(ciImageRescaled, from: ciImageRescaled.extent)
         let colorspace = CGColorSpaceCreateDeviceRGB()
         let bpc = cgImage!.bitsPerComponent
         let Bpr = cgImage!.bytesPerRow
@@ -162,53 +168,21 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
     // MARK: privates vars
     private var webview: WKWebView? = nil
     private var onGrabFrameJsCallBack: String?
-    private let ciContext = CIContext()
+    private let ciContext = CIContext(options: nil)
     private var previewWidth = 640;
     private var onCameraInitializedJsCallback: String?
     private var onCaptureJsCallback: String?
     let webserver = GCDWebServer()
+    let mjpegQueue = DispatchQueue(label: "stream-queue", qos: .userInteractive, attributes: [], autoreleaseFrequency: .inherit, target: nil)
+    let rawframeQueue = DispatchQueue(label: "rawframe-queue", qos: .userInitiated, attributes: [], autoreleaseFrequency: .inherit, target: nil)
+    let previewframeQueue = DispatchQueue(label: "previewframe-queue", qos: .userInteractive, attributes: [], autoreleaseFrequency: .inherit, target: nil)
     
     
     // MARK: public methods
     public override init() {
         super.init()
-//        webserver.addDefaultHandler(forMethod: "OPTIONS", request: GCDWebServerRequest.classForCoder()) { (req) -> GCDWebServerResponse? in
-//            let resp = GCDWebServerResponse().applyCORSHeaders()
-//            return resp
-//        }
-        let dirPath = Bundle.main.path(forResource: "www", ofType: nil)
-        webserver.addGETHandler(forBasePath: "/", directoryPath: dirPath!, indexFilename: nil, cacheAge: 0, allowRangeRequests: false)
-        webserver.addHandler(forMethod: "GET",
-                             path: "/rawframe",
-                             request: GCDWebServerRequest.self,
-                             processBlock: { request in
-//                                let data = "Hello from GCDWebserver".data(using: .utf8)!
-//                                let contentType = "text/html"
-                                let data = self.rawData
-                                let contentType = "application/octet-stream"
-                                let response = GCDWebServerDataResponse(data: data, contentType: contentType)
-                                return response
-                             })
-        webserver.addHandler(forMethod: "GET",
-                             path: "/previewframe",
-                             request: GCDWebServerRequest.self,
-                             processBlock: { request in
-//                                let data = "Hello from GCDWebserver".data(using: .utf8)!
-//                                let contentType = "text/html"
-                                let data = self.previewData
-                                let contentType = "application/octet-stream"
-                                let response = GCDWebServerDataResponse(data: data, contentType: contentType)
-                                return response
-                             })
-        let options: [String: Any] = [
-            GCDWebServerOption_Port: findFreePort(),
-            GCDWebServerOption_BindToLocalhost: true
-        ]
-        do {
-            try self.webserver.start(options: options)
-        } catch {
-            print(error)
-        }
+        addWebserverHandlers()
+        startWebserver()
     }
     
     deinit {
@@ -284,6 +258,102 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
     }
     
     // MARK: private methods
+    private func startWebserver() {
+        let options: [String: Any] = [
+            GCDWebServerOption_Port: findFreePort(),
+            GCDWebServerOption_BindToLocalhost: false
+        ]
+        do {
+            try self.webserver.start(options: options)
+        } catch {
+            print(error)
+        }
+    }
+    
+    private func addWebserverHandlers() {
+        let dirPath = Bundle.main.path(forResource: "www", ofType: nil)
+        webserver.addGETHandler(forBasePath: "/", directoryPath: dirPath!, indexFilename: nil, cacheAge: 0, allowRangeRequests: false)
+        webserver.addHandler(forMethod: "GET", path: "/mjpeg", request: GCDWebServerRequest.classForCoder(), asyncProcessBlock: {(request, completion) in
+            let response = GCDWebServerStreamedResponse(contentType: "multipart/x-mixed-replace; boundary=0123456789876543210", asyncStreamBlock: {completion in
+                self.mjpegQueue.async {
+                    if self.cameraSession == nil {
+                        completion(nil, StreamResponseError.cannotReadCameraSession)
+                        return
+                    }
+                    if self.cameraSession?.captureSession == nil {
+                        completion(nil, StreamResponseError.cannotReadCaptureSession)
+                        return
+                    }
+                    if let ciImage = self.currentCIImage {
+                        if let tempImage = self.ciContext.createCGImage(ciImage, from: ciImage.extent) {
+                            let image = UIImage(cgImage: tempImage)
+                            let jpegData = image.jpegData(compressionQuality: 0.5)!
+                            
+                            let frameHeaders = [
+                                "",
+                                "--0123456789876543210",
+                                "Content-Type: image/jpeg",
+                                "Content-Length: \(jpegData.count)",
+                                "",
+                                ""
+                            ]
+                            if let frameHeadersData = frameHeaders.joined(separator: "\r\n").data(using: String.Encoding.utf8) {
+                                var allData = Data()
+                                allData.append(frameHeadersData)
+                                allData.append(jpegData)
+                                let footersData = ["", ""].joined(separator: "\r\n").data(using: String.Encoding.utf8)!
+                                allData.append(footersData)
+                                completion(allData, nil)
+                            } else {
+                                print("Could not make frame headers data")
+                                completion(nil, StreamResponseError.cannotCreateFrameHeadersData)
+                            }
+                        } else {
+                            completion(nil, StreamResponseError.cannotCreateCGImage)
+                        }
+                    } else {
+                        completion(nil, StreamResponseError.cannotCreateCIImage)
+                    }
+                }
+            })
+            response.setValue("keep-alive", forAdditionalHeader: "Connection")
+            response.setValue("0", forAdditionalHeader: "Ma-age")
+            response.setValue("0", forAdditionalHeader: "Expires")
+            response.setValue("no-store,must-revalidate", forAdditionalHeader: "Cache-Control")
+            response.setValue("*", forAdditionalHeader: "Access-Control-Allow-Origin")
+            response.setValue("accept,content-type", forAdditionalHeader: "Access-Control-Allow-Headers")
+            response.setValue("GET", forAdditionalHeader: "Access-Control-Allow-Methods")
+            response.setValue("Cache-Control,Content-Encoding", forAdditionalHeader: "Access-Control-expose-headers")
+            response.setValue("no-cache", forAdditionalHeader: "Pragma")
+            completion(response)
+        })
+        
+        webserver.addHandler(forMethod: "GET", path: "/rawframe", request: GCDWebServerRequest.classForCoder(), asyncProcessBlock: { (response, completion) in
+            self.rawframeQueue.async {
+                if let ciImage = self.currentCIImage {
+                    let data = self.prepareRGBData(ciImage: ciImage)
+                    let contentType = "application/octet-stream"
+                    let response = GCDWebServerDataResponse(data: data, contentType: contentType)
+                    completion(response)
+                } else {
+                    completion(GCDWebServerErrorResponse.init(statusCode: 500))
+                }
+            }
+        })
+        webserver.addHandler(forMethod: "GET", path: "/previewframe", request: GCDWebServerRequest.self, asyncProcessBlock: {(request, completion) in
+            self.previewframeQueue.async {
+                if let ciImage = self.currentCIImage {
+                    let data = self.preparePreviewData(ciImage: ciImage)
+                    let contentType = "application/octet-stream"
+                    let response = GCDWebServerDataResponse(data: data, contentType: contentType)
+                    completion(response)
+                } else {
+                    completion(GCDWebServerErrorResponse(statusCode: 500))
+                }
+            }
+        })
+    }
+    
     private func handleCameraStart(onCameraInitializedJsCallback: String?, sessionPreset: String, flash_mode: String?) {
         self.onCameraInitializedJsCallback = onCameraInitializedJsCallback
         self.cameraConfiguration = .init(flash_mode: flash_mode, color_space: nil, session_preset: sessionPreset, auto_orienation_enabled: false)

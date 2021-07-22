@@ -19,6 +19,8 @@ var controls;
 const bytePerChannel = 3;
 var formatTexture;
 var flashMode = 'off'
+var time0 = undefined
+var globalCounter = 0
 
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -47,7 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
         i++;
     }
     for (let i = 0; i < select_preset.options.length; i++) {
-        if (select_preset.options[i].value === 'vga640x480') {
+        if (select_preset.options[i].value === 'hd1920x1080') {
             select_preset.selectedIndex = i;
             break;
         }
@@ -62,12 +64,16 @@ document.addEventListener("DOMContentLoaded", () => {
         previewHeight = Math.round(previewWidth / sessionPreset.height * sessionPreset.width) // w<-> because landscape
         setupGLView();
         startNativeCamera(sessionPreset, flashMode, onFramePreview, targetPreviewFPS, previewWidth, onFrameGrabbed, targetRawFPS)
+        // startNativeCamera(sessionPreset, flashMode, undefined, targetPreviewFPS, previewWidth, undefined, targetRawFPS)
     })
     document.getElementById('stopCameraButton').addEventListener('click', function(e) {
         stopNativeCamera();
         document.getElementById('select_preset').disabled = false;
         document.getElementById('startCameraButton').disabled = false
         document.getElementById('stopCameraButton').disabled = true
+        time0 = undefined
+        globalCounter = 0
+        document.getElementById('title_id').innerHTML = "Camera Test"
     })
 
     document.getElementById('takePictureButton').addEventListener('click', function(e) {
@@ -156,6 +162,10 @@ function ChangePresetList() {
  * @param {number} elapsedTime time in ms elapsed to get the preview frame
  */
 function onFramePreview(buffer, elapsedTime) {
+    if (time0 === undefined) {
+        document.getElementById('title_id').innerHTML = _serverUrl;
+        time0 = performance.now();
+    }
     var frame = new Uint8Array(buffer);
     material.map = new THREE.DataTexture(frame, previewWidth, previewHeight, formatTexture, THREE.UnsignedByteType);
     material.map.flipY = true;
@@ -169,7 +179,8 @@ function onFramePreview(buffer, elapsedTime) {
         previewFramesCounter += 1;
         previewFramesElapsedSum += elapsedTime;
     }
-    status_fps_preview.innerHTML = `preview ${Math.round(elapsedTime)} ms (max FPS=${Math.round(previewFramesMeasuredFPS)})`
+    globalCounter += 1
+    status_fps_preview.innerHTML = `preview ${Math.round(elapsedTime)} ms (max FPS=${Math.round(previewFramesMeasuredFPS)}) | gFPS:${Math.round(10 * 1000 * globalCounter / (performance.now() - time0)) / 10}`
 }
 
 /**

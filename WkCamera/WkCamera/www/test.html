@@ -4,7 +4,7 @@
       <script type = "text/javascript">
         document.addEventListener("DOMContentLoaded", () => {
             document.getElementById("get_frame").addEventListener("click", function(e) {
-                let target = "http://172.30.2.149:5555/"
+                let target = "http://192.168.8.155:44273/"
                 headers = new Headers()
                 headers.append('Access-Control-Allow-Origin', target);
                 let options = { 
@@ -21,10 +21,21 @@
                     })
                 })
             })
+            document.getElementById("show_stream").addEventListener("click", e => {
+                let src_stream = document.getElementById("src_ip").value;
+                document.getElementById("stream_display").src = src_stream;
+            })
         });
       </script>
    </head>
    <body>
     <button id="get_frame">get frame</button>
-   </body>
+    <button id="show_stream">show stream</button>
+    <br/>
+    <div>
+        <p>source ip:</p>
+        <input type="text" id="src_ip"/>
+        <img id="stream_display"/>
+    </div>
+    </body>
 </html>
