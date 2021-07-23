@@ -9,6 +9,9 @@
     width: 100%;
 }
 
-#stream_preview {
-    width: 80vw;
+#streamPreview {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    height: 60vh;
 }

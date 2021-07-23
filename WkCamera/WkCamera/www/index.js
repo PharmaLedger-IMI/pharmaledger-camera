@@ -17,30 +17,35 @@ var rawFramesMeasuredFPS = 0;
 var elapsed = 0
 var controls;
 const bytePerChannel = 3;
+if (bytePerChannel === 4) {
+    formatTexture = THREE.RGBAFormat;
+} else if (bytePerChannel === 3) {
+    formatTexture = THREE.RGBFormat;
+}
 var formatTexture;
 var flashMode = 'off'
-var time0 = undefined
-var globalCounter = 0
+var usingMJPEG = false
 
 
 document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById('stopCameraButton').disabled = true
     status_test = document.getElementById('status_test');
-    // FPS
     status_fps_preview = document.getElementById('status_fps_preview');
     status_fps_raw = document.getElementById('status_fps_raw');
 
-    if (bytePerChannel === 4) {
-        formatTexture = THREE.RGBAFormat;
-    } else if (bytePerChannel === 3) {
-        formatTexture = THREE.RGBFormat;
-    }
+    startCameraButtonGL = document.getElementById('startCameraButtonGL');
+    startCameraButtonMJPEG = document.getElementById('startCameraButtonMJPEG');
+    stopCameraButton = document.getElementById('stopCameraButton');
+    stopCameraButton.disabled = true
 
+    title_h2 = document.getElementById('title_id');
+    takePictureButton = document.getElementById('takePictureButton');
+    flashButton = document.getElementById('flashButton');
+    snapshotImage = document.getElementById('snapshotImage');
+
+    
     canvasgl = document.getElementById('cameraCanvas');
-    w = canvasgl.clientWidth;
-    h = canvasgl.clientHeight;
-
-    select_preset = document.getElementById('select_preset')
+    streamPreview = document.getElementById('streamPreview');
+    select_preset = document.getElementById('select_preset');
     let i = 0
     for (preset_key of Object.keys(DictSessionPreset)) {
         let preset = DictSessionPreset[preset_key]
@@ -57,30 +62,54 @@ document.addEventListener("DOMContentLoaded", () => {
     sessionPreset = getSessionPresetFromName(select_preset.options[select_preset.selectedIndex].value);
     status_test.innerHTML = sessionPreset.name;
 
-    document.getElementById('startCameraButton').addEventListener('click', function(e) {
-        document.getElementById('select_preset').disabled = true;
-        document.getElementById('startCameraButton').disabled = true
-        document.getElementById('stopCameraButton').disabled = false
+    startCameraButtonGL.addEventListener('click', function(e) {
+        usingMJPEG = false
+        select_preset.disabled = true;
+        startCameraButtonGL.disabled = true
+        startCameraButtonMJPEG.disabled = true
+        stopCameraButton.disabled = false
+        show(canvasgl);
+        hide(streamPreview);
+        show(status_fps_preview);
+        show(status_fps_raw);
         previewHeight = Math.round(previewWidth / sessionPreset.height * sessionPreset.width) // w<-> because landscape
         setupGLView();
         startNativeCamera(sessionPreset, flashMode, onFramePreview, targetPreviewFPS, previewWidth, onFrameGrabbed, targetRawFPS)
-        // startNativeCamera(sessionPreset, flashMode, undefined, targetPreviewFPS, previewWidth, undefined, targetRawFPS)
+        title_h2.innerHTML = _serverUrl;
     })
-    document.getElementById('stopCameraButton').addEventListener('click', function(e) {
+    startCameraButtonMJPEG.addEventListener('click', function(e) {
+        usingMJPEG = true
+        select_preset.disabled = true;
+        startCameraButtonGL.disabled = true
+        startCameraButtonMJPEG.disabled = true
+        stopCameraButton.disabled = false
+        hide(canvasgl);
+        show(streamPreview);
+        show(status_fps_preview);
+        show(status_fps_raw);
+        previewHeight = Math.round(previewWidth / sessionPreset.height * sessionPreset.width) // w<-> because landscape
+        startNativeCamera(sessionPreset, flashMode, undefined, targetPreviewFPS, previewWidth, onFrameGrabbed, targetRawFPS, () => {
+            streamPreview.src = `${_serverUrl}/mjpeg`;
+            title_h2.innerHTML = _serverUrl;
+        });
+    });
+    stopCameraButton.addEventListener('click', function(e) {
+        window.close(); 
         stopNativeCamera();
-        document.getElementById('select_preset').disabled = false;
-        document.getElementById('startCameraButton').disabled = false
-        document.getElementById('stopCameraButton').disabled = true
+        select_preset.disabled = false;
+        startCameraButtonGL.disabled = false
+        startCameraButtonMJPEG.disabled = false
+        stopCameraButton.disabled = true
         time0 = undefined
         globalCounter = 0
-        document.getElementById('title_id').innerHTML = "Camera Test"
-    })
+        title_h2.innerHTML = "Camera Test"
+    });
 
-    document.getElementById('takePictureButton').addEventListener('click', function(e) {
+    takePictureButton.addEventListener('click', function(e) {
         takePictureNativeCamera(onPictureTaken)
     });
 
-    document.getElementById('flashButton').addEventListener('click', function(e) {
+    flashButton.addEventListener('click', function(e) {
         switch (flashMode) {
             case 'off':
                 flashMode = 'flash';
@@ -94,9 +123,14 @@ document.addEventListener("DOMContentLoaded", () => {
             default:
                 break;
         }
-        document.getElementById('flashButton').innerHTML = `T ${flashMode}`;
+        flashButton.innerHTML = `T ${flashMode}`;
         setFlashModeNativeCamera(flashMode);
     });
+
+    hide(canvasgl);
+    hide(streamPreview);
+    hide(status_fps_preview)
+    hide(status_fps_raw)
 });
 
 function getSessionPresetFromName(name) {
@@ -109,6 +143,8 @@ function getSessionPresetFromName(name) {
 }
 
 function setupGLView() {
+    w = canvasgl.clientWidth;
+    h = canvasgl.clientHeight;
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(75, w/h, 0.1, 10000);
     renderer = new THREE.WebGLRenderer({ canvas: canvasgl, antialias: true });
@@ -117,7 +153,7 @@ function setupGLView() {
 
     controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enablePan = false;
-    controls.enableZoom = true;
+    controls.enableZoom = false;
     controls.enableRotate = false;
 
     const dataTexture = new Uint8Array(previewWidth*previewHeight*bytePerChannel);
@@ -162,10 +198,6 @@ function ChangePresetList() {
  * @param {number} elapsedTime time in ms elapsed to get the preview frame
  */
 function onFramePreview(buffer, elapsedTime) {
-    if (time0 === undefined) {
-        document.getElementById('title_id').innerHTML = _serverUrl;
-        time0 = performance.now();
-    }
     var frame = new Uint8Array(buffer);
     material.map = new THREE.DataTexture(frame, previewWidth, previewHeight, formatTexture, THREE.UnsignedByteType);
     material.map.flipY = true;
@@ -179,8 +211,7 @@ function onFramePreview(buffer, elapsedTime) {
         previewFramesCounter += 1;
         previewFramesElapsedSum += elapsedTime;
     }
-    globalCounter += 1
-    status_fps_preview.innerHTML = `preview ${Math.round(elapsedTime)} ms (max FPS=${Math.round(previewFramesMeasuredFPS)}) | gFPS:${Math.round(10 * 1000 * globalCounter / (performance.now() - time0)) / 10}`
+    status_fps_preview.innerHTML = `preview ${Math.round(elapsedTime)} ms (max FPS=${Math.round(previewFramesMeasuredFPS)})`;
 }
 
 /**
@@ -189,7 +220,12 @@ function onFramePreview(buffer, elapsedTime) {
  */
 function onFrameGrabbed(buffer, elapsedTime) {
     var rawframe = new Uint8Array(buffer);
-    status_test.innerHTML = `${sessionPreset.name}, p(${previewWidth}x${previewHeight}), p FPS:${targetPreviewFPS}, raw FPS:${targetRawFPS}<br/> raw frame length: ${Math.round(10*rawframe.byteLength/1024/1024)/10}MB, [0]=${rawframe[0]}, [1]=${rawframe[1]}`
+    if (usingMJPEG === false) {
+        pSizeText = `, p(${previewWidth}x${previewHeight}), p FPS:${targetPreviewFPS}`
+    } else {
+        pSizeText = ""
+    }
+    status_test.innerHTML = `${sessionPreset.name}${pSizeText}, raw FPS:${targetRawFPS}<br/> raw frame length: ${Math.round(10*rawframe.byteLength/1024/1024)/10}MB, [0]=${rawframe[0]}, [1]=${rawframe[1]}`
 
     if (rawFramesCounter !== 0 && rawFramesCounter%(fpsMeasurementInterval-1) === 0) {
         rawFramesMeasuredFPS = 1000/rawFramesElapsedSum * fpsMeasurementInterval;
@@ -204,5 +240,13 @@ function onFrameGrabbed(buffer, elapsedTime) {
 
 function onPictureTaken(base64ImageData) {
     console.log(`Inside onPictureTaken`)
-    document.getElementById('snapshotImage').src = base64ImageData
+    snapshotImage.src = base64ImageData
+}
+
+function hide(element) {
+    element.style.display = "none";
+}
+
+function show(element) {
+    element.style.display = "block";
 }

@@ -6,6 +6,7 @@ var _previewWidth = 0;
 var _serverUrl = undefined;
 var _cameraRunning = false;
 var _onFrameGrabbedCallBack = undefined;
+var _onCameraInitializedCallBack = undefined;
 var _targetGrabFps = 10;
 
 function callNative(api, args, callback) {
@@ -28,12 +29,14 @@ function callNative(api, args, callback) {
  * @param {number} previewWidth width for the preview data
  * @param {function} onFrameGrabbedCallBack callBack for each raw frame. Data are received as an RGB ArrayBuffer. Can be undefined if you want to call 'getRawFrame' yourself
  * @param {number} targetGrabFps fps for the full resolution raw frame
+ * @param {function} onCameraInitializedCallBack called after camera initilaization is finished
  */
-function startNativeCamera(sessionPreset, flashMode, onFramePreviewCallback = undefined, targetPreviewFps = 25, previewWidth = 640, onFrameGrabbedCallBack = undefined, targetGrabFps = 10) {
+function startNativeCamera(sessionPreset, flashMode, onFramePreviewCallback = undefined, targetPreviewFps = 25, previewWidth = 640, onFrameGrabbedCallBack = undefined, targetGrabFps = 10, onCameraInitializedCallBack = undefined) {
     _targetPreviewFps = targetPreviewFps
     _previewWidth = previewWidth
     _onFramePreviewCallback = onFramePreviewCallback;
     _onFrameGrabbedCallBack = onFrameGrabbedCallBack;
+    _onCameraInitializedCallBack = onCameraInitializedCallBack;
     _targetGrabFps = targetGrabFps
     let params = {
         "onInitializedJsCallback": onNativeCameraInitialized.name,
@@ -92,6 +95,11 @@ function onNativeCameraInitialized(wsPort) {
                 }
             })
         }, 1000/_targetGrabFps)
+    }
+    if (_onCameraInitializedCallBack !== undefined) {
+        setTimeout(() => {
+            _onCameraInitializedCallBack();
+        }, 500);
     }
 }
 

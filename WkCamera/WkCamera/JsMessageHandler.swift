@@ -23,8 +23,6 @@ enum StreamResponseError: Error {
     case cannotCreateCIImage
     case cannotCreateCGImage
     case cannotCreateFrameHeadersData
-    case cannotReadCameraSession
-    case cannotReadCaptureSession
 }
 
 public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHandler {
@@ -261,7 +259,7 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
     private func startWebserver() {
         let options: [String: Any] = [
             GCDWebServerOption_Port: findFreePort(),
-            GCDWebServerOption_BindToLocalhost: false
+            GCDWebServerOption_BindToLocalhost: true
         ]
         do {
             try self.webserver.start(options: options)
@@ -276,14 +274,6 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
         webserver.addHandler(forMethod: "GET", path: "/mjpeg", request: GCDWebServerRequest.classForCoder(), asyncProcessBlock: {(request, completion) in
             let response = GCDWebServerStreamedResponse(contentType: "multipart/x-mixed-replace; boundary=0123456789876543210", asyncStreamBlock: {completion in
                 self.mjpegQueue.async {
-                    if self.cameraSession == nil {
-                        completion(nil, StreamResponseError.cannotReadCameraSession)
-                        return
-                    }
-                    if self.cameraSession?.captureSession == nil {
-                        completion(nil, StreamResponseError.cannotReadCaptureSession)
-                        return
-                    }
                     if let ciImage = self.currentCIImage {
                         if let tempImage = self.ciContext.createCGImage(ciImage, from: ciImage.extent) {
                             let image = UIImage(cgImage: tempImage)

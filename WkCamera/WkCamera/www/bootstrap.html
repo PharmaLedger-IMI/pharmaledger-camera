@@ -26,32 +26,37 @@
             </select>
         </div>
         <div class="col">
-            <button type="button" class="btn btn-primary btn-sm" id='startCameraButton'>Start</button>
+            <button type="button" class="btn btn-primary btn-sm" id="flashButton" >F off</button>
         </div>
         <div class="col">
             <button type="button" class="btn btn-danger btn-sm" id='stopCameraButton'>Stop</button><br/>
         </div>
+    </div>
+    <div class="row top-buffer">
         <div class="col">
-            <button type="button" class="btn btn-primary btn-sm" id="takePictureButton" >Picture</button>
+            <button type="button" class="btn btn-primary btn-sm" id='startCameraButtonGL'>Start(GL)</button>
         </div>
         <div class="col">
-            <button type="button" class="btn btn-primary btn-sm" id="flashButton" >F off</button>
+            <button type="button" class="btn btn-primary btn-sm" id='startCameraButtonMJPEG'>Start(MJPEG)</button>
+        </div>
+        <div class="col">
+            <button type="button" class="btn btn-primary btn-sm" id="takePictureButton" >Picture</button>
         </div>
     </div>
     <div class="row top-buffer">
         <canvas id='cameraCanvas'></canvas>    
     </div>
-    <div class="row">
-        <p id='status_test'>Test Text</p>
-    </div>
-    <div class="row">
-        <p id='status_fps_preview'>FPS preview</p>
-    </div>
-    <div class="row">
-        <p id='status_fps_raw'>FPS raw</p>
-    </div>
     <div>
-        <img id='stream_preview' />
+        <img id='streamPreview'/>
+    </div>
+    <div class="row">
+        <p id='status_test'></p>
+    </div>
+    <div class="row">
+        <p id='status_fps_preview'></p>
+    </div>
+    <div class="row">
+        <p id='status_fps_raw'></p>
     </div>
 </div>
 <div>
