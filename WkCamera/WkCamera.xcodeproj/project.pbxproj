@@ -22,6 +22,7 @@
 		D2DA5A392693A804006B8C4E /* CameraWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2DA5A362693A804006B8C4E /* CameraWebView.swift */; };
 		D2DA5A3C2693A940006B8C4E /* JsMessageHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2DA5A3B2693A940006B8C4E /* JsMessageHandler.swift */; };
 		D2DA5A462693AB3F006B8C4E /* www in Resources */ = {isa = PBXBuildFile; fileRef = D2DA5A452693AB3F006B8C4E /* www */; };
+		D2FBA68526B05C4E000E2270 /* CaptureProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2FBA68426B05C4E000E2270 /* CaptureProcessor.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -114,6 +115,7 @@
 		D2DA5A362693A804006B8C4E /* CameraWebView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CameraWebView.swift; sourceTree = "<group>"; };
 		D2DA5A3B2693A940006B8C4E /* JsMessageHandler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JsMessageHandler.swift; sourceTree = "<group>"; };
 		D2DA5A452693AB3F006B8C4E /* www */ = {isa = PBXFileReference; lastKnownFileType = folder; path = www; sourceTree = "<group>"; };
+		D2FBA68426B05C4E000E2270 /* CaptureProcessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CaptureProcessor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -185,6 +187,7 @@
 				D2DA5A3B2693A940006B8C4E /* JsMessageHandler.swift */,
 				D2DA5A1F2693A6E2006B8C4E /* Preview Content */,
 				D2A0501A26A5BBCA004F7B09 /* Utilities.swift */,
+				D2FBA68426B05C4E000E2270 /* CaptureProcessor.swift */,
 			);
 			path = WkCamera;
 			sourceTree = "<group>";
@@ -354,6 +357,7 @@
 				D2A0501B26A5BBCA004F7B09 /* Utilities.swift in Sources */,
 				D2DA5A1A2693A6E1006B8C4E /* SceneDelegate.swift in Sources */,
 				D2DA5A382693A804006B8C4E /* CameraWebViewController.swift in Sources */,
+				D2FBA68526B05C4E000E2270 /* CaptureProcessor.swift in Sources */,
 				D2DA5A3C2693A940006B8C4E /* JsMessageHandler.swift in Sources */,
 				D2DA5A1C2693A6E1006B8C4E /* ContentView.swift in Sources */,
 			);
