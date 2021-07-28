@@ -59,11 +59,25 @@ function stopNativeCamera() {
 }
 
 /**
- * Takes a photo
+ * Takes a photo and return it as base64 string ImageData in callback function
  * @param  {function} onCaptureCallback callback reached when the picture is taken
  */
-function takePictureNativeCamera(onCaptureCallback) {
+function takePictureBase64NativeCamera(onCaptureCallback) {
+
     callNative("TakePicture", {"onCaptureJsCallback": onCaptureCallback.name});
+}
+
+/**
+ * @returns {Promise<Blob>} gets a JPEG snapshot
+ */
+ function getSnapshot() {
+    return fetch(`${_serverUrl}/snapshot`)
+    .then(response => {
+        return response.blob();
+    })
+    .catch( error => {
+        console.log(error);
+    })
 }
 
 /**

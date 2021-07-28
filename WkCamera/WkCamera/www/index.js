@@ -38,7 +38,8 @@ document.addEventListener("DOMContentLoaded", () => {
     stopCameraButton.disabled = true
 
     title_h2 = document.getElementById('title_id');
-    takePictureButton = document.getElementById('takePictureButton');
+    takePictureButton1 = document.getElementById('takePictureButton1');
+    takePictureButton2 = document.getElementById('takePictureButton2');
     flashButton = document.getElementById('flashButton');
     snapshotImage = document.getElementById('snapshotImage');
 
@@ -105,8 +106,13 @@ document.addEventListener("DOMContentLoaded", () => {
         title_h2.innerHTML = "Camera Test"
     });
 
-    takePictureButton.addEventListener('click', function(e) {
-        takePictureNativeCamera(onPictureTaken)
+    takePictureButton1.addEventListener('click', function(e) {
+        takePictureBase64NativeCamera(onPictureTaken)
+    });
+    takePictureButton2.addEventListener('click', function(e) {
+        getSnapshot().then( b => {
+            snapshotImage.src = URL.createObjectURL(b);
+        });
     });
 
     flashButton.addEventListener('click', function(e) {
