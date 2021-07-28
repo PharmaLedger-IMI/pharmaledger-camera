@@ -227,6 +227,11 @@ import UIKit
     
     //MARK: Public functions
     
+    /// returns the photoOutput for custom takePicture implementation
+    @objc public func getPhotoOutput() -> AVCapturePhotoOutput? {
+        return photoOutput
+    }
+    
     /// Stops the camera session
     @objc public func stopCamera(){
         captureSession?.stopRunning()
