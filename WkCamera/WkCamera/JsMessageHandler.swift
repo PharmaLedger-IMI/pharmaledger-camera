@@ -277,7 +277,7 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
     private func startWebserver() {
         let options: [String: Any] = [
             GCDWebServerOption_Port: findFreePort(),
-            GCDWebServerOption_BindToLocalhost: false
+            GCDWebServerOption_BindToLocalhost: true
         ]
         do {
             try self.webserver.start(options: options)
