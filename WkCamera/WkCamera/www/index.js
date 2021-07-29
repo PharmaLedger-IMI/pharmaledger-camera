@@ -73,8 +73,10 @@ document.addEventListener("DOMContentLoaded", () => {
         hide(streamPreview);
         show(status_fps_preview);
         show(status_fps_raw);
-        previewHeight = Math.round(previewWidth / sessionPreset.height * sessionPreset.width) // w<-> because landscape
-        setupGLView();
+        previewWidth = canvasgl.clientWidth;
+        previewHeight = Math.round(previewWidth / sessionPreset.height * sessionPreset.width) // w<->h because landscape in sessionPreset
+        canvasgl.clientHeight = previewHeight;
+        setupGLView(previewWidth, previewHeight);
         startNativeCamera(sessionPreset, flashMode, onFramePreview, targetPreviewFPS, previewWidth, onFrameGrabbed, targetRawFPS)
         title_h2.innerHTML = _serverUrl;
     })
@@ -86,9 +88,9 @@ document.addEventListener("DOMContentLoaded", () => {
         stopCameraButton.disabled = false
         hide(canvasgl);
         show(streamPreview);
-        show(status_fps_preview);
+        hide(status_fps_preview);
         show(status_fps_raw);
-        previewHeight = Math.round(previewWidth / sessionPreset.height * sessionPreset.width) // w<-> because landscape
+        previewHeight = Math.round(previewWidth / sessionPreset.height * sessionPreset.width) // w<->h because landscape in sessionPreset
         startNativeCamera(sessionPreset, flashMode, undefined, targetPreviewFPS, previewWidth, onFrameGrabbed, targetRawFPS, () => {
             streamPreview.src = `${_serverUrl}/mjpeg`;
             title_h2.innerHTML = _serverUrl;
@@ -148,26 +150,26 @@ function getSessionPresetFromName(name) {
     }
 }
 
-function setupGLView() {
-    w = canvasgl.clientWidth;
-    h = canvasgl.clientHeight;
+function setupGLView(w, h) {
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(75, w/h, 0.1, 10000);
     renderer = new THREE.WebGLRenderer({ canvas: canvasgl, antialias: true });
 
-    computeSize();
+    cameraHeight = h/2/Math.tan(camera.fov/2*(Math.PI/180))
+    camera.position.set(0,0,cameraHeight);
+    renderer.setSize(w,h);
 
     controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enablePan = false;
     controls.enableZoom = false;
     controls.enableRotate = false;
 
-    const dataTexture = new Uint8Array(previewWidth*previewHeight*bytePerChannel);
-    for (let i=0; i<previewWidth*previewHeight*bytePerChannel; i++)
-        dataTexture[i] = 128;
-    const frameTexture = new THREE.DataTexture(dataTexture, previewHeight, previewWidth, formatTexture, THREE.UnsignedByteType);
+    const dataTexture = new Uint8Array(w*h*bytePerChannel);
+    for (let i=0; i<w*h*bytePerChannel; i++)
+        dataTexture[i] = 255;
+    const frameTexture = new THREE.DataTexture(dataTexture, w, h, formatTexture, THREE.UnsignedByteType);
     frameTexture.needsUpdate = true;
-    const planeGeo = new THREE.PlaneBufferGeometry(previewWidth, previewHeight);
+    const planeGeo = new THREE.PlaneBufferGeometry(w, h);
     material = new THREE.MeshBasicMaterial({
         map: frameTexture,
     });
@@ -176,14 +178,6 @@ function setupGLView() {
     scene.add(plane);
 
     animate();
-}
-
-function computeSize() {
-    w = canvasgl.clientWidth;
-    h = canvasgl.clientHeight;
-    cameraHeight = previewHeight/2/Math.tan(camera.fov/2*(Math.PI/180))
-    camera.position.set(0,0,cameraHeight);
-    renderer.setSize(w,h);
 }
 
 function animate() {

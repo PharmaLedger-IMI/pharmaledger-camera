@@ -103,8 +103,11 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
     public func preparePreviewData(ciImage: CIImage) -> Data {
         let resizeFilter = CIFilter(name: "CILanczosScaleTransform")!
         resizeFilter.setValue(ciImage, forKey: kCIInputImageKey)
-        let scale = CGFloat(self.previewWidth) / ciImage.extent.width
+        let previewHeight = Int(CGFloat(ciImage.extent.height) / CGFloat(ciImage.extent.width) * CGFloat(self.previewWidth))
+        let scale = CGFloat(previewHeight) / ciImage.extent.height
+        let ratio = CGFloat(self.previewWidth) / CGFloat(ciImage.extent.width) / scale
         resizeFilter.setValue(scale, forKey: kCIInputScaleKey)
+        resizeFilter.setValue(ratio, forKey: kCIInputAspectRatioKey)
         let ciImageRescaled = resizeFilter.outputImage!
         //
         let cgImage = ciContext.createCGImage(ciImageRescaled, from: ciImageRescaled.extent)
