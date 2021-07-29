@@ -1,7 +1,5 @@
 var renderer, camera, scene, canvasgl;
 var material;
-var w = 320;
-var h = 240;
 var sessionPreset;
 var previewWidth = 360;
 var previewHeight = undefined;
@@ -11,6 +9,10 @@ var previewFramesCounter = 0;
 var previewFramesElapsedSum = 0;
 var previewFramesMeasuredFPS = 0;
 var targetRawFPS = 10;
+var rawCrop_x = 200;
+var rawCrop_y = 300;
+var rawCrop_w = 256;
+var rawCrop_h = 512;
 var rawFramesCounter = 0;
 var rawFramesElapsedSum = 0;
 var rawFramesMeasuredFPS = 0;
@@ -46,6 +48,8 @@ document.addEventListener("DOMContentLoaded", () => {
     
     canvasgl = document.getElementById('cameraCanvas');
     streamPreview = document.getElementById('streamPreview');
+    rawCropCanvas = document.getElementById('rawCropCanvas');
+    hide(rawCropCanvas);
     select_preset = document.getElementById('select_preset');
     let i = 0
     for (preset_key of Object.keys(DictSessionPreset)) {
@@ -70,16 +74,30 @@ document.addEventListener("DOMContentLoaded", () => {
         startCameraButtonMJPEG.disabled = true
         stopCameraButton.disabled = false
         show(canvasgl);
+        canvasgl.parentElement.style.display = "block";
         hide(streamPreview);
+        streamPreview.parentElement.style.display = "none";
         show(status_fps_preview);
         show(status_fps_raw);
         previewWidth = canvasgl.clientWidth;
         previewHeight = Math.round(previewWidth / sessionPreset.height * sessionPreset.width) // w<->h because landscape in sessionPreset
         canvasgl.clientHeight = previewHeight;
         setupGLView(previewWidth, previewHeight);
-        startNativeCamera(sessionPreset, flashMode, onFramePreview, targetPreviewFPS, previewWidth, onFrameGrabbed, targetRawFPS, () => {
-            title_h2.innerHTML = _serverUrl;
-        });
+        startNativeCamera(
+            sessionPreset, 
+            flashMode, 
+            onFramePreview, 
+            targetPreviewFPS, 
+            previewWidth, 
+            onFrameGrabbed, 
+            targetRawFPS, 
+            () => {
+                title_h2.innerHTML = _serverUrl;
+            },
+            rawCrop_w,
+            rawCrop_y,
+            rawCrop_w,
+            rawCrop_h);
     })
     startCameraButtonMJPEG.addEventListener('click', function(e) {
         usingMJPEG = true
@@ -88,14 +106,28 @@ document.addEventListener("DOMContentLoaded", () => {
         startCameraButtonMJPEG.disabled = true
         stopCameraButton.disabled = false
         hide(canvasgl);
+        canvasgl.parentElement.style.display = "none";
         show(streamPreview);
+        streamPreview.parentElement.style.display = "block";
         hide(status_fps_preview);
         show(status_fps_raw);
         previewHeight = Math.round(previewWidth / sessionPreset.height * sessionPreset.width) // w<->h because landscape in sessionPreset
-        startNativeCamera(sessionPreset, flashMode, undefined, targetPreviewFPS, previewWidth, onFrameGrabbed, targetRawFPS, () => {
-            streamPreview.src = `${_serverUrl}/mjpeg`;
-            title_h2.innerHTML = _serverUrl;
-        });
+        startNativeCamera(
+            sessionPreset, 
+            flashMode, 
+            undefined, 
+            targetPreviewFPS, 
+            previewWidth, 
+            onFrameGrabbed, 
+            targetRawFPS, 
+            () => {
+                streamPreview.src = `${_serverUrl}/mjpeg`;
+                title_h2.innerHTML = _serverUrl;
+            },
+            rawCrop_x,
+            rawCrop_y,
+            rawCrop_w,
+            rawCrop_h);
     });
     stopCameraButton.addEventListener('click', function(e) {
         window.close(); 
@@ -237,6 +269,10 @@ function onFrameGrabbed(buffer, elapsedTime) {
         rawFramesElapsedSum += elapsedTime;
     }
     status_fps_raw.innerHTML = `raw ${Math.round(elapsedTime)} ms (max FPS=${Math.round(rawFramesMeasuredFPS)})`
+    if (rawCrop_w !== undefined && rawCrop_h !== undefined) {
+        placeUint8RGBArrayInCanvas(rawCropCanvas, rawframe, rawCrop_w, rawCrop_h);
+        show(rawCropCanvas);
+    }
 }
 
 function onPictureTaken(base64ImageData) {
@@ -250,4 +286,21 @@ function hide(element) {
 
 function show(element) {
     element.style.display = "block";
+}
+
+function placeUint8RGBArrayInCanvas(canvasElem, array, w, h) {
+    canvasElem.width = w;
+    canvasElem.height = h;
+    var ctx = canvasElem.getContext('2d');
+    var clampedArray = new Uint8ClampedArray(w*h*4);
+    let j = 0
+    for (let i = 0; i < 3*w*h; i+=3) {
+        clampedArray[j] = array[i];
+        clampedArray[j+1] = array[i+1];
+        clampedArray[j+2] = array[i+2];
+        clampedArray[j+3] = 255;
+        j += 4;
+    }
+    var imageData = new ImageData(clampedArray, w, h);
+    ctx.putImageData(imageData, 0, 0);
 }

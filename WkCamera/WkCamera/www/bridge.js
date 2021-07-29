@@ -8,6 +8,10 @@ var _cameraRunning = false;
 var _onFrameGrabbedCallBack = undefined;
 var _onCameraInitializedCallBack = undefined;
 var _targetGrabFps = 10;
+var _x = undefined;
+var _y = undefined;
+var _w = undefined;
+var _h = undefined;
 
 function callNative(api, args, callback) {
     let handle = window.webkit.messageHandlers[api]
@@ -30,14 +34,22 @@ function callNative(api, args, callback) {
  * @param {function} onFrameGrabbedCallBack callBack for each raw frame. Data are received as an RGB ArrayBuffer. Can be undefined if you want to call 'getRawFrame' yourself
  * @param {number} targetGrabFps fps for the full resolution raw frame
  * @param {function} onCameraInitializedCallBack called after camera initilaization is finished
+ * @param  {number} x=undefined RGB raw frame ROI top-left x-coord
+ * @param  {number} y=undefined RGB raw frame ROI top-left y-coord
+ * @param  {number} w=undefined RGB raw frame ROI width
+ * @param  {number} h=undefined RGB raw frame ROI height
  */
-function startNativeCamera(sessionPreset, flashMode, onFramePreviewCallback = undefined, targetPreviewFps = 25, previewWidth = 640, onFrameGrabbedCallBack = undefined, targetGrabFps = 10, onCameraInitializedCallBack = undefined) {
+function startNativeCamera(sessionPreset, flashMode, onFramePreviewCallback = undefined, targetPreviewFps = 25, previewWidth = 640, onFrameGrabbedCallBack = undefined, targetGrabFps = 10, onCameraInitializedCallBack = undefined, x=undefined, y=undefined, w=undefined, h=undefined) {
     _targetPreviewFps = targetPreviewFps
     _previewWidth = previewWidth
     _onFramePreviewCallback = onFramePreviewCallback;
     _onFrameGrabbedCallBack = onFrameGrabbedCallBack;
     _onCameraInitializedCallBack = onCameraInitializedCallBack;
     _targetGrabFps = targetGrabFps
+    _x = x;
+    _y = y;
+    _w = w;
+    _h = h;
     let params = {
         "onInitializedJsCallback": onNativeCameraInitialized.name,
         "sessionPreset": sessionPreset.name,
@@ -103,7 +115,7 @@ function onNativeCameraInitialized(wsPort) {
     if (_onFrameGrabbedCallBack !== undefined) {
         _grabHandle = setInterval(() => {
             let t0 = performance.now();
-            getRawFrame().then(a => {
+            getRawFrame(_x, _y, _w, _h).then(a => {
                 if (a.byteLength > 1) {
                     _onFrameGrabbedCallBack(a, performance.now() - t0);
                 }
@@ -135,7 +147,12 @@ function getPreviewFrame() {
 }
 
 /**
- * @returns {Promise<ArrayBuffer>} gets a raw RGB frame
+ * Gets a raw RGB frame. A ROI can be specified.
+ * @param  {number} x=undefined
+ * @param  {number} y=undefined
+ * @param  {number} w=undefined
+ * @param  {number} h=undefined
+ * @returns {Promise<ArrayBuffer>} a raw RGB frame
  */
 function getRawFrame(x = undefined, y = undefined, w = undefined, h = undefined) {
     let fetchString = `${_serverUrl}/rawframe`;
