@@ -77,8 +77,9 @@ document.addEventListener("DOMContentLoaded", () => {
         previewHeight = Math.round(previewWidth / sessionPreset.height * sessionPreset.width) // w<->h because landscape in sessionPreset
         canvasgl.clientHeight = previewHeight;
         setupGLView(previewWidth, previewHeight);
-        startNativeCamera(sessionPreset, flashMode, onFramePreview, targetPreviewFPS, previewWidth, onFrameGrabbed, targetRawFPS)
-        title_h2.innerHTML = _serverUrl;
+        startNativeCamera(sessionPreset, flashMode, onFramePreview, targetPreviewFPS, previewWidth, onFrameGrabbed, targetRawFPS, () => {
+            title_h2.innerHTML = _serverUrl;
+        });
     })
     startCameraButtonMJPEG.addEventListener('click', function(e) {
         usingMJPEG = true

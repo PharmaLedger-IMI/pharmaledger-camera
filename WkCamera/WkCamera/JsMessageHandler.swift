@@ -54,6 +54,8 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
         print("Permission denied")
     }
     
+    private var dataBuffer_w = -1
+    private var dataBuffer_h = -1
     private var dataBufferRGBA: UnsafeMutableRawPointer? = nil
     private var dataBufferRGB: UnsafeMutableRawPointer? = nil
     private var dataBufferRGBsmall: UnsafeMutableRawPointer? = nil
@@ -68,15 +70,28 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
         currentCIImage = CIImage(cvImageBuffer: imageBuffer, options: nil)
     }
     
-    public func prepareRGBData(ciImage: CIImage) -> Data {
-        let cgImage = ciContext.createCGImage(ciImage, from: ciImage.extent)
+    public func prepareRGBData(ciImage: CIImage, roi: CGRect?) -> Data {
+        let extent: CGRect = roi ?? ciImage.extent
+        let cgImage = ciContext.createCGImage(ciImage, from: extent)
         let colorspace = CGColorSpaceCreateDeviceRGB()
         let rowBytes = cgImage!.bytesPerRow
         let bpc = cgImage!.bitsPerComponent
         let w = cgImage!.width
         let h = cgImage!.height
+        if w != dataBuffer_w || h != dataBuffer_h {
+            if dataBufferRGBA != nil {
+                free(dataBufferRGBA)
+                dataBufferRGBA = nil
+            }
+            if dataBufferRGB != nil {
+                free(dataBufferRGB)
+                dataBufferRGB = nil
+            }
+        }
         if dataBufferRGBA == nil {
             dataBufferRGBA = malloc(rowBytes*h)
+            dataBuffer_w = w
+            dataBuffer_h = h
         }
         if dataBufferRGB == nil {
             dataBufferRGB = malloc(3*w*h)
@@ -262,7 +277,7 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
     private func startWebserver() {
         let options: [String: Any] = [
             GCDWebServerOption_Port: findFreePort(),
-            GCDWebServerOption_BindToLocalhost: true
+            GCDWebServerOption_BindToLocalhost: false
         ]
         do {
             try self.webserver.start(options: options)
@@ -321,10 +336,28 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
             completion(response)
         })
         
-        webserver.addHandler(forMethod: "GET", path: "/rawframe", request: GCDWebServerRequest.classForCoder(), asyncProcessBlock: { (response, completion) in
+        webserver.addHandler(forMethod: "GET", path: "/rawframe", request: GCDWebServerRequest.classForCoder(), asyncProcessBlock: { (request, completion) in
             self.rawframeQueue.async {
+                var roi: CGRect? = nil
+                if let query = request.query {
+                    if query.count > 0 {
+                        guard let x = query["x"], let y = query["y"], let w = query["w"], let h = query["h"] else {
+                            let response = GCDWebServerErrorResponse.init(text: "Must specify exactly 4 params (x, y, w, h) or none.")
+                            response?.statusCode = 400
+                            completion(response)
+                            return
+                        }
+                        guard let x = Int(x), let y = Int(y), let w = Int(w), let h = Int(h) else {
+                            let response = GCDWebServerErrorResponse.init(text: "(x, y, w, h) must be integers.")
+                            response?.statusCode = 400
+                            completion(response)
+                            return
+                        }
+                        roi = CGRect(x: x, y: y, width: w, height: h)
+                    }
+                }
                 if let ciImage = self.currentCIImage {
-                    let data = self.prepareRGBData(ciImage: ciImage)
+                    let data = self.prepareRGBData(ciImage: ciImage, roi: roi)
                     let contentType = "application/octet-stream"
                     let response = GCDWebServerDataResponse(data: data, contentType: contentType)
                     completion(response)
@@ -398,6 +431,8 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
             free(dataBufferRGBsmall)
             dataBufferRGBsmall = nil
         }
+        dataBuffer_w = -1
+        dataBuffer_h = -1
     }
     
     private func handleTakePicture(onCaptureJsCallback: String?) {

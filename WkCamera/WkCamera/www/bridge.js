@@ -137,8 +137,26 @@ function getPreviewFrame() {
 /**
  * @returns {Promise<ArrayBuffer>} gets a raw RGB frame
  */
-function getRawFrame() {
-    return fetch(`${_serverUrl}/rawframe`)
+function getRawFrame(x = undefined, y = undefined, w = undefined, h = undefined) {
+    let fetchString = `${_serverUrl}/rawframe`;
+    let params = {};
+    if (x !== undefined) {
+        params.x = x;
+    }
+    if (y !== undefined) {
+        params.y = y;
+    }
+    if (w !== undefined) {
+        params.w = w;
+    }
+    if (h !== undefined) {
+        params.h = h;
+    }
+    if (Object.keys(params).length > 0) {
+        const urlParams = new URLSearchParams(params);
+        fetchString = `${fetchString}?${urlParams.toString()}`;
+    }
+    return fetch(fetchString)
     .then(response => {
         return response.blob().then( b => {
             return b.arrayBuffer().then(a => {
