@@ -9,10 +9,10 @@ var previewFramesCounter = 0;
 var previewFramesElapsedSum = 0;
 var previewFramesMeasuredFPS = 0;
 var targetRawFPS = 10;
-var rawCrop_x = 200;
-var rawCrop_y = 300;
-var rawCrop_w = 256;
-var rawCrop_h = 512;
+var rawCrop_x = undefined;
+var rawCrop_y = undefined;
+var rawCrop_w = undefined;
+var rawCrop_h = undefined;
 var rawFramesCounter = 0;
 var rawFramesElapsedSum = 0;
 var rawFramesMeasuredFPS = 0;
@@ -49,7 +49,23 @@ document.addEventListener("DOMContentLoaded", () => {
     canvasgl = document.getElementById('cameraCanvas');
     streamPreview = document.getElementById('streamPreview');
     rawCropCanvas = document.getElementById('rawCropCanvas');
+    invertRawFrameCheck = document.getElementById('invertRawFrameCheck');
+    cropRawFrameCheck = document.getElementById('cropRawFrameCheck');
+    rawCropRoiInput = document.getElementById('rawCropRoiInput');
+    rawCropRoiInput.addEventListener('change', function() {
+        setCropCoords();
+    })
+    cropRawFrameCheck.addEventListener('change', function() {
+        if (this.checked) {
+            show(rawCropRoiInput);        
+        } else {
+            hide(rawCropRoiInput);
+        }
+    });
+    hide(rawCropRoiInput);
     hide(rawCropCanvas);
+
+
     select_preset = document.getElementById('select_preset');
     let i = 0
     for (preset_key of Object.keys(DictSessionPreset)) {
@@ -73,6 +89,7 @@ document.addEventListener("DOMContentLoaded", () => {
         startCameraButtonGL.disabled = true
         startCameraButtonMJPEG.disabled = true
         stopCameraButton.disabled = false
+        setCropCoords();
         show(canvasgl);
         canvasgl.parentElement.style.display = "block";
         hide(streamPreview);
@@ -94,7 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
             () => {
                 title_h2.innerHTML = _serverUrl;
             },
-            rawCrop_w,
+            rawCrop_x,
             rawCrop_y,
             rawCrop_w,
             rawCrop_h);
@@ -105,6 +122,7 @@ document.addEventListener("DOMContentLoaded", () => {
         startCameraButtonGL.disabled = true
         startCameraButtonMJPEG.disabled = true
         stopCameraButton.disabled = false
+        setCropCoords();
         hide(canvasgl);
         canvasgl.parentElement.style.display = "none";
         show(streamPreview);
@@ -223,7 +241,29 @@ function ChangePresetList() {
     status_test.innerHTML = sessionPreset.name;
 }
 
-
+function setCropCoords() {
+    if (cropRawFrameCheck.checked) {
+        const coords = rawCropRoiInput.value.split(",");
+        rawCrop_x = parseInt(coords[0]);
+        rawCrop_y = parseInt(coords[1]);
+        rawCrop_w = parseInt(coords[2]);
+        rawCrop_h = parseInt(coords[3]);
+        if (rawCrop_x != rawCrop_x || rawCrop_y != rawCrop_y || rawCrop_w != rawCrop_w || rawCrop_h != rawCrop_h) {
+            alert("failed to parse coords");
+            cropRawFrameCheck.checked = false;
+            hide(rawCropRoiInput);
+            rawCrop_x = undefined;
+            rawCrop_y = undefined;
+            rawCrop_w = undefined;
+            rawCrop_h = undefined;
+        }
+    } else {
+        rawCrop_x = undefined;
+        rawCrop_y = undefined;
+        rawCrop_w = undefined;
+        rawCrop_h = undefined;
+    }
+}
 
 
 /**
@@ -271,8 +311,10 @@ function onFrameGrabbed(buffer, elapsedTime) {
     status_fps_raw.innerHTML = `raw ${Math.round(elapsedTime)} ms (max FPS=${Math.round(rawFramesMeasuredFPS)})`
     if (rawCrop_w !== undefined && rawCrop_h !== undefined) {
         placeUint8RGBArrayInCanvas(rawCropCanvas, rawframe, rawCrop_w, rawCrop_h);
-        show(rawCropCanvas);
+    } else {
+        placeUint8RGBArrayInCanvas(rawCropCanvas, rawframe, sessionPreset.height, sessionPreset.width);
     }
+    show(rawCropCanvas);
 }
 
 function onPictureTaken(base64ImageData) {
@@ -289,15 +331,21 @@ function show(element) {
 }
 
 function placeUint8RGBArrayInCanvas(canvasElem, array, w, h) {
+    let a = 1;
+    let b = 0;
+    if (invertRawFrameCheck.checked === true){
+        a = -1;
+        b = 255;
+    }
     canvasElem.width = w;
     canvasElem.height = h;
     var ctx = canvasElem.getContext('2d');
     var clampedArray = new Uint8ClampedArray(w*h*4);
     let j = 0
     for (let i = 0; i < 3*w*h; i+=3) {
-        clampedArray[j] = array[i];
-        clampedArray[j+1] = array[i+1];
-        clampedArray[j+2] = array[i+2];
+        clampedArray[j] = b+a*array[i];
+        clampedArray[j+1] = b+a*array[i+1];
+        clampedArray[j+2] = b+a*array[i+2];
         clampedArray[j+3] = 255;
         j += 4;
     }

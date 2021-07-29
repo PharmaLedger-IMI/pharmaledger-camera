@@ -49,6 +49,25 @@
         </div>
     </div>
     <div class="row top-buffer">
+        <input class="col form-control" type="text" id="rawCropRoiInput" placeholder="enter roi as x,y,w,h"/>
+    </div>
+    <div class="row">
+        <div class="col custom-control custom-switch">
+            <input type="checkbox" class="custom-control-input" id="cropRawFrameCheck"/>
+            <label class="custom-control-label" for="cropRawFrameCheck">Crop</label>
+        </div>
+        <div class="col custom-control custom-switch">
+            <input class="custom-control-input" type="checkbox" id="invertRawFrameCheck" checked />
+            <label class="custom-control-label" for="invertRawFrameCheck">Invert</label>
+        </div>
+    </div>
+    <!-- <div class="row top-buffer">
+        <div class="col custom-control custom-switch">
+            <label class="custom-control-label" for="invertRawFrameCheck">Invert raw crop colors</label>
+            <input class="custom-control-input" type="checkbox" id="invertRawFrameCheck" checked />
+        </div>
+    </div> -->
+    <div class="row top-buffer">
         <div class="col">
             <canvas id='cameraCanvas'></canvas>    
         </div>

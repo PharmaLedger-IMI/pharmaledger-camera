@@ -10,13 +10,14 @@ import AVFoundation
 import UIKit
 import WebKit
 
-public class CameraWebViewController: UIViewController /*, WKScriptMessageHandler*/ {
+public class CameraWebViewController: UIViewController, WKUIDelegate {
     // MARK: Privates
     private var webview: WKWebView?
     private var messageHandler = JsMessageHandler()
     
     func load() {
         self.webview = messageHandler.getWebview(frame: self.view.frame)
+        self.webview?.uiDelegate = self
         if let webview = webview {
 //            let fileUrl = URL(fileURLWithPath: Bundle.main.path(forResource: "www/bootstrap.html", ofType: nil)!)
 //            webview.loadFileURL(fileUrl, allowingReadAccessTo: fileUrl.deletingLastPathComponent())
@@ -26,6 +27,12 @@ public class CameraWebViewController: UIViewController /*, WKScriptMessageHandle
             
             self.view.addSubview(webview)
         }
+    }
+    
+    public func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping () -> Void) {
+        let alert = UIAlertController(title: message, message: nil, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .cancel, handler: {action in completionHandler() }))
+        self.present(alert, animated: true, completion: nil)
     }
     
     override public func viewWillAppear(_ animated: Bool) {
