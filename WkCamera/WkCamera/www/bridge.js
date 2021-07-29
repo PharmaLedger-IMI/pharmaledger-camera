@@ -46,10 +46,7 @@ function startNativeCamera(sessionPreset, flashMode, onFramePreviewCallback = un
     _onFrameGrabbedCallBack = onFrameGrabbedCallBack;
     _onCameraInitializedCallBack = onCameraInitializedCallBack;
     _targetGrabFps = targetGrabFps
-    _x = x;
-    _y = y;
-    _w = w;
-    _h = h;
+    setRawCropRoi(x, y, w, h);
     let params = {
         "onInitializedJsCallback": onNativeCameraInitialized.name,
         "sessionPreset": sessionPreset.name,
@@ -57,6 +54,19 @@ function startNativeCamera(sessionPreset, flashMode, onFramePreviewCallback = un
         "previewWidth": _previewWidth
     }
     callNative("StartCamera", params);
+}
+/**
+ * Sets the raw crop to a new position
+ * @param  {number} x
+ * @param  {number} y
+ * @param  {number} w
+ * @param  {number} h
+ */
+function setRawCropRoi(x, y, w, h) {
+    _x = x;
+    _y = y;
+    _w = w;
+    _h = h;
 }
 
 /**

@@ -263,6 +263,7 @@ function setCropCoords() {
         rawCrop_w = undefined;
         rawCrop_h = undefined;
     }
+    setRawCropRoi(rawCrop_x, rawCrop_y, rawCrop_w, rawCrop_h);
 }
 
 
