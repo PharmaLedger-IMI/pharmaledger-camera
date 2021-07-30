@@ -1,3 +1,18 @@
+/** Class representing a raw interleaved RGB image */
+class PLRgbImage {
+    /**
+     * create a PLRgbImage
+     * @param  {ArrayBuffer} arrayBuffer contains interleaved RGB raw data
+     * @param  {Number} width image width 
+     * @param  {Number} height image height
+     */
+    constructor(arrayBuffer, width, height) {
+        this.arrayBuffer = arrayBuffer;
+        this.width = width;
+        this.height = height;
+    }
+};
+  
 var _previewHandle = undefined;
 var _grabHandle = undefined;
 var _onFramePreviewCallback = undefined;
@@ -39,7 +54,7 @@ function callNative(api, args, callback) {
  * @param  {number} w=undefined RGB raw frame ROI width
  * @param  {number} h=undefined RGB raw frame ROI height
  */
-function startNativeCamera(sessionPreset, flashMode, onFramePreviewCallback = undefined, targetPreviewFps = 25, previewWidth = 640, onFrameGrabbedCallBack = undefined, targetGrabFps = 10, onCameraInitializedCallBack = undefined, x=undefined, y=undefined, w=undefined, h=undefined) {
+function startNativeCamera(sessionPreset, flashMode, onFramePreviewCallback = undefined, targetPreviewFps = 25, previewWidth = 640, onFrameGrabbedCallBack = undefined, targetGrabFps = 10, auto_orientation_enabled=false, onCameraInitializedCallBack = undefined, x=undefined, y=undefined, w=undefined, h=undefined) {
     _targetPreviewFps = targetPreviewFps
     _previewWidth = previewWidth
     _onFramePreviewCallback = onFramePreviewCallback;
@@ -51,7 +66,8 @@ function startNativeCamera(sessionPreset, flashMode, onFramePreviewCallback = un
         "onInitializedJsCallback": onNativeCameraInitialized.name,
         "sessionPreset": sessionPreset.name,
         "flashMode": flashMode,
-        "previewWidth": _previewWidth
+        "previewWidth": _previewWidth,
+        "auto_orientation_enabled": auto_orientation_enabled
     }
     callNative("StartCamera", params);
 }
@@ -115,9 +131,9 @@ function onNativeCameraInitialized(wsPort) {
     if (_onFramePreviewCallback !== undefined) {
         _previewHandle = setInterval(() => {
             let t0 = performance.now();
-            getPreviewFrame().then(a => {
-                if (a.byteLength > 1) {
-                    _onFramePreviewCallback(a, performance.now() - t0)
+            getPreviewFrame().then(image => {
+                if (image.arrayBuffer.byteLength > 1) {
+                    _onFramePreviewCallback(image, performance.now() - t0)
                 }
             });
         }, 1000/_targetPreviewFps);
@@ -125,9 +141,9 @@ function onNativeCameraInitialized(wsPort) {
     if (_onFrameGrabbedCallBack !== undefined) {
         _grabHandle = setInterval(() => {
             let t0 = performance.now();
-            getRawFrame(_x, _y, _w, _h).then(a => {
-                if (a.byteLength > 1) {
-                    _onFrameGrabbedCallBack(a, performance.now() - t0);
+            getRawFrame(_x, _y, _w, _h).then(image => {
+                if (image.arrayBuffer.byteLength > 1) {
+                    _onFrameGrabbedCallBack(image, performance.now() - t0);
                 }
             })
         }, 1000/_targetGrabFps)
@@ -140,16 +156,13 @@ function onNativeCameraInitialized(wsPort) {
 }
 
 /**
- * @returns  {Promise<ArrayBuffer>} gets a downsampled RGB frame for preview
+ * @returns  {Promise<PLRgbImage>} gets a downsampled RGB frame for preview
  */
 function getPreviewFrame() {
     return fetch(`${_serverUrl}/previewframe`)
     .then(response => {
-        return response.blob().then( b => {
-            return b.arrayBuffer().then(a => {
-                return a;
-            })
-        })
+        let image = getPLRgbImageFromResponse(response);
+        return image;
     })
     .catch( error => {
         console.log(error);
@@ -162,7 +175,7 @@ function getPreviewFrame() {
  * @param  {number} y=undefined
  * @param  {number} w=undefined
  * @param  {number} h=undefined
- * @returns {Promise<ArrayBuffer>} a raw RGB frame
+ * @returns {Promise<PLRgbImage>} a raw RGB frame
  */
 function getRawFrame(x = undefined, y = undefined, w = undefined, h = undefined) {
     let fetchString = `${_serverUrl}/rawframe`;
@@ -185,13 +198,33 @@ function getRawFrame(x = undefined, y = undefined, w = undefined, h = undefined)
     }
     return fetch(fetchString)
     .then(response => {
-        return response.blob().then( b => {
-            return b.arrayBuffer().then(a => {
-                return a;
-            })
-        })
+        let image = getPLRgbImageFromResponse(response);
+        return image;
     })
     .catch( error => {
         console.log(error);
+    })
+}
+
+/**
+ * Packs a response from endpoints providing raw rgb buffer as octet-stream and image size in headers
+ * 
+ * @param  {Response} response
+ * @returns {Promise<PLRgbImage>} the image in a promise
+ */
+function getPLRgbImageFromResponse(response) {
+    let frame_w = 0
+    let frame_h = 0
+    if (response.headers.has("image-width")) {
+        frame_w = parseInt(response.headers.get("image-width"));
+    }
+    if (response.headers.has("image-height")) {
+        frame_h = parseInt(response.headers.get("image-height"));
+    }
+    return response.blob().then( b => {
+        return b.arrayBuffer().then(a => {
+            let image = new PLRgbImage(a, frame_w, frame_h);
+            return image;
+        })
     })
 }

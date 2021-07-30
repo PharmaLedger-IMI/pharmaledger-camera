@@ -182,8 +182,8 @@ import UIKit
         let videoOutput = AVCaptureVideoDataOutput()
         
         videoOutput.setSampleBufferDelegate(self, queue: DispatchQueue(label: "sampleBuffer"))
-//        videoOutput.videoSettings = [String(kCVPixelBufferPixelFormatTypeKey): Int(kCVPixelFormatType_420YpCbCr8BiPlanarFullRange)]
-        videoOutput.videoSettings = [String(kCVPixelBufferPixelFormatTypeKey): Int(kCVPixelFormatType_32BGRA)]
+        videoOutput.videoSettings = [String(kCVPixelBufferPixelFormatTypeKey): Int(kCVPixelFormatType_420YpCbCr8BiPlanarFullRange)]
+//        videoOutput.videoSettings = [String(kCVPixelBufferPixelFormatTypeKey): Int(kCVPixelFormatType_32BGRA)]
         
         guard (captureSession?.canAddOutput(videoOutput))! else {
             return .deviceOutputFailure

@@ -108,6 +108,7 @@ document.addEventListener("DOMContentLoaded", () => {
             previewWidth, 
             onFrameGrabbed, 
             targetRawFPS, 
+            true,
             () => {
                 title_h2.innerHTML = _serverUrl;
             },
@@ -137,7 +138,8 @@ document.addEventListener("DOMContentLoaded", () => {
             targetPreviewFPS, 
             previewWidth, 
             onFrameGrabbed, 
-            targetRawFPS, 
+            targetRawFPS,
+            true, 
             () => {
                 streamPreview.src = `${_serverUrl}/mjpeg`;
                 title_h2.innerHTML = _serverUrl;
@@ -268,12 +270,12 @@ function setCropCoords() {
 
 
 /**
- * @param {ArrayBuffer} buffer preview data coming from native camera. Can be used to create a new Uint8Array
+ * @param {PLRgbImage} buffer preview data coming from native camera. Can be used to create a new Uint8Array
  * @param {number} elapsedTime time in ms elapsed to get the preview frame
  */
-function onFramePreview(buffer, elapsedTime) {
-    var frame = new Uint8Array(buffer);
-    material.map = new THREE.DataTexture(frame, previewWidth, previewHeight, formatTexture, THREE.UnsignedByteType);
+function onFramePreview(rgbImage, elapsedTime) {
+    var frame = new Uint8Array(rgbImage.arrayBuffer);
+    material.map = new THREE.DataTexture(frame, rgbImage.width, rgbImage.height, formatTexture, THREE.UnsignedByteType);
     material.map.flipY = true;
     material.needsUpdate = true;
 
@@ -289,17 +291,17 @@ function onFramePreview(buffer, elapsedTime) {
 }
 
 /**
- * @param {ArrayBuffer} buffer raw data coming from native camera. Can be used to create a new Uint8Array
+ * @param {PLRgbImage} rgbImage raw data coming from native camera. Can be used to create a new Uint8Array
  * @param {number} elapsedTime time in ms elapsed to get the raw frame
  */
-function onFrameGrabbed(buffer, elapsedTime) {
-    var rawframe = new Uint8Array(buffer);
+function onFrameGrabbed(rgbImage, elapsedTime) {
+    var rawframe = new Uint8Array(rgbImage.arrayBuffer);
     if (usingMJPEG === false) {
         pSizeText = `, p(${previewWidth}x${previewHeight}), p FPS:${targetPreviewFPS}`
     } else {
         pSizeText = ""
     }
-    status_test.innerHTML = `${sessionPreset.name}${pSizeText}, raw FPS:${targetRawFPS}<br/> raw frame length: ${Math.round(10*rawframe.byteLength/1024/1024)/10}MB, [0]=${rawframe[0]}, [1]=${rawframe[1]}`
+    status_test.innerHTML = `${sessionPreset.name}${pSizeText}, raw FPS:${targetRawFPS}<br/> raw frame length: ${Math.round(10*rawframe.byteLength/1024/1024)/10}MB, ${rgbImage.width}x${rgbImage.height}`
 
     if (rawFramesCounter !== 0 && rawFramesCounter%(fpsMeasurementInterval-1) === 0) {
         rawFramesMeasuredFPS = 1000/rawFramesElapsedSum * fpsMeasurementInterval;
@@ -310,11 +312,7 @@ function onFrameGrabbed(buffer, elapsedTime) {
         rawFramesElapsedSum += elapsedTime;
     }
     status_fps_raw.innerHTML = `raw ${Math.round(elapsedTime)} ms (max FPS=${Math.round(rawFramesMeasuredFPS)})`
-    if (rawCrop_w !== undefined && rawCrop_h !== undefined) {
-        placeUint8RGBArrayInCanvas(rawCropCanvas, rawframe, rawCrop_w, rawCrop_h);
-    } else {
-        placeUint8RGBArrayInCanvas(rawCropCanvas, rawframe, sessionPreset.height, sessionPreset.width);
-    }
+    placeUint8RGBArrayInCanvas(rawCropCanvas, rawframe, rgbImage.width, rgbImage.height);
     show(rawCropCanvas);
 }
 

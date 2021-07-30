@@ -17,6 +17,7 @@ public enum MessageNames: String, CaseIterable {
     case StopCamera = "StopCamera"
     case TakePicture = "TakePicture"
     case SetFlashMode = "SetFlashMode"
+    case GetAllSessionPresetStrings = "GetAllSessionPresetStrings"
 }
 
 enum StreamResponseError: Error {
@@ -115,7 +116,7 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
         return data
     }
     
-    public func preparePreviewData(ciImage: CIImage) -> Data {
+    public func preparePreviewData(ciImage: CIImage) -> (Data, Int, Int) {
         let resizeFilter = CIFilter(name: "CILanczosScaleTransform")!
         resizeFilter.setValue(ciImage, forKey: kCIInputImageKey)
         let previewHeight = Int(CGFloat(ciImage.extent.height) / CGFloat(ciImage.extent.width) * CGFloat(self.previewWidth))
@@ -148,7 +149,7 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
             rowBytes: 3*cgImage!.width)
         vImageConvert_RGBA8888toRGB888(&inBufferSmall, &outBufferSmall, UInt32(kvImageNoFlags))
         let data = Data(bytesNoCopy: dataBufferRGBsmall!, count: 3*cgImage!.width*cgImage!.height, deallocator: .none)
-        return data
+        return (data, self.previewWidth, previewHeight)
     }
     
     public func onCapture(imageData: Data) {
@@ -245,7 +246,8 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
             }
             handleCameraStart(onCameraInitializedJsCallback: args?["onInitializedJsCallback"] as? String,
                               sessionPreset: args?["sessionPreset"] as! String,
-                              flash_mode: args?["flashMode"] as? String)
+                              flash_mode: args?["flashMode"] as? String,
+                              auto_orientation_enabled: args?["auto_orientation_enabled"] as? Bool)
             jsonString = ""
         case .StopCamera:
             handleCameraStop()
@@ -254,6 +256,8 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
             handleTakePicture(onCaptureJsCallback: args?["onCaptureJsCallback"] as? String)
         case .SetFlashMode:
             handleSetFlashMode(mode: args?["mode"] as? String)
+        case .GetAllSessionPresetStrings:
+            break
         }
         if let callback = jsCallback {
             if !callback.isEmpty {
@@ -360,6 +364,9 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
                     let data = self.prepareRGBData(ciImage: ciImage, roi: roi)
                     let contentType = "application/octet-stream"
                     let response = GCDWebServerDataResponse(data: data, contentType: contentType)
+                    let imageSize: CGSize = roi?.size ?? ciImage.extent.size
+                    response.setValue(String(Int(imageSize.width)), forAdditionalHeader: "image-width")
+                    response.setValue(String(Int(imageSize.height)), forAdditionalHeader: "image-height")
                     completion(response)
                 } else {
                     completion(GCDWebServerErrorResponse.init(statusCode: 500))
@@ -369,9 +376,11 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
         webserver.addHandler(forMethod: "GET", path: "/previewframe", request: GCDWebServerRequest.self, asyncProcessBlock: {(request, completion) in
             self.previewframeQueue.async {
                 if let ciImage = self.currentCIImage {
-                    let data = self.preparePreviewData(ciImage: ciImage)
+                    let (data, w, h) = self.preparePreviewData(ciImage: ciImage)
                     let contentType = "application/octet-stream"
                     let response = GCDWebServerDataResponse(data: data, contentType: contentType)
+                    response.setValue(String(w), forAdditionalHeader: "image-width")
+                    response.setValue(String(h), forAdditionalHeader: "image-height")
                     completion(response)
                 } else {
                     completion(GCDWebServerErrorResponse(statusCode: 500))
@@ -403,9 +412,9 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
     }
     
     
-    private func handleCameraStart(onCameraInitializedJsCallback: String?, sessionPreset: String, flash_mode: String?) {
+    private func handleCameraStart(onCameraInitializedJsCallback: String?, sessionPreset: String, flash_mode: String?, auto_orientation_enabled: Bool?) {
         self.onCameraInitializedJsCallback = onCameraInitializedJsCallback
-        self.cameraConfiguration = .init(flash_mode: flash_mode, color_space: nil, session_preset: sessionPreset, auto_orienation_enabled: false)
+        self.cameraConfiguration = .init(flash_mode: flash_mode, color_space: nil, session_preset: sessionPreset, auto_orienation_enabled: auto_orientation_enabled ?? false)
         self.cameraSession = .init(cameraEventListener: self, cameraConfiguration: self.cameraConfiguration!)
         return
     }
