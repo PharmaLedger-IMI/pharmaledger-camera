@@ -1,6 +1,5 @@
 var renderer, camera, scene, canvasgl;
 var material;
-var sessionPreset;
 var previewWidth = 360;
 var previewHeight = undefined;
 var targetPreviewFPS = 25;
@@ -68,9 +67,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     select_preset = document.getElementById('select_preset');
     let i = 0
-    for (preset_key of Object.keys(DictSessionPreset)) {
-        let preset = DictSessionPreset[preset_key]
-        var p_i = new Option(preset.name, preset.name)
+    for (presetName of sessionPresetNames) {
+        var p_i = new Option(presetName, presetName)
         select_preset.options.add(p_i);
         i++;
     }
@@ -80,8 +78,8 @@ document.addEventListener("DOMContentLoaded", () => {
             break;
         }
     }
-    sessionPreset = getSessionPresetFromName(select_preset.options[select_preset.selectedIndex].value);
-    status_test.innerHTML = sessionPreset.name;
+    selectedPresetName = select_preset.options[select_preset.selectedIndex].value;
+    status_test.innerHTML = selectedPresetName;
 
     startCameraButtonGL.addEventListener('click', function(e) {
         usingMJPEG = false
@@ -97,11 +95,11 @@ document.addEventListener("DOMContentLoaded", () => {
         show(status_fps_preview);
         show(status_fps_raw);
         previewWidth = canvasgl.clientWidth;
-        previewHeight = Math.round(previewWidth / sessionPreset.height * sessionPreset.width) // w<->h because landscape in sessionPreset
+        previewHeight = Math.round(previewWidth * 16 / 9) // assume 16:9 portrait at start
         canvasgl.clientHeight = previewHeight;
         setupGLView(previewWidth, previewHeight);
         startNativeCamera(
-            sessionPreset, 
+            selectedPresetName, 
             flashMode, 
             onFramePreview, 
             targetPreviewFPS, 
@@ -130,9 +128,9 @@ document.addEventListener("DOMContentLoaded", () => {
         streamPreview.parentElement.style.display = "block";
         hide(status_fps_preview);
         show(status_fps_raw);
-        previewHeight = Math.round(previewWidth / sessionPreset.height * sessionPreset.width) // w<->h because landscape in sessionPreset
+        previewHeight = Math.round(previewWidth * 16 / 9) // assume 16:9 portrait at start
         startNativeCamera(
-            sessionPreset, 
+            selectedPresetName, 
             flashMode, 
             undefined, 
             targetPreviewFPS, 
@@ -194,15 +192,6 @@ document.addEventListener("DOMContentLoaded", () => {
     hide(status_fps_raw)
 });
 
-function getSessionPresetFromName(name) {
-    for (preset_key of Object.keys(DictSessionPreset)) {
-        let preset = DictSessionPreset[preset_key]
-        if (preset.name === name) {
-            return preset
-        }
-    }
-}
-
 function setupGLView(w, h) {
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(75, w/h, 0.1, 10000);
@@ -239,8 +228,8 @@ function animate() {
 }
 
 function ChangePresetList() {
-    sessionPreset = getSessionPresetFromName(select_preset.options[select_preset.selectedIndex].value);
-    status_test.innerHTML = sessionPreset.name;
+    selectedPresetName = select_preset.options[select_preset.selectedIndex].value;
+    status_test.innerHTML = selectedPresetName;
 }
 
 function setCropCoords() {
@@ -301,7 +290,7 @@ function onFrameGrabbed(rgbImage, elapsedTime) {
     } else {
         pSizeText = ""
     }
-    status_test.innerHTML = `${sessionPreset.name}${pSizeText}, raw FPS:${targetRawFPS}<br/> raw frame length: ${Math.round(10*rawframe.byteLength/1024/1024)/10}MB, ${rgbImage.width}x${rgbImage.height}`
+    status_test.innerHTML = `${selectedPresetName}${pSizeText}, raw FPS:${targetRawFPS}<br/> raw frame length: ${Math.round(10*rawframe.byteLength/1024/1024)/10}MB, ${rgbImage.width}x${rgbImage.height}`
 
     if (rawFramesCounter !== 0 && rawFramesCounter%(fpsMeasurementInterval-1) === 0) {
         rawFramesMeasuredFPS = 1000/rawFramesElapsedSum * fpsMeasurementInterval;

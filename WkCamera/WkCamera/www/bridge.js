@@ -1,3 +1,18 @@
+const sessionPresetNames = [
+    "low",
+    "medium",
+    "high",
+    "inputPriority",
+    "hd1280x720",
+    "hd1920x1080",
+    "hd4K3840x2160",
+    "iFrame960x540",
+    "iFrame1280x720",
+    "vga640x480",
+    "cif352x288",
+    "photo"
+];
+
 /** Class representing a raw interleaved RGB image */
 class PLRgbImage {
     /**
@@ -41,7 +56,7 @@ function callNative(api, args, callback) {
 }
 /**
  * Starts the native camera frame grabber
- * @param  {SessionPreset} sessionPreset one of the session presets available in DictSessionPreset
+ * @param  {string} sessionPresetName one of the session presets available in sessionPresetNames
  * @param  {string} flashMode can be `torch`, `flash`, or `off`, all other values will be treated as `auto`
  * @param  {function} onFramePreviewCallback callBack for each preview frame. Data are received as an RGB ArrayBuffer. Can be undefined if you want to call 'getPreviewFrame' yourself
  * @param {number} targetPreviewFps fps for the preview
@@ -54,7 +69,7 @@ function callNative(api, args, callback) {
  * @param  {number} w=undefined RGB raw frame ROI width
  * @param  {number} h=undefined RGB raw frame ROI height
  */
-function startNativeCamera(sessionPreset, flashMode, onFramePreviewCallback = undefined, targetPreviewFps = 25, previewWidth = 640, onFrameGrabbedCallBack = undefined, targetGrabFps = 10, auto_orientation_enabled=false, onCameraInitializedCallBack = undefined, x=undefined, y=undefined, w=undefined, h=undefined) {
+function startNativeCamera(sessionPresetName, flashMode, onFramePreviewCallback = undefined, targetPreviewFps = 25, previewWidth = 640, onFrameGrabbedCallBack = undefined, targetGrabFps = 10, auto_orientation_enabled=false, onCameraInitializedCallBack = undefined, x=undefined, y=undefined, w=undefined, h=undefined) {
     _targetPreviewFps = targetPreviewFps
     _previewWidth = previewWidth
     _onFramePreviewCallback = onFramePreviewCallback;
@@ -64,7 +79,7 @@ function startNativeCamera(sessionPreset, flashMode, onFramePreviewCallback = un
     setRawCropRoi(x, y, w, h);
     let params = {
         "onInitializedJsCallback": onNativeCameraInitialized.name,
-        "sessionPreset": sessionPreset.name,
+        "sessionPreset": sessionPresetName,
         "flashMode": flashMode,
         "previewWidth": _previewWidth,
         "auto_orientation_enabled": auto_orientation_enabled
@@ -132,7 +147,7 @@ function onNativeCameraInitialized(wsPort) {
         _previewHandle = setInterval(() => {
             let t0 = performance.now();
             getPreviewFrame().then(image => {
-                if (image.arrayBuffer.byteLength > 1) {
+                if (image instanceof PLRgbImage) {
                     _onFramePreviewCallback(image, performance.now() - t0)
                 }
             });
@@ -142,7 +157,7 @@ function onNativeCameraInitialized(wsPort) {
         _grabHandle = setInterval(() => {
             let t0 = performance.now();
             getRawFrame(_x, _y, _w, _h).then(image => {
-                if (image.arrayBuffer.byteLength > 1) {
+                if (image instanceof PLRgbImage) {
                     _onFrameGrabbedCallBack(image, performance.now() - t0);
                 }
             })
