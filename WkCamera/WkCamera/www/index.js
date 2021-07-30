@@ -1,7 +1,7 @@
 var renderer, camera, scene, canvasgl;
 var material;
 var previewWidth = 360;
-var previewHeight = undefined;
+var previewHeight = Math.round(previewWidth * 16 / 9); // assume 16:9 portrait at start
 var targetPreviewFPS = 25;
 var fpsMeasurementInterval = 5;
 var previewFramesCounter = 0;
@@ -94,9 +94,6 @@ document.addEventListener("DOMContentLoaded", () => {
         streamPreview.parentElement.style.display = "none";
         show(status_fps_preview);
         show(status_fps_raw);
-        previewWidth = canvasgl.clientWidth;
-        previewHeight = Math.round(previewWidth * 16 / 9) // assume 16:9 portrait at start
-        canvasgl.clientHeight = previewHeight;
         setupGLView(previewWidth, previewHeight);
         startNativeCamera(
             selectedPresetName, 
@@ -128,7 +125,6 @@ document.addEventListener("DOMContentLoaded", () => {
         streamPreview.parentElement.style.display = "block";
         hide(status_fps_preview);
         show(status_fps_raw);
-        previewHeight = Math.round(previewWidth * 16 / 9) // assume 16:9 portrait at start
         startNativeCamera(
             selectedPresetName, 
             flashMode, 
@@ -199,7 +195,8 @@ function setupGLView(w, h) {
 
     cameraHeight = h/2/Math.tan(camera.fov/2*(Math.PI/180))
     camera.position.set(0,0,cameraHeight);
-    renderer.setSize(w,h);
+    let clientHeight = Math.round(h/w * canvasgl.clientWidth);    
+    renderer.setSize(canvasgl.clientWidth, clientHeight);
 
     controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enablePan = false;
@@ -264,6 +261,11 @@ function setCropCoords() {
  */
 function onFramePreview(rgbImage, elapsedTime) {
     var frame = new Uint8Array(rgbImage.arrayBuffer);
+    if (rgbImage.width !== previewWidth || rgbImage.height !== previewHeight) {
+        previewWidth = rgbImage.width;
+        previewHeight = rgbImage.height;
+        setupGLView(previewWidth, previewHeight);
+    }
     material.map = new THREE.DataTexture(frame, rgbImage.width, rgbImage.height, formatTexture, THREE.UnsignedByteType);
     material.map.flipY = true;
     material.needsUpdate = true;
