@@ -42,6 +42,19 @@ document.addEventListener("DOMContentLoaded", () => {
     takePictureButton1 = document.getElementById('takePictureButton1');
     takePictureButton2 = document.getElementById('takePictureButton2');
     flashButton = document.getElementById('flashButton');
+    torchRange = document.getElementById('torchLevelRange');
+    torchRange.addEventListener('change', function() {
+        let level = parseFloat(torchRange.value);
+        if (level != level) {
+            alert('failed to parse torch level value');
+        } else {
+            SetTorchLevelNativeCamera(level);
+            document.getElementById("torchLevelRangeLabel").innerHTML = `Torch Level: ${torchRange.value}`;
+        }
+    })
+    torchRange.value = "1.0";
+    document.getElementById("torchLevelRangeLabel").innerHTML = `Torch Level: ${torchRange.value}`;
+    torchRange.disabled = true;
     snapshotImage = document.getElementById('snapshotImage');
 
     
@@ -87,6 +100,7 @@ document.addEventListener("DOMContentLoaded", () => {
         startCameraButtonGL.disabled = true
         startCameraButtonMJPEG.disabled = true
         stopCameraButton.disabled = false
+        torchRange.disabled = false
         setCropCoords();
         show(canvasgl);
         canvasgl.parentElement.style.display = "block";
@@ -118,6 +132,7 @@ document.addEventListener("DOMContentLoaded", () => {
         startCameraButtonGL.disabled = true
         startCameraButtonMJPEG.disabled = true
         stopCameraButton.disabled = false
+        torchRange.disabled = false
         setCropCoords();
         hide(canvasgl);
         canvasgl.parentElement.style.display = "none";
@@ -150,6 +165,7 @@ document.addEventListener("DOMContentLoaded", () => {
         startCameraButtonGL.disabled = false
         startCameraButtonMJPEG.disabled = false
         stopCameraButton.disabled = true
+        torchRange.disabled = true
         time0 = undefined
         globalCounter = 0
         title_h2.innerHTML = "Camera Test"

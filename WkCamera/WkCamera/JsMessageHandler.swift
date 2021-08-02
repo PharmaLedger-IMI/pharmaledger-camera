@@ -17,6 +17,7 @@ public enum MessageNames: String, CaseIterable {
     case StopCamera = "StopCamera"
     case TakePicture = "TakePicture"
     case SetFlashMode = "SetFlashMode"
+    case SetTorchLevel = "SetTorchLevel"
     case GetAllSessionPresetStrings = "GetAllSessionPresetStrings"
 }
 
@@ -256,7 +257,20 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
             handleTakePicture(onCaptureJsCallback: args?["onCaptureJsCallback"] as? String)
         case .SetFlashMode:
             handleSetFlashMode(mode: args?["mode"] as? String)
+        case .SetTorchLevel:
+            if let level = args?["level"] as? NSNumber {
+                let levelVal = level.floatValue
+                if levelVal > 0.0 {
+                    handleSetTorchLevel(level: levelVal)
+                } else {
+                    print("Torch level must be greater than 0.0")
+                }
+            } else {
+                print("JsMessageHandler: cannot convert argument to NSNumber")
+                return
+            }
         case .GetAllSessionPresetStrings:
+            /// TODO
             break
         }
         if let callback = jsCallback {
@@ -454,6 +468,27 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
             return
         }
         cameraConfiguration.setFlashConfiguration(flash_mode: mode)
+        if let cameraSession = self.cameraSession {
+            if let captureSession = cameraSession.captureSession {
+                if captureSession.isRunning {
+                    cameraConfiguration.applyConfiguration()
+                }
+            }
+        }
+    }
+    
+    private func handleSetTorchLevel(level: Float) {
+        guard let cameraConfiguration = cameraConfiguration else {
+            return
+        }
+        cameraConfiguration.setTorchLevel(level: level)
+        if let cameraSession = self.cameraSession {
+            if let captureSession = cameraSession.captureSession {
+                if captureSession.isRunning {
+                    cameraConfiguration.applyConfiguration()
+                }
+            }
+        }
     }
     
     private func callJsAfterCameraStart() {

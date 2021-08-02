@@ -141,6 +141,14 @@ function setFlashModeNativeCamera(mode) {
     callNative("SetFlashMode", { "mode": mode })
 }
 
+/**
+ * Control camera torch level
+ * @param  {number} level torch level between (0.0, 1.0]
+ */
+function SetTorchLevelNativeCamera(level) {
+    callNative("SetTorchLevel", { "level": level})
+}
+
 function onNativeCameraInitialized(wsPort) {
     _serverUrl = `http://localhost:${wsPort}`
     if (_onFramePreviewCallback !== undefined) {
