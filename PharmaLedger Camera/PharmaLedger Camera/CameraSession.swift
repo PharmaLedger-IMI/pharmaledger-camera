@@ -182,6 +182,8 @@ import UIKit
         let videoOutput = AVCaptureVideoDataOutput()
         
         videoOutput.setSampleBufferDelegate(self, queue: DispatchQueue(label: "sampleBuffer"))
+        videoOutput.videoSettings = [String(kCVPixelBufferPixelFormatTypeKey): Int(kCVPixelFormatType_420YpCbCr8BiPlanarFullRange)]
+//        videoOutput.videoSettings = [String(kCVPixelBufferPixelFormatTypeKey): Int(kCVPixelFormatType_32BGRA)]
         
         guard (captureSession?.canAddOutput(videoOutput))! else {
             return .deviceOutputFailure
@@ -224,6 +226,11 @@ import UIKit
     }
     
     //MARK: Public functions
+    
+    /// returns the photoOutput for custom takePicture implementation
+    @objc public func getPhotoOutput() -> AVCapturePhotoOutput? {
+        return photoOutput
+    }
     
     /// Stops the camera session
     @objc public func stopCamera(){
