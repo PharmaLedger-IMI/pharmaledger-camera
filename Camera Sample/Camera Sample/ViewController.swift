@@ -10,6 +10,10 @@ import PharmaLedger_Camera
 import AVFoundation
 
 class ViewController: UIViewController,SettingsViewDelegate {
+    func onContinuousFocusChanged(continuous_focus: Bool) {
+        cameraConfig.continuousFocus = continuous_focus
+    }
+    
     func onSessionPresetChanged(session_preset: String) {
         cameraConfig.setSessionPreset(preset: session_preset)
     }
@@ -63,9 +67,9 @@ class ViewController: UIViewController,SettingsViewDelegate {
             openCameraViewButton.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             openCameraViewButton.heightAnchor.constraint(equalToConstant: 100),
             openCameraViewButton.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor),
-            settingsView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            settingsView.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
             settingsView.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
-            settingsView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            settingsView.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
             settingsView.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor, constant: -100),
         ])
     }
@@ -93,7 +97,7 @@ class ViewController: UIViewController,SettingsViewDelegate {
         cameraViewController = CameraViewController.init(cameraConfig: cameraConfig)
         
         cameraViewController?.modalPresentationStyle = .fullScreen
-        cameraViewController?.saveMode = self.saveMode ?? "files"
+        cameraViewController?.setSaveMode(save_mode: self.saveMode ?? "files")
         //self.navigationController?.pushViewController(cameraViewController!, animated: true)
         
         print("camera should open now")

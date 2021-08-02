@@ -42,6 +42,14 @@ public class CameraConfiguration {
      */
     public var autoOrientationEnabled:Bool = true
     
+    /** Defines the preferred [AVCaptureDevice.FocusMode](https://developer.apple.com/documentation/avfoundation/avcapturedevice/focusmode).
+     If true, preferred focusmode will be set to **continuousAutoFocus**, otherwise the mode will switch between **autoFocus** and **locked**.
+     
+     Default: true
+     
+     */
+    public var continuousFocus:Bool = true
+    
     //MARK: Initialization
     
     /// Initializes the camera confifugration with default values. To further customize the configuration, call any
@@ -128,7 +136,6 @@ public class CameraConfiguration {
     public func setTorchLevel(level:Float){
         self.torchlevel = level
     }
-    
     
     //MARK: Color space
     

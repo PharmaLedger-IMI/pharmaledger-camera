@@ -152,6 +152,8 @@ import UIKit
                 }
             }
             device.unlockForConfiguration()
+            
+            requestFocus(pointOfInterest: nil)
         }catch {
             print(error)
         }
@@ -279,6 +281,46 @@ import UIKit
         case .P3_D65: return "P3_D65"
         default: return "unknown"
         }
+    }
+    
+    /// Lens focus request.
+    /// - Parameter pointOfInterest: Point of interest ranging from {0,0} to {1,1}. This coordinate system is always relative to a landscape device orientation with the home button on the right, regardless of the actual device orientation.
+    public func requestFocus(pointOfInterest:CGPoint?){
+        guard let device = captureDevice else {
+            return
+        }
+        
+        do{
+            try device.lockForConfiguration()
+        }catch {
+            print(error)
+            return
+        }
+        
+        if(cameraConfiguration.continuousFocus){
+            if(device.isFocusModeSupported(.continuousAutoFocus)){
+                device.focusMode = .continuousAutoFocus
+            }else{
+                print("requestFocus","mode continuousAuto not supported")
+                device.focusMode = .autoFocus
+                cameraConfiguration.continuousFocus = false
+            }
+        }else{
+            if(device.isFocusModeSupported(.autoFocus)){
+                device.focusMode = .autoFocus
+            }else{
+                print("requestFocus","mode auto not supported")
+                device.focusMode = .continuousAutoFocus
+                cameraConfiguration.continuousFocus = true
+            }
+        }
+        
+        if(device.isFocusPointOfInterestSupported && pointOfInterest != nil){
+            device.focusPointOfInterest = pointOfInterest!
+        }
+        
+        device.unlockForConfiguration()
+        
     }
     
     //MARK: Device orientation

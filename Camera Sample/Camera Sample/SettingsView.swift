@@ -8,6 +8,7 @@
 	
 
 import UIKit
+import PharmaLedger_Camera
 
 /// Delegate for setting changes
 protocol SettingsViewDelegate {
@@ -16,6 +17,7 @@ protocol SettingsViewDelegate {
     func onFlashModeChanged(flash_mode:String)
     func onSaveModeChanged(save_mode:String)
     func onSessionPresetChanged(session_preset:String)
+    func onContinuousFocusChanged(continuous_focus:Bool)
 }
 
 /// Scrollable view containing camera settings
@@ -76,6 +78,8 @@ class SettingsView:UIScrollView, UIPickerViewDelegate, UIPickerViewDataSource{
         }
     }
     
+    //MARK: UI Views
+    
     private let containerView:UIStackView = UIStackView.init()
     
     private let flashModeLabel:UILabel = UILabel.init()
@@ -92,6 +96,11 @@ class SettingsView:UIScrollView, UIPickerViewDelegate, UIPickerViewDataSource{
     
     private let sessionPresetLabel:UILabel = UILabel.init()
     private let sessionPresetPicker:UIPickerView = UIPickerView.init()
+    
+    private let focusModeLabel:UILabel = UILabel.init()
+    private let focusModeSwitch:UISwitch = UISwitch.init()
+    
+    //MARK: Variables and constants
     
     private let colorSpaceValues:[String] = ["default", "sRGB", "P3_D65", "HLG_BT2020"]
     private var currentColorSpace = "default"
@@ -116,9 +125,13 @@ class SettingsView:UIScrollView, UIPickerViewDelegate, UIPickerViewDataSource{
                                                 "cif352x288"]
     private var currentSessionPreset = "photo"
     
+    private var currentContinuousFocus = true
+    
     private var torchLevel:Float = 1.0
     
     var settingsViewDelegate:SettingsViewDelegate?
+    
+    //MARK: Getters
     
     func getCurrentColorSpace()->String{
         return currentColorSpace
@@ -133,6 +146,8 @@ class SettingsView:UIScrollView, UIPickerViewDelegate, UIPickerViewDataSource{
         return torchLevel
     }
 
+    //MARK: Setters
+    
     func setColorSpace(color_space:String){
         self.currentColorSpace = color_space
         colorSpacePicker.selectRow(colorSpaceValues.firstIndex(of: color_space) ?? 0, inComponent: 0, animated: false)
@@ -148,7 +163,34 @@ class SettingsView:UIScrollView, UIPickerViewDelegate, UIPickerViewDataSource{
         self.torchLevelSlider.value = self.torchLevel
     }
     
+    func setSessionPreset(session_preset:String){
+        self.currentSessionPreset = session_preset
+        sessionPresetPicker.selectRow(sessionPresetValues.firstIndex(of: session_preset) ?? 0, inComponent: 0, animated: false)
+    }
+    
+    func setFocusMode(continuous_focus:Bool){
+        currentContinuousFocus = continuous_focus
+        self.focusModeSwitch.isOn = self.currentContinuousFocus
+    }
+    
+    func setSaveMode(save_mode:String){
+        self.currentSaveMode = save_mode
+        saveModePicker.selectRow(saveModeValues.firstIndex(of: save_mode) ?? 0, inComponent: 0, animated: false)
+    }
+    
+    func setConfig(config:CameraConfiguration){
+        print("settingsView","setConfig")
+        setFocusMode(continuous_focus: config.continuousFocus)
+        setTorchLevel(torch_level: config.getTorchLevel())
+        setColorSpace(color_space: config.getPreferredColorSpaceString())
+        setFlashMode(flash_mode: config.getFlashConfiguration() ?? "auto")
+        setSessionPreset(session_preset: config.getSessionPresetString())
+    }
+    
+    //MARK: UI init
+    
     override func didMoveToSuperview() {
+        print("settingsView","didMoveToSuperview")
         containerView.alignment = .center
         containerView.distribution = .equalSpacing
         containerView.spacing = 10
@@ -166,7 +208,8 @@ class SettingsView:UIScrollView, UIPickerViewDelegate, UIPickerViewDataSource{
         saveModePicker.translatesAutoresizingMaskIntoConstraints = false
         sessionPresetLabel.translatesAutoresizingMaskIntoConstraints = false
         sessionPresetPicker.translatesAutoresizingMaskIntoConstraints = false
-        
+        focusModeLabel.translatesAutoresizingMaskIntoConstraints = false
+        focusModeSwitch.translatesAutoresizingMaskIntoConstraints = false
         
         //labels
         flashModeLabel.text = "Flash mode:"
@@ -174,6 +217,7 @@ class SettingsView:UIScrollView, UIPickerViewDelegate, UIPickerViewDataSource{
         saveModeLabel.text = "Save mode:"
         sessionPresetLabel.text = "Session preset:"
         torchLevelLabel.text = "Torch level: \(torchLevel)"
+        focusModeLabel.text = "Continuous auto focus:"
         
         //torch level slider
         torchLevelSlider.minimumValue = 0.1
@@ -182,14 +226,24 @@ class SettingsView:UIScrollView, UIPickerViewDelegate, UIPickerViewDataSource{
         torchLevelSlider.isContinuous = false
         torchLevelSlider.addTarget(self, action: #selector(updateTorchLevel), for: .valueChanged)
         
+        //focus mode switch
+        focusModeSwitch.isOn = currentContinuousFocus
+        focusModeSwitch.addTarget(self, action: #selector(switchToggled), for: .valueChanged)
+        
         //pickers
-        flashmodePicker.delegate = self
         flashmodePicker.dataSource = self
-        colorSpacePicker.delegate = self
         colorSpacePicker.dataSource = self
-        saveModePicker.delegate = self
-        saveModePicker.dataSource = self
         sessionPresetPicker.dataSource = self
+        saveModePicker.dataSource = self
+        
+        setColorSpace(color_space: self.currentColorSpace)
+        setFlashMode(flash_mode: self.currentFlashMode)
+        setSessionPreset(session_preset: self.currentSessionPreset)
+        setSaveMode(save_mode: self.currentSaveMode)
+        
+        flashmodePicker.delegate = self
+        colorSpacePicker.delegate = self
+        saveModePicker.delegate = self
         sessionPresetPicker.delegate = self
         
         //add views to container
@@ -197,6 +251,8 @@ class SettingsView:UIScrollView, UIPickerViewDelegate, UIPickerViewDataSource{
         containerView.addArrangedSubview(flashmodePicker)
         containerView.addArrangedSubview(torchLevelLabel)
         containerView.addArrangedSubview(torchLevelSlider)
+        containerView.addArrangedSubview(focusModeLabel)
+        containerView.addArrangedSubview(focusModeSwitch)
         containerView.addArrangedSubview(colorSpaceLabel)
         containerView.addArrangedSubview(colorSpacePicker)
         containerView.addArrangedSubview(saveModeLabel)
@@ -222,10 +278,15 @@ class SettingsView:UIScrollView, UIPickerViewDelegate, UIPickerViewDataSource{
         ])
     }
     
+    //MARK: Functions
+    
     @objc func updateTorchLevel(){
         self.torchLevel = torchLevelSlider.value
         self.settingsViewDelegate?.onTorchLevelChanged(level: self.torchLevel)
         self.torchLevelLabel.text = "Torch level: \(self.torchLevel)"
     }
     
+    @objc func switchToggled(ui_switch:UISwitch){
+        self.settingsViewDelegate?.onContinuousFocusChanged(continuous_focus: ui_switch.isOn)
+    }
 }

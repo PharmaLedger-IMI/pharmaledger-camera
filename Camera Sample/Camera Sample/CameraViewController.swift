@@ -12,6 +12,11 @@ import PharmaLedger_Camera
 import AVFoundation
 
 class CameraViewController: UIViewController, CameraEventListener, SettingsViewDelegate {
+    func onContinuousFocusChanged(continuous_focus: Bool) {
+        cameraConfig?.continuousFocus = continuous_focus
+        cameraConfig?.applyConfiguration()
+    }
+    
     func onSessionPresetChanged(session_preset: String) {
         cameraConfig?.setSessionPreset(preset: session_preset)
         cameraConfig?.applyConfiguration()
@@ -120,11 +125,14 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
     
     init(cameraConfig:CameraConfiguration){
         self.cameraConfig = cameraConfig
-        self.settingsView.setTorchLevel(torch_level: cameraConfig.getTorchLevel())
-        self.settingsView.setColorSpace(color_space: cameraConfig.getPreferredColorSpaceString())
-        self.settingsView.setFlashMode(flash_mode: cameraConfig.getFlashConfiguration() ?? "auto")
+        self.settingsView.setConfig(config: cameraConfig)
         super.init(nibName: nil, bundle: nil)
         print("camera view initialized")
+    }
+    
+    public func setSaveMode(save_mode:String){
+        self.saveMode = save_mode
+        self.settingsView.setSaveMode(save_mode: self.saveMode)
     }
     
     required init?(coder: NSCoder) {
@@ -191,6 +199,9 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
         cameraImagePreview?.addSubview(settingsView)
         cameraImagePreview?.isUserInteractionEnabled = true
         
+        let cameraTapGesture = UITapGestureRecognizer(target: self, action: #selector(requestFocusWithPOI))
+        cameraImagePreview?.addGestureRecognizer(cameraTapGesture)
+        
         let ui_spacing:CGFloat = 5
         let button_width:CGFloat = 50
         
@@ -246,8 +257,6 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
         }else{
             cameraSession = CameraSession.init(cameraEventListener: self,cameraConfiguration: cameraConfig!)
         }
-        
-       
     }
     
     func readjustAspectRatio(){
@@ -310,6 +319,32 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
         }
         
         
+    }
+    
+    @objc func requestFocusWithPOI(touch:UITapGestureRecognizer){
+        let rawLocation = touch.location(in: self.cameraImagePreview)
+        
+        var x_corrected:CGFloat = rawLocation.x
+        var y_corrected:CGFloat = rawLocation.y
+        
+        var width_corrected:CGFloat = self.cameraImagePreview!.frame.width
+        var height_corrected:CGFloat = self.cameraImagePreview!.frame.height
+        
+        if(UIDevice.current.orientation == .portrait || UIDevice.current.orientation == .portraitUpsideDown){
+            width_corrected = self.cameraImagePreview!.frame.height
+            height_corrected = self.cameraImagePreview!.frame.width
+            
+            x_corrected = rawLocation.y
+            y_corrected = height_corrected - rawLocation.x
+            
+        }
+        
+        let pointOfInterest:CGPoint = CGPoint.init(x: x_corrected/width_corrected, y: y_corrected/height_corrected)
+        
+        print("requestFocusWithPOI","touched at \(rawLocation)")
+        print("requestFocusWithPOI","requesting focus at point \(pointOfInterest)")
+        
+        cameraSession?.requestFocus(pointOfInterest: pointOfInterest)
     }
     
     @objc func toggleSettingsView(){
