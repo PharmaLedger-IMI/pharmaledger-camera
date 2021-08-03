@@ -32,7 +32,7 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
     public var cameraSession: CameraSession?
     public var cameraConfiguration: CameraConfiguration?
     
-    // MARK: WKScriptMessageHandler
+    // MARK: WKScriptMessageHandler Protocol
     public func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
         var args: [String: AnyObject]? = nil
         var jsCallback: String? = nil
@@ -51,106 +51,17 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
         }
     }
     
-    // MARK: CameraEventListener
+    // MARK: CameraEventListener Protocol
     public func onCameraPermissionDenied() {
         print("Permission denied")
     }
     
-    private var dataBuffer_w = -1
-    private var dataBuffer_h = -1
-    private var dataBufferRGBA: UnsafeMutableRawPointer? = nil
-    private var dataBufferRGB: UnsafeMutableRawPointer? = nil
-    private var dataBufferRGBsmall: UnsafeMutableRawPointer? = nil
-    private var rawData = Data()
-    private var previewData = Data()
-    private var currentCIImage: CIImage? = nil
     public func onPreviewFrame(sampleBuffer: CMSampleBuffer) {
         guard let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {
             print("Cannot get imageBuffer")
             return
         }
         currentCIImage = CIImage(cvImageBuffer: imageBuffer, options: nil)
-    }
-    
-    public func prepareRGBData(ciImage: CIImage, roi: CGRect?) -> Data {
-        let extent: CGRect = roi ?? ciImage.extent
-        let cgImage = ciContext.createCGImage(ciImage, from: extent)
-        let colorspace = CGColorSpaceCreateDeviceRGB()
-        let rowBytes = cgImage!.bytesPerRow
-        let bpc = cgImage!.bitsPerComponent
-        let w = cgImage!.width
-        let h = cgImage!.height
-        if w != dataBuffer_w || h != dataBuffer_h {
-            if dataBufferRGBA != nil {
-                free(dataBufferRGBA)
-                dataBufferRGBA = nil
-            }
-            if dataBufferRGB != nil {
-                free(dataBufferRGB)
-                dataBufferRGB = nil
-            }
-        }
-        if dataBufferRGBA == nil {
-            dataBufferRGBA = malloc(rowBytes*h)
-            dataBuffer_w = w
-            dataBuffer_h = h
-        }
-        if dataBufferRGB == nil {
-            dataBufferRGB = malloc(3*w*h)
-        }
-        let cgContext = CGContext(data: dataBufferRGBA, width: w, height: h, bitsPerComponent: bpc, bytesPerRow: rowBytes, space: colorspace, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
-        
-        cgContext?.draw(cgImage!, in: CGRect(x: 0, y: 0, width: w, height: h))
-        var inBuffer = vImage_Buffer(
-            data: dataBufferRGBA!,
-            height: vImagePixelCount(h),
-            width: vImagePixelCount(w),
-            rowBytes: rowBytes)
-        var outBuffer = vImage_Buffer(
-            data: dataBufferRGB,
-            height: vImagePixelCount(h),
-            width: vImagePixelCount(w),
-            rowBytes: 3*w)
-        vImageConvert_RGBA8888toRGB888(&inBuffer, &outBuffer, UInt32(kvImageNoFlags))
-        
-        let data = Data(bytesNoCopy: dataBufferRGB!, count: 3*w*h, deallocator: .none)
-        return data
-    }
-    
-    public func preparePreviewData(ciImage: CIImage) -> (Data, Int, Int) {
-        let resizeFilter = CIFilter(name: "CILanczosScaleTransform")!
-        resizeFilter.setValue(ciImage, forKey: kCIInputImageKey)
-        let previewHeight = Int(CGFloat(ciImage.extent.height) / CGFloat(ciImage.extent.width) * CGFloat(self.previewWidth))
-        let scale = CGFloat(previewHeight) / ciImage.extent.height
-        let ratio = CGFloat(self.previewWidth) / CGFloat(ciImage.extent.width) / scale
-        resizeFilter.setValue(scale, forKey: kCIInputScaleKey)
-        resizeFilter.setValue(ratio, forKey: kCIInputAspectRatioKey)
-        let ciImageRescaled = resizeFilter.outputImage!
-        //
-        let cgImage = ciContext.createCGImage(ciImageRescaled, from: ciImageRescaled.extent)
-        let colorspace = CGColorSpaceCreateDeviceRGB()
-        let bpc = cgImage!.bitsPerComponent
-        let Bpr = cgImage!.bytesPerRow
-        let cgContext = CGContext(data: nil, width: cgImage!.width, height: cgImage!.height, bitsPerComponent: bpc, bytesPerRow: Bpr, space: colorspace, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
-
-
-        cgContext?.draw(cgImage!, in: CGRect(x: 0, y: 0, width: cgImage!.width, height: cgImage!.height))
-        if dataBufferRGBsmall == nil {
-            dataBufferRGBsmall = malloc(3*cgImage!.height*cgImage!.width)
-        }
-        var inBufferSmall = vImage_Buffer(
-            data: cgContext!.data!,
-            height: vImagePixelCount(cgImage!.height),
-            width: vImagePixelCount(cgImage!.width),
-            rowBytes: Bpr)
-        var outBufferSmall = vImage_Buffer(
-            data: dataBufferRGBsmall,
-            height: vImagePixelCount(cgImage!.height),
-            width: vImagePixelCount(cgImage!.width),
-            rowBytes: 3*cgImage!.width)
-        vImageConvert_RGBA8888toRGB888(&inBufferSmall, &outBufferSmall, UInt32(kvImageNoFlags))
-        let data = Data(bytesNoCopy: dataBufferRGBsmall!, count: 3*cgImage!.width*cgImage!.height, deallocator: .none)
-        return (data, self.previewWidth, previewHeight)
     }
     
     public func onCapture(imageData: Data) {
@@ -184,6 +95,35 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
     }
     
     // MARK: privates vars
+    private var ypCbCrPixelRange = vImage_YpCbCrPixelRange(Yp_bias: 0,
+                                                     CbCr_bias: 128,
+                                                     YpRangeMax: 255,
+                                                     CbCrRangeMax: 255,
+                                                     YpMax: 255,
+                                                     YpMin: 0,
+                                                     CbCrMax: 255,
+                                                     CbCrMin: 0)
+    private var argbToYpCbCr: vImage_ARGBToYpCbCr {
+        var outInfo = vImage_ARGBToYpCbCr()
+        
+        vImageConvert_ARGBToYpCbCr_GenerateConversion(kvImage_ARGBToYpCbCrMatrix_ITU_R_709_2,
+                                                      &ypCbCrPixelRange,
+                                                      &outInfo,
+                                                      kvImageARGB8888,
+                                                      kvImage420Yp8_CbCr8,
+                                                      vImage_Flags(kvImageNoFlags))
+        return outInfo
+    }
+    private var dataBuffer_w = -1
+    private var dataBuffer_h = -1
+    private var dataBufferRGBA: UnsafeMutableRawPointer? = nil
+    private var dataBufferRGB: UnsafeMutableRawPointer? = nil
+    private var dataBufferYp: UnsafeMutableRawPointer? = nil
+    private var dataBufferCbCr: UnsafeMutableRawPointer? = nil
+    private var dataBufferRGBsmall: UnsafeMutableRawPointer? = nil
+    private var rawData = Data()
+    private var previewData = Data()
+    private var currentCIImage: CIImage? = nil
     private var webview: WKWebView? = nil
     private var onGrabFrameJsCallBack: String?
     private let ciContext = CIContext(options: nil)
@@ -292,6 +232,131 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
     }
     
     // MARK: private methods
+    private func enforceRawBuffer(cgImage: CGImage) {
+        if cgImage.width != dataBuffer_w || cgImage.height != dataBuffer_h {
+            if dataBufferRGBA != nil {
+                free(dataBufferRGBA)
+                dataBufferRGBA = nil
+            }
+            if dataBufferRGB != nil {
+                free(dataBufferRGB)
+                dataBufferRGB = nil
+            }
+            if dataBufferYp != nil {
+                free(dataBufferYp)
+                dataBufferYp = nil
+            }
+            if dataBufferCbCr != nil {
+                free(dataBufferCbCr)
+                dataBufferCbCr = nil
+            }
+        }
+        if dataBufferRGBA == nil {
+            dataBufferRGBA = malloc(cgImage.bytesPerRow*cgImage.height)
+            dataBuffer_w = cgImage.width
+            dataBuffer_h = cgImage.height
+        }
+        if dataBufferRGB == nil {
+            dataBufferRGB = malloc(3*cgImage.width*cgImage.height)
+        }
+        if dataBufferYp == nil {
+            dataBufferYp = malloc(cgImage.width*cgImage.height)
+        }
+        if dataBufferCbCr == nil {
+            dataBufferCbCr = malloc(cgImage.width*cgImage.height / 2)
+        }
+    }
+    
+    private func buildRgba_vImage(cgImage: CGImage, vimage: inout vImage_Buffer) {
+        enforceRawBuffer(cgImage: cgImage)
+        let colorspace = CGColorSpaceCreateDeviceRGB()
+        let cgContext = CGContext(data: dataBufferRGBA, width: cgImage.width, height: cgImage.height, bitsPerComponent: cgImage.bitsPerComponent, bytesPerRow: cgImage.bytesPerRow, space: colorspace, bitmapInfo: cgImage.bitmapInfo.rawValue)
+        
+        cgContext?.draw(cgImage, in: CGRect(x: 0, y: 0, width: cgImage.width, height: cgImage.height))
+        vimage = vImage_Buffer(
+            data: dataBufferRGBA!,
+            height: vImagePixelCount(cgImage.height),
+            width: vImagePixelCount(cgImage.width),
+            rowBytes: cgImage.bytesPerRow)
+    }
+    
+    private func prepareRGBData(ciImage: CIImage, roi: CGRect?) -> Data {
+        let extent: CGRect = roi ?? ciImage.extent
+        guard let cgImage = ciContext.createCGImage(ciImage, from: extent) else {
+            return Data()
+        }
+        var inBuffer: vImage_Buffer = vImage_Buffer()
+        buildRgba_vImage(cgImage: cgImage, vimage: &inBuffer)
+        var outBuffer = vImage_Buffer(
+            data: dataBufferRGB,
+            height: vImagePixelCount(cgImage.height),
+            width: vImagePixelCount(cgImage.width),
+            rowBytes: 3*cgImage.width)
+        vImageConvert_RGBA8888toRGB888(&inBuffer, &outBuffer, UInt32(kvImageNoFlags))
+        
+        let data = Data(bytesNoCopy: dataBufferRGB!, count: 3*cgImage.width*cgImage.height, deallocator: .none)
+        return data
+    }
+    
+    private func prepare420Yp8_CbCr8Data(ciImage: CIImage, roi: CGRect?) -> Data {
+        let extent: CGRect = roi ?? ciImage.extent
+        guard let cgImage = ciContext.createCGImage(ciImage, from: extent) else {
+            return Data()
+        }
+        var inBuffer: vImage_Buffer = vImage_Buffer()
+        buildRgba_vImage(cgImage: cgImage, vimage: &inBuffer)
+        var ypOut = vImage_Buffer(data: dataBufferYp, height: vImagePixelCount(cgImage.height), width: vImagePixelCount(cgImage.width), rowBytes: cgImage.width)
+        var cbCrOut = vImage_Buffer(data: dataBufferCbCr, height: vImagePixelCount(cgImage.height/2), width: vImagePixelCount(cgImage.width/2), rowBytes: cgImage.width)
+        _ = withUnsafePointer(to: argbToYpCbCr, {info in
+            vImageConvert_ARGB8888To420Yp8_CbCr8(&inBuffer, &ypOut, &cbCrOut, info, [3, 0, 1, 2], vImage_Flags(kvImagePrintDiagnosticsToConsole))
+        })
+        let dataYp = Data(bytesNoCopy: dataBufferYp!, count: cgImage.width*cgImage.height, deallocator: .none)
+        let dataCbCr = Data(bytesNoCopy: dataBufferCbCr!, count: cgImage.width*cgImage.height/2, deallocator: .none)
+        var fullData = Data()
+        fullData.append(dataYp)
+        fullData.append(dataCbCr)
+        return fullData
+    }
+    
+    private func preparePreviewData(ciImage: CIImage) -> (Data, Int, Int) {
+        let resizeFilter = CIFilter(name: "CILanczosScaleTransform")!
+        resizeFilter.setValue(ciImage, forKey: kCIInputImageKey)
+        let previewHeight = Int(CGFloat(ciImage.extent.height) / CGFloat(ciImage.extent.width) * CGFloat(self.previewWidth))
+        let scale = CGFloat(previewHeight) / ciImage.extent.height
+        let ratio = CGFloat(self.previewWidth) / CGFloat(ciImage.extent.width) / scale
+        resizeFilter.setValue(scale, forKey: kCIInputScaleKey)
+        resizeFilter.setValue(ratio, forKey: kCIInputAspectRatioKey)
+        let ciImageRescaled = resizeFilter.outputImage!
+        //
+        guard let cgImage = ciContext.createCGImage(ciImageRescaled, from: ciImageRescaled.extent) else {
+            return (Data(), -1, -1)
+        }
+        let colorspace = CGColorSpaceCreateDeviceRGB()
+        let bpc = cgImage.bitsPerComponent
+        let Bpr = cgImage.bytesPerRow
+        let cgContext = CGContext(data: nil, width: cgImage.width, height: cgImage.height, bitsPerComponent: bpc, bytesPerRow: Bpr, space: colorspace, bitmapInfo: cgImage.bitmapInfo.rawValue)
+
+
+        cgContext?.draw(cgImage, in: CGRect(x: 0, y: 0, width: cgImage.width, height: cgImage.height))
+        if dataBufferRGBsmall == nil {
+            dataBufferRGBsmall = malloc(3*cgImage.height*cgImage.width)
+        }
+        var inBufferSmall = vImage_Buffer(
+            data: cgContext!.data!,
+            height: vImagePixelCount(cgImage.height),
+            width: vImagePixelCount(cgImage.width),
+            rowBytes: Bpr)
+        var outBufferSmall = vImage_Buffer(
+            data: dataBufferRGBsmall,
+            height: vImagePixelCount(cgImage.height),
+            width: vImagePixelCount(cgImage.width),
+            rowBytes: 3*cgImage.width)
+        vImageConvert_RGBA8888toRGB888(&inBufferSmall, &outBufferSmall, UInt32(kvImageNoFlags))
+        let data = Data(bytesNoCopy: dataBufferRGBsmall!, count: 3*cgImage.width*cgImage.height, deallocator: .none)
+        return (data, self.previewWidth, previewHeight)
+    }
+    
+    
     private func startWebserver() {
         let options: [String: Any] = [
             GCDWebServerOption_Port: findFreePort(),
@@ -304,6 +369,7 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
         }
     }
     
+    // MARK: webserver endpoints definitions
     private func addWebserverHandlers() {
         let dirPath = Bundle.main.path(forResource: "www", ofType: nil)
         webserver.addGETHandler(forBasePath: "/", directoryPath: dirPath!, indexFilename: nil, cacheAge: 0, allowRangeRequests: false)
@@ -387,6 +453,40 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
                 }
             }
         })
+        webserver.addHandler(forMethod: "GET", path: "/rawframe_ycbcr", request: GCDWebServerRequest.classForCoder(), asyncProcessBlock: { (request, completion) in
+            self.rawframeQueue.async {
+                var roi: CGRect? = nil
+                if let query = request.query {
+                    if query.count > 0 {
+                        guard let x = query["x"], let y = query["y"], let w = query["w"], let h = query["h"] else {
+                            let response = GCDWebServerErrorResponse.init(text: "Must specify exactly 4 params (x, y, w, h) or none.")
+                            response?.statusCode = 400
+                            completion(response)
+                            return
+                        }
+                        guard let x = Int(x), let y = Int(y), let w = Int(w), let h = Int(h) else {
+                            let response = GCDWebServerErrorResponse.init(text: "(x, y, w, h) must be integers.")
+                            response?.statusCode = 400
+                            completion(response)
+                            return
+                        }
+                        roi = CGRect(x: x, y: y, width: w, height: h)
+                    }
+                }
+                if let ciImage = self.currentCIImage {
+                    let data = self.prepare420Yp8_CbCr8Data(ciImage: ciImage, roi: roi)
+                    let contentType = "application/octet-stream"
+                    let response = GCDWebServerDataResponse(data: data, contentType: contentType)
+                    let imageSize: CGSize = roi?.size ?? ciImage.extent.size
+                    response.setValue(String(Int(imageSize.width)), forAdditionalHeader: "image-width")
+                    response.setValue(String(Int(imageSize.height)), forAdditionalHeader: "image-height")
+                    completion(response)
+                } else {
+                    completion(GCDWebServerErrorResponse.init(statusCode: 500))
+                }
+            }
+        })
+        
         webserver.addHandler(forMethod: "GET", path: "/previewframe", request: GCDWebServerRequest.self, asyncProcessBlock: {(request, completion) in
             self.previewframeQueue.async {
                 if let ciImage = self.currentCIImage {
@@ -425,7 +525,7 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
         })
     }
     
-    
+    // MARK: js message handlers implementations
     private func handleCameraStart(onCameraInitializedJsCallback: String?, sessionPreset: String, flash_mode: String?, auto_orientation_enabled: Bool?) {
         self.onCameraInitializedJsCallback = onCameraInitializedJsCallback
         self.cameraConfiguration = .init(flash_mode: flash_mode, color_space: nil, session_preset: sessionPreset, auto_orienation_enabled: auto_orientation_enabled ?? false)
@@ -449,6 +549,14 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
         if dataBufferRGB != nil {
             free(dataBufferRGB)
             dataBufferRGB = nil
+        }
+        if dataBufferYp != nil {
+            free(dataBufferYp)
+            dataBufferYp = nil
+        }
+        if dataBufferCbCr != nil {
+            free(dataBufferCbCr)
+            dataBufferCbCr = nil
         }
         if dataBufferRGBsmall != nil {
             free(dataBufferRGBsmall)

@@ -63,6 +63,10 @@
             <input class="custom-control-input" type="checkbox" id="invertRawFrameCheck" />
             <label class="custom-control-label" for="invertRawFrameCheck">Invert</label>
         </div>
+        <div class="col custom-control custom-switch">
+            <input class="custom-control-input" type="checkbox" id="ycbcrCheck" />
+            <label class="custom-control-label" for="ycbcrCheck">YCbCr</label>
+        </div>
     </div>
     <div class="row top-buffer">
         <div class="col">
@@ -73,6 +77,12 @@
         </div>
         <div class="col">
             <canvas id='rawCropCanvas'></canvas>
+        </div>
+        <div class="col">
+            <canvas id='rawCropCbCanvas'></canvas>
+        </div>
+        <div class="col">
+            <canvas id='rawCropCrCanvas'></canvas>
         </div>
     </div>
     <div class="row">
