@@ -10,6 +10,14 @@ import PharmaLedger_Camera
 import AVFoundation
 
 class ViewController: UIViewController,SettingsViewDelegate {
+    func onDeviceTypeChanged(device_type: String) {
+        cameraConfig.setDeviceTypes(deviceTypes: [device_type])
+    }
+    
+    func onCameraPositionChanged(camera_position: String) {
+        cameraConfig.setCameraPosition(position: camera_position)
+    }
+    
     func onContinuousFocusChanged(continuous_focus: Bool) {
         cameraConfig.continuousFocus = continuous_focus
     }
@@ -58,6 +66,8 @@ class ViewController: UIViewController,SettingsViewDelegate {
         openCameraViewButton.addTarget(self, action: #selector(openCamera), for: .touchUpInside)
         openCameraViewButton.setTitleColor(UIColor.systemBlue, for: .normal)
         
+        initConfigParameters()
+        
         view.addSubview(settingsView)
         view.addSubview(openCameraViewButton)
         
@@ -79,10 +89,7 @@ class ViewController: UIViewController,SettingsViewDelegate {
         if(cameraViewController != nil){
             cameraViewController = nil
             cameraConfig = CameraConfiguration.init()
-            cameraConfig.setFlashConfiguration(flash_mode: settingsView.getCurrentFlashMode())
-            saveMode = settingsView.getCurrentSaveMode()
-            cameraConfig.setTorchLevel(level: settingsView.getCurrentTorchLevel())
-            cameraConfig.setPreferredColorSpace(color_space: settingsView.getCurrentColorSpace())
+            initConfigParameters()
             print("camera view controller removed")
         }
     }
@@ -104,5 +111,14 @@ class ViewController: UIViewController,SettingsViewDelegate {
         show(cameraViewController!, sender: self)
     }
     
-    
+    private func initConfigParameters(){
+        cameraConfig.setTorchLevel(level: settingsView.getCurrentTorchLevel())
+        cameraConfig.setPreferredColorSpace(color_space: settingsView.getCurrentColorSpace())
+        cameraConfig.setCameraPosition(position: settingsView.getCurrentCameraPosition())
+        cameraConfig.setDeviceTypes(deviceTypes: [settingsView.getCurrentDeviceType()])
+        cameraConfig.setFlashConfiguration(flash_mode: settingsView.getCurrentFlashMode())
+        cameraConfig.setSessionPreset(preset: settingsView.getCurrentSessionPreset())
+        cameraConfig.continuousFocus = settingsView.currentContinuousFocus
+        saveMode = settingsView.getCurrentSaveMode()
+    }
 }

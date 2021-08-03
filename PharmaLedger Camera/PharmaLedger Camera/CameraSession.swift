@@ -20,9 +20,6 @@ import UIKit
     private var photoCaptureConnection:AVCaptureConnection?
     
     private let sessionQueue = DispatchQueue(label: "camera_session_queue")
-    let discoverySession = AVCaptureDevice.DiscoverySession(deviceTypes:
-        [.builtInTrueDepthCamera, .builtInDualCamera, .builtInWideAngleCamera],
-        mediaType: .video, position: .back)
     private var sessionPreset:AVCaptureSession.Preset = .photo
     
     private let cameraSessionDelegate:CameraEventListener
@@ -90,6 +87,7 @@ import UIKit
                 self.cameraSessionDelegate.onCameraPermissionDenied()
             }
             else{
+                captureSession?.commitConfiguration()
                 print("configuration error!","Error: \(configuration)")
             }
         }
@@ -143,12 +141,14 @@ import UIKit
         do{
             print("camConfig","Try to set torch mode to \(cameraConfiguration.getFlashConfiguration() ?? "undefined") and torch level to \(cameraConfiguration.getTorchLevel())")
             try device.lockForConfiguration()
-            device.torchMode = cameraConfiguration.getTorchMode()
-            if(device.torchMode == .on){
-                do {
-                    try device.setTorchModeOn(level: cameraConfiguration.getTorchLevel())
-                } catch {
-                    print(error)
+            if(device.isTorchModeSupported(cameraConfiguration.getTorchMode()) && device.isTorchAvailable){
+                device.torchMode = cameraConfiguration.getTorchMode()
+                if(device.torchMode == .on){
+                    do {
+                        try device.setTorchModeOn(level: cameraConfiguration.getTorchLevel())
+                    } catch {
+                        print(error)
+                    }
                 }
             }
             device.unlockForConfiguration()
@@ -166,7 +166,7 @@ import UIKit
         captureSession?.beginConfiguration()
         captureSession?.sessionPreset = self.sessionPreset
         
-        guard let captureDevice:AVCaptureDevice = selectDevice(in: .back) else {
+        guard let captureDevice:AVCaptureDevice = selectDevice(in: cameraConfiguration.getCameraPosition()) else {
             return .deviceDiscoveryFailure
         }
         self.captureDevice = captureDevice
@@ -221,9 +221,15 @@ import UIKit
     }
     
     private func selectDevice(in position: AVCaptureDevice.Position) -> AVCaptureDevice? {
-        let devices = self.discoverySession.devices
+        var positionString = "back"
+        if(position == .front){
+            positionString = "front"
+        }
+        print("selectDevice","Trying to find devices for \(positionString) camera with criteria \(cameraConfiguration.getDeviceTypeStrings())")
+        let discoverySession = AVCaptureDevice.DiscoverySession(deviceTypes: cameraConfiguration.getDeviceTypes(), mediaType: .video, position: position)
+        let devices = discoverySession.devices
         guard !devices.isEmpty else { return nil}
-
+        print("selectDevice","number of available devices for criteria: \(devices.count)")
         return devices.first(where: { device in device.position == position })!
     }
     
@@ -287,6 +293,10 @@ import UIKit
     /// - Parameter pointOfInterest: Point of interest ranging from {0,0} to {1,1}. This coordinate system is always relative to a landscape device orientation with the home button on the right, regardless of the actual device orientation.
     public func requestFocus(pointOfInterest:CGPoint?){
         guard let device = captureDevice else {
+            return
+        }
+        
+        if(!device.isFocusModeSupported(.continuousAutoFocus) && !device.isFocusModeSupported(.autoFocus)){
             return
         }
         

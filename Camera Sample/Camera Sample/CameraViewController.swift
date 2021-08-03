@@ -12,6 +12,14 @@ import PharmaLedger_Camera
 import AVFoundation
 
 class CameraViewController: UIViewController, CameraEventListener, SettingsViewDelegate {
+    func onDeviceTypeChanged(device_type: String) {
+        cameraConfig?.setDeviceTypes(deviceTypes: [device_type])
+    }
+    
+    func onCameraPositionChanged(camera_position: String) {
+        cameraConfig?.setCameraPosition(position: camera_position)
+    }
+    
     func onContinuousFocusChanged(continuous_focus: Bool) {
         cameraConfig?.continuousFocus = continuous_focus
         cameraConfig?.applyConfiguration()
@@ -23,7 +31,6 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
         readjustAspectRatio()
         setViewConstraints(orientation: UIDevice.current.orientation)
     }
-    
     
     //MARK: SettingsViewDelegate
     func onTorchLevelChanged(level: Float) {
@@ -192,6 +199,7 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
         infoview.textAlignment = .center
         infoview.numberOfLines = 0
         
+        cameraImagePreview?.backgroundColor = .gray
         cameraImagePreview?.addSubview(infoButton)
         cameraImagePreview?.addSubview(settingsButton)
         cameraImagePreview?.addSubview(closeButton)
