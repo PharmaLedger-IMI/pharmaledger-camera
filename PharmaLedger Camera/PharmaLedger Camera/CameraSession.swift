@@ -301,9 +301,11 @@ import UIKit
         case .landscapeRight:
             connection.videoOrientation = .landscapeLeft
             capture_connection.videoOrientation = .landscapeLeft
-        default:
+        case .portrait, .portraitUpsideDown, .unknown:
             connection.videoOrientation = .portrait
             capture_connection.videoOrientation = .portrait
+        default: // .faceUp, .faceDown
+            break
         }
         
         guard let device = captureDevice else {
