@@ -67,6 +67,8 @@ class ViewController: UIViewController,SettingsViewDelegate {
         openCameraViewButton.setTitleColor(UIColor.systemBlue, for: .normal)
         
         initConfigParameters()
+        cameraConfig.setCameraPosition(position: "back")
+        settingsView.setDevicePosition(device_position: "back")
         
         view.addSubview(settingsView)
         view.addSubview(openCameraViewButton)

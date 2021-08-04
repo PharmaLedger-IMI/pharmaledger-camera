@@ -14,10 +14,12 @@ import AVFoundation
 class CameraViewController: UIViewController, CameraEventListener, SettingsViewDelegate {
     func onDeviceTypeChanged(device_type: String) {
         cameraConfig?.setDeviceTypes(deviceTypes: [device_type])
+        cameraConfig?.applyConfiguration()
     }
     
     func onCameraPositionChanged(camera_position: String) {
         cameraConfig?.setCameraPosition(position: camera_position)
+        cameraConfig?.applyConfiguration()
     }
     
     func onContinuousFocusChanged(continuous_focus: Bool) {

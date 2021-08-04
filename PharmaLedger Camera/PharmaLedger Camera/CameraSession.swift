@@ -21,6 +21,8 @@ import UIKit
     
     private let sessionQueue = DispatchQueue(label: "camera_session_queue")
     private var sessionPreset:AVCaptureSession.Preset = .photo
+    private var currentDeviceTypes:[AVCaptureDevice.DeviceType]?
+    private var currentCameraPosition:AVCaptureDevice.Position?
     
     private let cameraSessionDelegate:CameraEventListener
     private var photoOutput: AVCapturePhotoOutput?
@@ -73,6 +75,8 @@ import UIKit
     func initCamera(){
         print("CameraSession","initalizing camera...")
         checkPermission()
+        currentDeviceTypes = cameraConfiguration.getDeviceTypes()
+        currentCameraPosition = cameraConfiguration.getCameraPosition()
         sessionQueue.async { [unowned self] in
             let configuration = self.configureSession()
             if(configuration == .success){
@@ -221,13 +225,16 @@ import UIKit
     }
     
     private func selectDevice(in position: AVCaptureDevice.Position) -> AVCaptureDevice? {
-        var positionString = "back"
-        if(position == .front){
-            positionString = "front"
+        var discoverySession = AVCaptureDevice.DiscoverySession(deviceTypes: cameraConfiguration.getDeviceTypes(), mediaType: .video, position: position)
+        var devices = discoverySession.devices
+        if(devices.isEmpty){
+            //try to get fallback devices
+            cameraConfiguration.setDeviceTypes(deviceTypes: [])
+            print("selectDevice","didn't find devices with initial query, searching with fallback \(cameraConfiguration.getDeviceTypeStrings())")
+            discoverySession = AVCaptureDevice.DiscoverySession(deviceTypes: cameraConfiguration.getDeviceTypes(), mediaType: .video, position: position)
+            devices = discoverySession.devices
         }
-        print("selectDevice","Trying to find devices for \(positionString) camera with criteria \(cameraConfiguration.getDeviceTypeStrings())")
-        let discoverySession = AVCaptureDevice.DiscoverySession(deviceTypes: cameraConfiguration.getDeviceTypes(), mediaType: .video, position: position)
-        let devices = discoverySession.devices
+        
         guard !devices.isEmpty else { return nil}
         print("selectDevice","number of available devices for criteria: \(devices.count)")
         return devices.first(where: { device in device.position == position })!
@@ -441,11 +448,48 @@ import UIKit
     
     //MARK: CameraConfigurationChangeListener
     func onConfigurationsChanged() {
+        print("onConfigurationsChanged", "configurations were changed and applied")
+        //if there are any critical changes that require session reconfiguration, run initCamera instead
+        if(currentCameraPosition != cameraConfiguration.getCameraPosition() || deviceArrayHasChanged()){
+            print("onConfigurationsChanged", "reinitialize the camera")
+            stopCamera()
+            sessionQueue.resume()
+            initCamera()
+            
+            return
+        }
+        
+        print("onConfigurationsChanged", "apply device and runtime configurations")
         guard let device:AVCaptureDevice = self.captureDevice else {
             return
         }
         self.configureDevice(device: device)
         self.configureRuntimeSettings(device: device)
+    }
+    
+    
+    private func deviceArrayHasChanged()->Bool{
+        guard let device_types:[AVCaptureDevice.DeviceType] = currentDeviceTypes else {
+            print("deviceArrayHasChanged","device_types not defined")
+            return false
+        }
+        
+        let configTypes = cameraConfiguration.getDeviceTypes()
+        
+        if(device_types.count != configTypes.count){
+            print("deviceArrayHasChanged","different array sizes!")
+            return true
+        }
+        
+        for i in 0 ... device_types.count-1 {
+            if(device_types[i] != configTypes[i]){
+                print("deviceArrayHasChanged","index \(i) is different in arrays!")
+                return true
+            }
+        }
+        
+        print("deviceArrayHasChanged","no changes detected")
+        return false
     }
     
 }

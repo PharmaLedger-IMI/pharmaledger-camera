@@ -26,7 +26,7 @@ public class CameraConfiguration {
     private var sessionPreset:AVCaptureSession.Preset = .photo
     private var aspectRatio:CGFloat = 4.0/3.0
     
-    private let deviceTypeDefaults:[AVCaptureDevice.DeviceType] =  [.builtInDualWideCamera,.builtInUltraWideCamera]
+    private let deviceTypeDefaults:[AVCaptureDevice.DeviceType] =  [.builtInDualWideCamera,.builtInWideAngleCamera]
     private var deviceTypes:[AVCaptureDevice.DeviceType] = [.builtInTripleCamera,
                                                             .builtInDualCamera,
                                                             .builtInDualWideCamera,
@@ -75,7 +75,7 @@ public class CameraConfiguration {
     /// - Parameter flash_mode: Available modes are "torch", "flash", "off" and "auto"
     /// - Parameter color_space: Possible values are "sRGB", "P3_D65" or "HLG_BT2020".
     /// - Parameter session_preset: Session preset in String format. See **setSessionPreset** for more information.
-    /// - Parameter device_types: Additional criteria for selecting the camera. Supported values are **tripleCamera**, **dualCamera**, **dualWideCamera**, **wideAngleCamera**, **ultraWideAngleCamera**, **telephotoCamera** and **trueDepthCamera**. Device discovery session will prioritize device types in the array based on their array index.
+    /// - Parameter device_types: Additional criteria for selecting the camera. Supported values are **tripleCamera**, **dualCamera**, **dualWideCamera**, **wideAngleCamera**, **ultraWideAngleCamera**, **telephotoCamera** and **trueDepthCamera**. Device discovery session will prioritize device types in the array based on their array index. Defaults to ["dualWideCamera","wideAngleCamera"] if undefined or empty.
     /// - Parameter camera_position: "back" or "front". If not defined, this setting will default to "back"
     /// - Parameter continuous_focus: Defines the preferred [AVCaptureDevice.FocusMode](https://developer.apple.com/documentation/avfoundation/avcapturedevice/focusmode). If true, preferred focusmode will be set to **continuousAutoFocus**, otherwise the mode will switch between **autoFocus** and **locked**.
     /// - Parameter auto_orientation_enabled: If set to true, camera session will attempt to automatically adjust the preview and capture orientation based on the device orientation
@@ -339,13 +339,21 @@ public class CameraConfiguration {
     //MARK: Camera selection
     
     /// Sets the device type criteria for [the device discovery session](https://developer.apple.com/documentation/avfoundation/avcapturedevice/discoverysession)
-    /// - Parameter deviceTypes: Supported values are **.builtInTripleCamera**, **.builtInDualCamera**, **.builtInDualWideCamera**, **.builtInUltraWideAngleCamera**, **.builtInTrueDepthCamera**, **.builtInWideAngleCamera** and **.builtInTelephotoCamera**
+    /// - Parameter deviceTypes: Supported values are **.builtInTripleCamera**, **.builtInDualCamera**, **.builtInDualWideCamera**, **.builtInUltraWideAngleCamera**, **.builtInTrueDepthCamera**, **.builtInWideAngleCamera** and **.builtInTelephotoCamera**. Device discovery session will prioritize device types in the array based on their array index.
+    ///
+    /// If an empty array is passed, the configuration will fallback to [.builtInDualWideCamera,.builtInWideAngleCamera]
     public func setDeviceTypes(deviceTypes:[AVCaptureDevice.DeviceType]){
-        self.deviceTypes = deviceTypes
+        if(deviceTypes.isEmpty){
+            self.deviceTypes = deviceTypeDefaults
+        }else{
+            self.deviceTypes = deviceTypes
+        }
     }
     
     /// Sets the device type criteria for [the device discovery session](https://developer.apple.com/documentation/avfoundation/avcapturedevice/discoverysession)
     /// - Parameter deviceTypes: Supported values are **tripleCamera**, **dualCamera**, **dualWideCamera**, **wideAngleCamera**, **ultraWideAngleCamera**, **telephotoCamera** and **trueDepthCamera**. Device discovery session will prioritize device types in the array based on their array index.
+    ///
+    /// If an empty array is passed, the configuration will fallback to ["dualWideCamera","wideAngleCamera"]
     public func setDeviceTypes(deviceTypes:[String]?){
         var devicetypesArray:[AVCaptureDevice.DeviceType] = []
         

@@ -224,6 +224,16 @@ class SettingsView:UIScrollView, UIPickerViewDelegate, UIPickerViewDataSource{
         saveModePicker.selectRow(saveModeValues.firstIndex(of: save_mode) ?? 0, inComponent: 0, animated: false)
     }
     
+    func setDevicePosition(device_position:String){
+        if(device_position == "back"){
+            cameraPositionSwitch.isOn = true
+            cameraPositionLabel.text = "Camera position: \(getCurrentCameraPosition())"
+        }else{
+            cameraPositionSwitch.isOn = false
+            cameraPositionLabel.text = "Camera position: \(getCurrentCameraPosition())"
+        }
+    }
+    
     func setConfig(config:CameraConfiguration){
         print("settingsView","setConfig")
         setFocusMode(continuous_focus: config.continuousFocus)
@@ -232,6 +242,7 @@ class SettingsView:UIScrollView, UIPickerViewDelegate, UIPickerViewDataSource{
         setFlashMode(flash_mode: config.getFlashConfiguration() ?? "auto")
         setSessionPreset(session_preset: config.getSessionPresetString())
         setDeviceType(device_type: config.getDeviceTypeStrings()[0])
+        setDevicePosition(device_position: config.getCameraPositionString())
     }
     
     //MARK: UI init
