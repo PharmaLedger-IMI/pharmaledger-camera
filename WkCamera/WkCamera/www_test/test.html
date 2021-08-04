@@ -1,36 +1,13 @@
 <!DOCTYPE HTML>
 <html>
    <head>
-      <script type = "text/javascript">
-        document.addEventListener("DOMContentLoaded", () => {
-            document.getElementById("get_frame").addEventListener("click", function(e) {
-                let target = "http://192.168.8.155:44273/"
-                headers = new Headers()
-                headers.append('Access-Control-Allow-Origin', target);
-                let options = { 
-                    method: 'GET',
-                    headers: headers
-                }
-                fetch(`${target}rawframe`, options)
-                .then(response => {
-                    response.blob().then( b => {
-                        b.arrayBuffer().then(a => {
-                            let arrayData = new Uint8Array(a)
-                            console.log(arrayData.byteLength)
-                        })
-                    })
-                })
-            })
-            document.getElementById("show_stream").addEventListener("click", e => {
-                let src_stream = document.getElementById("src_ip").value;
-                document.getElementById("stream_display").src = src_stream;
-            })
-        });
-      </script>
+    <script src="../www/bridge.js" type="text/javascript"></script> 
+      <script src="./test.js" type = "text/javascript"></script>
    </head>
    <body>
-    <button id="get_frame">get frame</button>
     <button id="show_stream">show stream</button>
+    <button id="get_camera_config">Get Camera Config</button>
+    <p id="camera_config_output"></p>
     <br/>
     <div>
         <p>source ip:</p>

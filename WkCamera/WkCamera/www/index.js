@@ -48,7 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (level != level) {
             alert('failed to parse torch level value');
         } else {
-            SetTorchLevelNativeCamera(level);
+            setTorchLevelNativeCamera(level);
             document.getElementById("torchLevelRangeLabel").innerHTML = `Torch Level: ${torchRange.value}`;
         }
     })
@@ -56,8 +56,33 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("torchLevelRangeLabel").innerHTML = `Torch Level: ${torchRange.value}`;
     torchRange.disabled = true;
     snapshotImage = document.getElementById('snapshotImage');
+    getConfigButton = document.getElementById("getConfigButton");
+    getConfigButton.addEventListener("click", (e) => {
+        getCameraConfiguration()
+        .then(data => {
+            configInfo.innerHTML = JSON.stringify(data);
+        })
+    });
+    configInfo = document.getElementById("configInfo");
+    colorspaceButton = document.getElementById("colorspaceButton");
+    colorspaceButton.addEventListener('click', function(e) {
+        let nextColorspace = '';
+        switch (colorspaceButton.innerHTML) {
+            case 'sRGB':
+                nextColorspace = 'HLG_BT2020';
+                break;
+            case 'HLG_BT2020':
+                nextColorspace = 'P3_D65';
+                break;
+            default:
+                nextColorspace = 'sRGB';
+                break;
+        }
+        colorspaceButton.innerHTML = nextColorspace;
+        setPreferredColorSpaceNativeCamera(nextColorspace);
+    });
 
-    
+
     canvasgl = document.getElementById('cameraCanvas');
     streamPreview = document.getElementById('streamPreview');
     rawCropCanvas = document.getElementById('rawCropCanvas');

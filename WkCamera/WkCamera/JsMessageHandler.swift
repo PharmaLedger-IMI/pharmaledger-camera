@@ -18,7 +18,7 @@ public enum MessageNames: String, CaseIterable {
     case TakePicture = "TakePicture"
     case SetFlashMode = "SetFlashMode"
     case SetTorchLevel = "SetTorchLevel"
-    case GetAllSessionPresetStrings = "GetAllSessionPresetStrings"
+    case SetPreferredColorSpace = "SetPreferredColorSpace"
 }
 
 enum StreamResponseError: Error {
@@ -209,9 +209,16 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
                 print("JsMessageHandler: cannot convert argument to NSNumber")
                 return
             }
-        case .GetAllSessionPresetStrings:
-            /// TODO
-            break
+        case .SetPreferredColorSpace:
+            if let colorspace = args?["colorspace"] as? String {
+                if let cameraConfiguration = self.cameraConfiguration {
+                    cameraConfiguration.setPreferredColorSpace(color_space: colorspace)
+                    cameraConfiguration.applyConfiguration()
+                }
+            } else {
+                print("JsMessageHandler: cannot convert argument to String")
+                return
+            }
         }
         if let callback = jsCallback {
             if !callback.isEmpty {
@@ -523,6 +530,14 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
                 completion(response)
             }
         })
+        
+        webserver.addHandler(forMethod: "GET", path: "/cameraconfig", request: GCDWebServerRequest.classForCoder(), processBlock: {request in
+            var response: GCDWebServerDataResponse!
+            let cameraConfigDict: [String: AnyObject] = self.cameraConfiguration?.toDict() ?? [String: AnyObject]()
+            response = GCDWebServerDataResponse(jsonObject: cameraConfigDict)
+//            response = response.applyCORSHeaders()
+            return response
+        })
     }
     
     // MARK: js message handlers implementations
@@ -541,6 +556,7 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
                 }
             }
         }
+        self.cameraConfiguration = nil
         self.cameraSession = nil
         if dataBufferRGBA != nil {
             free(dataBufferRGBA!)
@@ -564,6 +580,7 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
         }
         dataBuffer_w = -1
         dataBuffer_h = -1
+        self.currentCIImage = nil
     }
     
     private func handleTakePicture(onCaptureJsCallback: String?) {
@@ -616,3 +633,15 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
         }
     }
 }
+
+//extension GCDWebServerResponse {
+//    func applyCORSHeaders() -> Self {
+//        let resp = self
+//        resp.setValue("*", forAdditionalHeader: "Access-Control-Allow-Origin")
+//        resp.setValue("*", forAdditionalHeader: "Access-Control-Allow-Methods")
+//        resp.setValue("*", forAdditionalHeader: "Access-Control-Allow-Headers")
+//        resp.setValue("true", forAdditionalHeader: "Access-Control-Allow-Credentials")
+//        return self
+//    }
+//}
+

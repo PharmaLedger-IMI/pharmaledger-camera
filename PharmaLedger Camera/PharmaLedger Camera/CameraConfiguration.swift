@@ -71,6 +71,17 @@ public class CameraConfiguration {
         self.delegate?.onConfigurationsChanged()
     }
     
+    public func toDict() -> [String: AnyObject] {
+        var dict = [String: AnyObject]()
+        dict["preferredColorSpace"] = self.getPreferredColorSpaceString() as AnyObject
+        dict["sessionPreset"] = self.getSessionPresetString() as AnyObject
+        dict["flashConfiguration"] = self.getFlashConfiguration() as AnyObject
+        dict["torchLevel"] = self.getTorchLevel() as AnyObject
+        dict["aspectRatio"] = self.getAspectRatio() as AnyObject
+        dict["autoOrientationEnabled"] = self.autoOrientationEnabled as AnyObject
+        return dict
+    }
+    
     //MARK: Flash and torch mode
     
     /// Returns the current torch mode in AVCaptureDevice.TorchMode format

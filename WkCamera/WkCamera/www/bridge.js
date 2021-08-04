@@ -73,6 +73,10 @@ function callNative(api, args, callback) {
     }
     handle.postMessage(payload)
 }
+
+
+
+
 /**
  * Starts the native camera frame grabber
  * @param  {string} sessionPresetName one of the session presets available in sessionPresetNames
@@ -168,8 +172,17 @@ function setFlashModeNativeCamera(mode) {
  * Control camera torch level
  * @param  {number} level torch level between (0.0, 1.0]
  */
-function SetTorchLevelNativeCamera(level) {
+function setTorchLevelNativeCamera(level) {
     callNative("SetTorchLevel", { "level": level})
+}
+
+/**
+ * Control preferred colorspace. The call may not succeed if the colorspace is not available. 
+ * In this case the colorspace is reverted to undefined. 
+ * @param  {string} colorspace 'sRGB', 'HLG_BT2020', 'P3_D65'
+ */
+function setPreferredColorSpaceNativeCamera(colorspace) {
+    callNative("SetPreferredColorSpace", { "colorspace": colorspace })
 }
 
 function onNativeCameraInitialized(wsPort) {
@@ -294,6 +307,17 @@ function getRawFrameYCbCr(x = undefined, y = undefined, w = undefined, h = undef
     })
     .catch( error => {
         console.log(error);
+    })
+}
+/**
+ * Get the current camera configuration, corresponds to endpoint /cameraconfig
+ * @returns {Promise<any>} the current camera configuration
+ */
+function getCameraConfiguration() {
+    let fetchString = `${_serverUrl}/cameraconfig`;
+    return fetch(fetchString)
+    .then(response => {
+        return response.json()
     })
 }
 
