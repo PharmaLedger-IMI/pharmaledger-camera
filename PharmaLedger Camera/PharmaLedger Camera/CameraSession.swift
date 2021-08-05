@@ -30,6 +30,8 @@ import UIKit
     private let cameraConfiguration:CameraConfiguration
     private let notificationCenter:NotificationCenter = NotificationCenter.default
     
+    private var lastOrientation:UIDeviceOrientation?
+    
     private var cameraPermissionGranted = false
     
     private enum ConfigurationResult{
@@ -44,6 +46,14 @@ import UIKit
         case photoOutputFailure
         case success
     }
+    
+    //focus variables
+    private var currentFocuscallbackTime = 0.0
+    private var focusCallbackTimeout:Double = 2.0
+    private let focusCallbackMinimumTime = 0.4
+    private let focusCallbackInterval = 0.1
+    
+    private var focusTimeoutHandler:Timer?
     
     //MARK: Initialization
     
@@ -86,7 +96,6 @@ import UIKit
                 configureRuntimeSettings(device: captureDevice!)
                 cameraSessionDelegate.onCameraInitialized()
                 print("CameraSession","Camera successfully configured")
-                
             }else if(configuration == .permissionsDenied){
                 self.cameraSessionDelegate.onCameraPermissionDenied()
             }
@@ -261,6 +270,7 @@ import UIKit
         }
         self.configureDevice(device: device)
         captureSession?.startRunning()
+        print("start camera...")
         self.configureRuntimeSettings(device: device)
         
         sessionQueue.resume()
@@ -296,14 +306,87 @@ import UIKit
         }
     }
     
+    //MARK: Focus request handling
+    
+    /** Focus request with a callback
+    - Parameters:
+      - pointOfInterest: Point of interest ranging from {0,0} to {1,1}. This coordinate system is always relative to a landscape device orientation with the home button on the right, regardless of the actual device orientation.
+      - requestTimeout: Focus request will time out after the defined duration (in seconds). Default is 2.0.
+      - completion: Closure for focus request.
+      - locked: Callback completion result. **True** if the device successfully found focus and **false** if focus has not been locked before timing out. Note that some device types might return false even when focus is found.
+     
+ # Code
+ ```
+ cameraSession?.requestFocusWithCallback(
+     pointOfInterest: pointOfInterest,
+     requestTimeout: 2.0,
+     completion: {locked in
+        print("locked",locked)
+ })
+ ```
+     
+ */
+    public func requestFocusWithCallback(pointOfInterest:CGPoint?, requestTimeout:Double?, completion: @escaping (_ locked:Bool) -> Void){
+        
+        if(requestTimeout != nil){
+            self.focusCallbackTimeout = requestTimeout!
+        }
+        
+        requestFocus(pointOfInterest: pointOfInterest)
+        
+        if(focusTimeoutHandler != nil){
+            if(focusTimeoutHandler!.isValid){
+                print("focusCallback", "invalidate current request")
+                focusTimeoutHandler?.invalidate()
+            }
+        }
+        
+        currentFocuscallbackTime = 0.0
+        
+        focusTimeoutHandler = Timer.scheduledTimer(withTimeInterval: self.focusCallbackInterval, repeats: true) {timer in
+            
+            self.currentFocuscallbackTime += self.focusCallbackInterval
+            
+            if(self.currentFocuscallbackTime >= self.focusCallbackMinimumTime){
+            
+                if let focusMode:AVCaptureDevice.FocusMode = self.captureDevice?.focusMode {
+                    if(focusMode == .locked){
+                        print("focusCallback", "auto focus is now locked!")
+                        timer.invalidate()
+                        self.currentFocuscallbackTime = 0.0
+                        completion(true)
+                        return
+                    }else if(focusMode == .continuousAutoFocus){
+                        if(self.captureDevice!.isAdjustingFocus){
+                            print("focusCallback", "no longer adjusting focus")
+                            timer.invalidate()
+                            self.currentFocuscallbackTime = 0.0
+                            completion(true)
+                            return
+                        }
+                    }
+                }
+            }
+            
+            print("focusCallback","timer is now at \(self.currentFocuscallbackTime)")
+            if(self.currentFocuscallbackTime>=self.focusCallbackTimeout){
+                timer.invalidate()
+                self.currentFocuscallbackTime = 0.0
+                completion(false)
+            }
+        }
+    }
+    
     /// Lens focus request.
     /// - Parameter pointOfInterest: Point of interest ranging from {0,0} to {1,1}. This coordinate system is always relative to a landscape device orientation with the home button on the right, regardless of the actual device orientation.
     public func requestFocus(pointOfInterest:CGPoint?){
         guard let device = captureDevice else {
+            print("requestFocus","couldn't define capture device")
             return
         }
         
         if(!device.isFocusModeSupported(.continuousAutoFocus) && !device.isFocusModeSupported(.autoFocus)){
+            print("requestFocus","device doesn't support focus requests")
             return
         }
         
@@ -314,7 +397,18 @@ import UIKit
             return
         }
         
+        device.isSmoothAutoFocusEnabled = device.isSmoothAutoFocusSupported
+        if(device.isAutoFocusRangeRestrictionSupported){
+            device.autoFocusRangeRestriction = .none
+        }
+        
+        if(device.isFocusPointOfInterestSupported && pointOfInterest != nil){
+            device.focusPointOfInterest = pointOfInterest!
+        }else{
+            print("requestFocus","POI not supported")
+        }
         if(cameraConfiguration.continuousFocus){
+            print("requestFocus","request continuousAuto")
             if(device.isFocusModeSupported(.continuousAutoFocus)){
                 device.focusMode = .continuousAutoFocus
             }else{
@@ -323,21 +417,19 @@ import UIKit
                 cameraConfiguration.continuousFocus = false
             }
         }else{
+            print("requestFocus","request auto")
             if(device.isFocusModeSupported(.autoFocus)){
                 device.focusMode = .autoFocus
             }else{
                 print("requestFocus","mode auto not supported")
                 device.focusMode = .continuousAutoFocus
+                
                 cameraConfiguration.continuousFocus = true
             }
         }
         
-        if(device.isFocusPointOfInterestSupported && pointOfInterest != nil){
-            device.focusPointOfInterest = pointOfInterest!
-        }
         
         device.unlockForConfiguration()
-        
     }
     
     //MARK: Device orientation
@@ -352,7 +444,7 @@ import UIKit
         }
         
         let deviceOrientation = UIDevice.current.orientation
-        
+        print("update orientation...")
         switch deviceOrientation {
         case .landscapeLeft:
             connection.videoOrientation = .landscapeRight
@@ -360,14 +452,28 @@ import UIKit
         case .landscapeRight:
             connection.videoOrientation = .landscapeLeft
             capture_connection.videoOrientation = .landscapeLeft
-        default:
+        case .portrait, .portraitUpsideDown, .unknown:
             connection.videoOrientation = .portrait
             capture_connection.videoOrientation = .portrait
+        default: // .faceUp, .faceDown
+            break
         }
         
         guard let device = captureDevice else {
             return
         }
+        
+        
+        if(lastOrientation != deviceOrientation){
+            if(deviceOrientation == .faceUp || deviceOrientation == .faceDown){
+                print("faceUp or faceDown, return!")
+                return
+            }
+            lastOrientation = deviceOrientation
+        }else{
+            return
+        }
+        
         configureRuntimeSettings(device: device)
     }
     
@@ -380,7 +486,7 @@ import UIKit
         guard let capture_connection = self.photoCaptureConnection else {
             return
         }
-        
+        print("setOrientation",orientation)
         switch orientation {
         case "landscapeLeft":
             connection.videoOrientation = .landscapeRight
@@ -455,7 +561,13 @@ import UIKit
             stopCamera()
             sessionQueue.resume()
             initCamera()
-            
+            var orientationString:String = "portrait"
+            if(lastOrientation == .landscapeLeft){
+                orientationString = "landscapeLeft"
+            }else if(lastOrientation == .landscapeRight){
+                orientationString = "landscapeRight"
+            }
+            setOrientation(orientation: orientationString)
             return
         }
         

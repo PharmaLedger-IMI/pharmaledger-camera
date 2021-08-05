@@ -354,7 +354,9 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
         print("requestFocusWithPOI","touched at \(rawLocation)")
         print("requestFocusWithPOI","requesting focus at point \(pointOfInterest)")
         
-        cameraSession?.requestFocus(pointOfInterest: pointOfInterest)
+        cameraSession?.requestFocusWithCallback(pointOfInterest: pointOfInterest, requestTimeout: 2.0, completion: {locked in
+            print("requestFocusWithPOI","focus request has finished as locked:\(locked)")
+        })
     }
     
     @objc func toggleSettingsView(){
