@@ -15,8 +15,6 @@ var rawCrop_h = undefined;
 var rawFramesCounter = 0;
 var rawFramesElapsedSum = 0;
 var rawFramesMeasuredFPS = 0;
-var elapsed = 0
-var controls;
 const bytePerChannel = 3;
 if (bytePerChannel === 4) {
     formatTexture = THREE.RGBAFormat;
@@ -26,6 +24,32 @@ if (bytePerChannel === 4) {
 var formatTexture;
 var flashMode = 'off'
 var usingMJPEG = false
+
+var status_test
+var status_fps_preview
+var status_fps_raw
+var startCameraButtonGL
+var startCameraButtonMJPEG
+var stopCameraButton
+var title_h2
+var takePictureButton1
+var takePictureButton2
+var flashButton
+var torchRange
+var snapshotImage
+var getConfigButton
+var configInfo
+var colorspaceButton
+var streamPreview
+var rawCropCanvas
+var rawCropCbCanvas 
+var rawCropCrCanvas 
+var invertRawFrameCheck 
+var cropRawFrameCheck 
+var ycbcrCheck 
+var rawCropRoiInput 
+var select_preset
+var selectedPresetName
 
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -48,7 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (level != level) {
             alert('failed to parse torch level value');
         } else {
-            setTorchLevelNativeCamera(level);
+            window.nativeCamera.setTorchLevelNativeCamera(level);
             document.getElementById("torchLevelRangeLabel").innerHTML = `Torch Level: ${torchRange.value}`;
         }
     })
@@ -58,7 +82,7 @@ document.addEventListener("DOMContentLoaded", () => {
     snapshotImage = document.getElementById('snapshotImage');
     getConfigButton = document.getElementById("getConfigButton");
     getConfigButton.addEventListener("click", (e) => {
-        getCameraConfiguration()
+        window.nativeCamera.getCameraConfiguration()
         .then(data => {
             configInfo.innerHTML = JSON.stringify(data);
         })
@@ -79,7 +103,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 break;
         }
         colorspaceButton.innerHTML = nextColorspace;
-        setPreferredColorSpaceNativeCamera(nextColorspace);
+        window.nativeCamera.setPreferredColorSpaceNativeCamera(nextColorspace);
     });
 
 
@@ -110,7 +134,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     select_preset = document.getElementById('select_preset');
     let i = 0
-    for (presetName of sessionPresetNames) {
+    for (let presetName of window.nativeCamera.sessionPresetNames) {
         var p_i = new Option(presetName, presetName)
         select_preset.options.add(p_i);
         i++;
@@ -140,7 +164,7 @@ document.addEventListener("DOMContentLoaded", () => {
         show(status_fps_preview);
         show(status_fps_raw);
         setupGLView(previewWidth, previewHeight);
-        startNativeCamera(
+        window.nativeCamera.startNativeCamera(
             selectedPresetName, 
             flashMode, 
             onFramePreview, 
@@ -150,7 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
             targetRawFPS, 
             true,
             () => {
-                title_h2.innerHTML = _serverUrl;
+                title_h2.innerHTML = window.nativeCamera.getBridgeServerUrl();
             },
             rawCrop_x,
             rawCrop_y,
@@ -165,7 +189,7 @@ document.addEventListener("DOMContentLoaded", () => {
         startCameraButtonMJPEG.disabled = true
         stopCameraButton.disabled = false
         torchRange.disabled = false
-        ycbcrCheck,disabled = true
+        ycbcrCheck.disabled = true
         setCropCoords();
         hide(canvasgl);
         canvasgl.parentElement.style.display = "none";
@@ -173,7 +197,7 @@ document.addEventListener("DOMContentLoaded", () => {
         streamPreview.parentElement.style.display = "block";
         hide(status_fps_preview);
         show(status_fps_raw);
-        startNativeCamera(
+        window.nativeCamera.startNativeCamera(
             selectedPresetName, 
             flashMode, 
             undefined, 
@@ -183,8 +207,8 @@ document.addEventListener("DOMContentLoaded", () => {
             targetRawFPS,
             true, 
             () => {
-                streamPreview.src = `${_serverUrl}/mjpeg`;
-                title_h2.innerHTML = _serverUrl;
+                streamPreview.src = `${window.nativeCamera.getBridgeServerUrl()}/mjpeg`;
+                title_h2.innerHTML = window.nativeCamera.getBridgeServerUrl();
             },
             rawCrop_x,
             rawCrop_y,
@@ -194,23 +218,21 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     stopCameraButton.addEventListener('click', function(e) {
         window.close(); 
-        stopNativeCamera();
+        window.nativeCamera.stopNativeCamera();
         select_preset.disabled = false;
         startCameraButtonGL.disabled = false
         startCameraButtonMJPEG.disabled = false
         stopCameraButton.disabled = true
         torchRange.disabled = true
         ycbcrCheck.disabled = false
-        time0 = undefined
-        globalCounter = 0
         title_h2.innerHTML = "Camera Test"
     });
 
     takePictureButton1.addEventListener('click', function(e) {
-        takePictureBase64NativeCamera(onPictureTaken)
+        window.nativeCamera.takePictureBase64NativeCamera(onPictureTaken)
     });
     takePictureButton2.addEventListener('click', function(e) {
-        getSnapshot().then( b => {
+        window.nativeCamera.getSnapshot().then( b => {
             snapshotImage.src = URL.createObjectURL(b);
         });
     });
@@ -230,7 +252,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 break;
         }
         flashButton.innerHTML = `T ${flashMode}`;
-        setFlashModeNativeCamera(flashMode);
+        window.nativeCamera.setFlashModeNativeCamera(flashMode);
     });
 
     hide(canvasgl);
@@ -244,7 +266,7 @@ function setupGLView(w, h) {
     camera = new THREE.PerspectiveCamera(75, w/h, 0.1, 10000);
     renderer = new THREE.WebGLRenderer({ canvas: canvasgl, antialias: true });
 
-    cameraHeight = h/2/Math.tan(camera.fov/2*(Math.PI/180))
+    let cameraHeight = h/2/Math.tan(camera.fov/2*(Math.PI/180))
     camera.position.set(0,0,cameraHeight);
     let clientHeight = Math.round(h/w * canvasgl.clientWidth);    
     renderer.setSize(canvasgl.clientWidth, clientHeight);
@@ -302,12 +324,12 @@ function setCropCoords() {
         rawCrop_w = undefined;
         rawCrop_h = undefined;
     }
-    setRawCropRoi(rawCrop_x, rawCrop_y, rawCrop_w, rawCrop_h);
+    window.nativeCamera.setRawCropRoi(rawCrop_x, rawCrop_y, rawCrop_w, rawCrop_h);
 }
 
 
 /**
- * @param {PLRgbImage} buffer preview data coming from native camera
+ * @param {PLRgbImage} rgbImage preview data coming from native camera
  * @param {number} elapsedTime time in ms elapsed to get the preview frame
  */
 function onFramePreview(rgbImage, elapsedTime) {
@@ -337,6 +359,7 @@ function onFramePreview(rgbImage, elapsedTime) {
  * @param {number} elapsedTime time in ms elapsed to get the raw frame
  */
 function onFrameGrabbed(plImage, elapsedTime) {
+    let pSizeText;
     if (usingMJPEG === false) {
         pSizeText = `, p(${previewWidth}x${previewHeight}), p FPS:${targetPreviewFPS}`
     } else {
@@ -344,13 +367,13 @@ function onFrameGrabbed(plImage, elapsedTime) {
     }
     
     let rawframeLengthMB = undefined
-    if (plImage instanceof PLRgbImage) {
+    if (plImage instanceof window.nativeCamera.PLRgbImage) {
         rawframeLengthMB = Math.round(10*plImage.arrayBuffer.byteLength/1024/1024)/10;
         placeUint8RGBArrayInCanvas(rawCropCanvas, new Uint8Array(plImage.arrayBuffer), plImage.width, plImage.height);
         show(rawCropCanvas);
         hide(rawCropCbCanvas);
         hide(rawCropCrCanvas);
-    } else if (plImage instanceof PLYCbCrImage) {
+    } else if (plImage instanceof window.nativeCamera.PLYCbCrImage) {
         rawframeLengthMB = Math.round(10*(plImage.yArrayBuffer.byteLength + plImage.cbCrArrayBuffer.byteLength)/1024/1024)/10;
         placeUint8GrayScaleArrayInCanvas(rawCropCanvas, new Uint8Array(plImage.yArrayBuffer), plImage.width, plImage.height);
         show(rawCropCanvas);

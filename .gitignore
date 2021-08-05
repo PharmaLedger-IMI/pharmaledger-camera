@@ -59,3 +59,5 @@ PharmaLedger Camera/build
 pharmaledger_flutterdemo/ios/build
 WkCamera/WkCamera.xcodeproj/project.xcworkspace/xcuserdata
 WkCamera/WkCamera.xcodeproj/xcuserdata
+WkCamera/WkCamera/www2/.cache
+WkCamera/WkCamera/www2/.parcel-cache

@@ -143,6 +143,12 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
         startWebserver()
     }
     
+    public init(staticPath: String?) {
+        super.init()
+        addWebserverHandlers(staticPath: staticPath)
+        startWebserver()
+    }
+    
     deinit {
         if let webview = webview {
             if let cameraSession = self.cameraSession {
@@ -377,9 +383,10 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
     }
     
     // MARK: webserver endpoints definitions
-    private func addWebserverHandlers() {
-        let dirPath = Bundle.main.path(forResource: "www", ofType: nil)
-        webserver.addGETHandler(forBasePath: "/", directoryPath: dirPath!, indexFilename: nil, cacheAge: 0, allowRangeRequests: false)
+    private func addWebserverHandlers(staticPath: String? = nil) {
+        if let dirPath = staticPath {
+            webserver.addGETHandler(forBasePath: "/", directoryPath: dirPath, indexFilename: nil, cacheAge: 0, allowRangeRequests: false)
+        }
         webserver.addHandler(forMethod: "GET", path: "/mjpeg", request: GCDWebServerRequest.classForCoder(), asyncProcessBlock: {(request, completion) in
             let response = GCDWebServerStreamedResponse(contentType: "multipart/x-mixed-replace; boundary=0123456789876543210", asyncStreamBlock: {completion in
                 self.mjpegQueue.async {

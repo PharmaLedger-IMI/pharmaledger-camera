@@ -13,7 +13,7 @@ import WebKit
 public class CameraWebViewController: UIViewController, WKUIDelegate {
     // MARK: Privates
     private var webview: WKWebView?
-    private var messageHandler = JsMessageHandler()
+    private var messageHandler = JsMessageHandler(staticPath: Bundle.main.path(forResource: "www", ofType: nil))
     
     func load() {
         self.webview = messageHandler.getWebview(frame: self.view.frame)
