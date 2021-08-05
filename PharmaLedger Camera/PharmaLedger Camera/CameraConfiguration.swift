@@ -96,6 +96,32 @@ public class CameraConfiguration {
         self.delegate?.onConfigurationsChanged()
     }
     
+    /** Conversion to dictionary
+ - Returns: [String: AnyObject] dictionary. Available dictionary keys are:
+     - "preferredColorSpace" (String)
+     - "sessionPreset" (String)
+     - "flashConfiguration" (String)
+     - "torchLevel" (Float)
+     - "aspectRatio" (CGFloat)
+     - "autoOrientationEnabled" (Bool)
+     - "deviceTypes" (String array)
+     - "cameraPosition" (String)
+     - "continuousFocus" (Bool)
+ */
+    public func toDict() -> [String: AnyObject] {
+        var dict = [String: AnyObject]()
+        dict["preferredColorSpace"] = self.getPreferredColorSpaceString() as AnyObject
+        dict["sessionPreset"] = self.getSessionPresetString() as AnyObject
+        dict["flashConfiguration"] = self.getFlashConfiguration() as AnyObject
+        dict["torchLevel"] = self.getTorchLevel() as AnyObject
+        dict["aspectRatio"] = self.getAspectRatio() as AnyObject
+        dict["autoOrientationEnabled"] = self.autoOrientationEnabled as AnyObject
+        dict["deviceTypes"] = self.getDeviceTypeStrings() as AnyObject
+        dict["cameraPosition"] = self.getCameraPositionString() as AnyObject
+        dict["continuousFocus"] = self.continuousFocus as AnyObject
+        return dict
+    }
+    
     //MARK: Flash and torch mode
     
     /// Returns the current torch mode in AVCaptureDevice.TorchMode format
