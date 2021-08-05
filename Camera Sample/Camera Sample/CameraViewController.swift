@@ -71,7 +71,7 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
         }else{
             imageData.savePhotoToLibrary()
         }
-        self.showToast(message: "file saved", font: .systemFont(ofSize: 14.0))
+        cameraImagePreview?.showToast(message: "file saved", font: .systemFont(ofSize: 14.0))
     }
     
     func onPreviewFrame(sampleBuffer: CMSampleBuffer) {
@@ -267,6 +267,8 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
         }else{
             cameraSession = CameraSession.init(cameraEventListener: self,cameraConfiguration: cameraConfig!)
         }
+        
+        
     }
     
     func readjustAspectRatio(){
@@ -356,6 +358,7 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
         
         cameraSession?.requestFocusWithCallback(pointOfInterest: pointOfInterest, requestTimeout: 2.0, completion: {locked in
             print("requestFocusWithPOI","focus request has finished as locked:\(locked)")
+            self.cameraImagePreview?.showToast(message: "focus locked: \(locked)", font: .systemFont(ofSize: 14.0))
         })
     }
     
@@ -389,7 +392,20 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
         //get info
         let sdk_version = Bundle(for: CameraSession.self).infoDictionary?["CFBundleShortVersionString"]
         
-        let infotext = "Current color space: \(cameraSession?.getCurrentColorSpaceString() ?? "")\nFlash mode: \(cameraConfig?.getFlashConfiguration() ?? "")\nTorch level: \(cameraConfig?.getTorchLevel() ?? 1.0)\n\n\n\nSDK version: \(sdk_version ?? "")"
+        var infotext = ""
+        let configDict:[String: AnyObject] = cameraConfig!.toDict()
+        
+        for key in configDict.keys {
+            let stringvalue = String(describing: configDict[key])// as? String ?? ""
+            infotext.append("\(key):\(stringvalue)\n")
+            print("configDict-\(key)",configDict[key] ?? "not set")
+        }
+        
+        infotext.append("\n\nSDK version: \(sdk_version ?? "")")
+        /*var infotext = "Current color space: \(cameraSession?.getCurrentColorSpaceString() ?? "")\n"
+        infotext.append("Flash mode: \(cameraConfig?.getFlashConfiguration() ?? "")\n")
+        infotext.append("Torch level: \(cameraConfig?.getTorchLevel() ?? 1.0)\n")
+        */
         //display info
         infoview.text = infotext
     }
@@ -506,11 +522,11 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
     
 }
 
-extension UIViewController {
-
+extension UIView {
+    
 func showToast(message : String, font: UIFont) {
 
-    let toastLabel = UILabel(frame: self.view.frame)
+    let toastLabel = UILabel(frame: self.frame)
     toastLabel.backgroundColor = UIColor.black.withAlphaComponent(0.6)
     toastLabel.textColor = UIColor.white
     toastLabel.font = font
@@ -519,7 +535,7 @@ func showToast(message : String, font: UIFont) {
     toastLabel.alpha = 1.0
     toastLabel.layer.cornerRadius = 10;
     toastLabel.clipsToBounds  =  true
-    self.view.addSubview(toastLabel)
+    self.addSubview(toastLabel)
     UIView.animate(withDuration: 4.0, delay: 0.1, options: .curveEaseOut, animations: {
          toastLabel.alpha = 0.0
     }, completion: {(isCompleted) in
