@@ -20,6 +20,7 @@ protocol SettingsViewDelegate {
     func onDeviceTypeChanged(device_type:String)
     func onCameraPositionChanged(camera_position:String)
     func onContinuousFocusChanged(continuous_focus:Bool)
+    func onHighResolutionEnabled(high_resolution:Bool)
 }
 
 /// Scrollable view containing camera settings
@@ -115,6 +116,9 @@ class SettingsView:UIScrollView, UIPickerViewDelegate, UIPickerViewDataSource{
     private let focusModeLabel:UILabel = UILabel.init()
     private let focusModeSwitch:UISwitch = UISwitch.init()
     
+    private let highResolutionLabel:UILabel = UILabel.init()
+    private let highResolutionSwitch:UISwitch = UISwitch.init()
+    
     //MARK: Variables and constants
     
     private let colorSpaceValues:[String] = ["default", "sRGB", "P3_D65", "HLG_BT2020"]
@@ -151,6 +155,8 @@ class SettingsView:UIScrollView, UIPickerViewDelegate, UIPickerViewDataSource{
     private var currentDeviceType = "dualWideCamera"
     
     public var currentContinuousFocus = true
+    
+    public var currentHighResolutionCaptureEnabled = true
     
     private var torchLevel:Float = 1.0
     
@@ -219,6 +225,11 @@ class SettingsView:UIScrollView, UIPickerViewDelegate, UIPickerViewDataSource{
         self.focusModeSwitch.isOn = self.currentContinuousFocus
     }
     
+    func setHighResolutionEnabled(enabled:Bool){
+        currentHighResolutionCaptureEnabled = enabled
+        self.highResolutionSwitch.isOn = self.currentHighResolutionCaptureEnabled
+    }
+    
     func setSaveMode(save_mode:String){
         self.currentSaveMode = save_mode
         saveModePicker.selectRow(saveModeValues.firstIndex(of: save_mode) ?? 0, inComponent: 0, animated: false)
@@ -243,6 +254,7 @@ class SettingsView:UIScrollView, UIPickerViewDelegate, UIPickerViewDataSource{
         setSessionPreset(session_preset: config.getSessionPresetString())
         setDeviceType(device_type: config.getDeviceTypeStrings()[0])
         setDevicePosition(device_position: config.getCameraPositionString())
+        setHighResolutionEnabled(enabled: config.highResolutionCaptureEnabled)
     }
     
     //MARK: UI init
@@ -270,6 +282,8 @@ class SettingsView:UIScrollView, UIPickerViewDelegate, UIPickerViewDataSource{
         focusModeSwitch.translatesAutoresizingMaskIntoConstraints = false
         deviceTypeLabel.translatesAutoresizingMaskIntoConstraints = false
         deviceTypePicker.translatesAutoresizingMaskIntoConstraints = false
+        highResolutionLabel.translatesAutoresizingMaskIntoConstraints = false
+        highResolutionSwitch.translatesAutoresizingMaskIntoConstraints = false
         
         //labels
         flashModeLabel.text = "Flash mode:"
@@ -280,6 +294,7 @@ class SettingsView:UIScrollView, UIPickerViewDelegate, UIPickerViewDataSource{
         focusModeLabel.text = "Continuous auto focus:"
         deviceTypeLabel.text = "Device type:"
         cameraPositionLabel.text = "Camera position: \(getCurrentCameraPosition())"
+        highResolutionLabel.text = "High resolution capture:"
         
         //torch level slider
         torchLevelSlider.minimumValue = 0.1
@@ -294,6 +309,9 @@ class SettingsView:UIScrollView, UIPickerViewDelegate, UIPickerViewDataSource{
         
         cameraPositionSwitch.isOn = getCurrentCameraPosition() == "back"
         cameraPositionSwitch.addTarget(self, action: #selector(switchToggled), for: .valueChanged)
+        
+        highResolutionSwitch.isOn = currentHighResolutionCaptureEnabled
+        highResolutionSwitch.addTarget(self, action: #selector(switchToggled), for: .valueChanged)
         
         //pickers
         flashmodePicker.dataSource = self
@@ -323,6 +341,8 @@ class SettingsView:UIScrollView, UIPickerViewDelegate, UIPickerViewDataSource{
         containerView.addArrangedSubview(focusModeSwitch)
         containerView.addArrangedSubview(colorSpaceLabel)
         containerView.addArrangedSubview(colorSpacePicker)
+        containerView.addArrangedSubview(highResolutionLabel)
+        containerView.addArrangedSubview(highResolutionSwitch)
         containerView.addArrangedSubview(saveModeLabel)
         containerView.addArrangedSubview(saveModePicker)
         containerView.addArrangedSubview(sessionPresetLabel)
@@ -365,6 +385,8 @@ class SettingsView:UIScrollView, UIPickerViewDelegate, UIPickerViewDataSource{
         }else if(ui_switch == cameraPositionSwitch){
             self.cameraPositionLabel.text = "Camera position: \(getCurrentCameraPosition())"
             self.settingsViewDelegate?.onCameraPositionChanged(camera_position: getCurrentCameraPosition())
+        }else if(ui_switch == highResolutionSwitch){
+            self.settingsViewDelegate?.onHighResolutionEnabled(high_resolution: ui_switch.isOn)
         }
     }
 }

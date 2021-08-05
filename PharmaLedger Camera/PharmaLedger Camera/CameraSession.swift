@@ -280,7 +280,7 @@ import UIKit
     @objc public func takePicture(){
         
         let photoSettings = AVCapturePhotoSettings()
-        photoSettings.isHighResolutionPhotoEnabled = true
+        photoSettings.isHighResolutionPhotoEnabled = cameraConfiguration.highResolutionCaptureEnabled
         photoSettings.flashMode = cameraConfiguration.getFlashMode()
         
         photoOutput?.capturePhoto(with: photoSettings, delegate: self)

@@ -10,6 +10,10 @@ import PharmaLedger_Camera
 import AVFoundation
 
 class ViewController: UIViewController,SettingsViewDelegate {
+    func onHighResolutionEnabled(high_resolution: Bool) {
+        cameraConfig.highResolutionCaptureEnabled = high_resolution
+    }
+    
     func onDeviceTypeChanged(device_type: String) {
         cameraConfig.setDeviceTypes(deviceTypes: [device_type])
     }

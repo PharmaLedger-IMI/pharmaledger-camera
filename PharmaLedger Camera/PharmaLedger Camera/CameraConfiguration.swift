@@ -60,6 +60,9 @@ public class CameraConfiguration {
      */
     public var continuousFocus:Bool = true
     
+    ///If high resolution is enabled, the photo capture will be taken with the highest possible resolution available. Default: **true**
+    public var highResolutionCaptureEnabled = true
+    
     //MARK: Initialization
     
     /// Initializes the camera confifugration with default values. To further customize the configuration, call any
@@ -78,8 +81,9 @@ public class CameraConfiguration {
     /// - Parameter device_types: Additional criteria for selecting the camera. Supported values are **tripleCamera**, **dualCamera**, **dualWideCamera**, **wideAngleCamera**, **ultraWideAngleCamera**, **telephotoCamera** and **trueDepthCamera**. Device discovery session will prioritize device types in the array based on their array index. Defaults to ["dualWideCamera","wideAngleCamera"] if undefined or empty.
     /// - Parameter camera_position: "back" or "front". If not defined, this setting will default to "back"
     /// - Parameter continuous_focus: Defines the preferred [AVCaptureDevice.FocusMode](https://developer.apple.com/documentation/avfoundation/avcapturedevice/focusmode). If true, preferred focusmode will be set to **continuousAutoFocus**, otherwise the mode will switch between **autoFocus** and **locked**.
+    /// - Parameter highResolutionCaptureEnabled: If high resolution is enabled, the photo capture will be taken with the highest possible resolution available.
     /// - Parameter auto_orientation_enabled: If set to true, camera session will attempt to automatically adjust the preview and capture orientation based on the device orientation
-    public init(flash_mode: String?, color_space:String?, session_preset:String?, device_types:[String]?, camera_position:String?, continuous_focus:Bool, auto_orientation_enabled:Bool) {
+    public init(flash_mode: String?, color_space:String?, session_preset:String?, device_types:[String]?, camera_position:String?, continuous_focus:Bool, highResolutionCaptureEnabled:Bool, auto_orientation_enabled:Bool) {
         self.setFlashConfiguration(flash_mode: flash_mode ?? self.flash_configuration)
         self.setPreferredColorSpace(color_space: color_space ?? "")
         self.autoOrientationEnabled = auto_orientation_enabled
@@ -87,6 +91,7 @@ public class CameraConfiguration {
         self.continuousFocus = continuous_focus
         self.setDeviceTypes(deviceTypes: device_types)
         self.setCameraPosition(position: camera_position)
+        self.highResolutionCaptureEnabled = highResolutionCaptureEnabled
     }
     
     //MARK: Public functions
@@ -107,6 +112,7 @@ public class CameraConfiguration {
      - "deviceTypes" (String array)
      - "cameraPosition" (String)
      - "continuousFocus" (Bool)
+     - "highResolutionCaptureEnabled" (Bool)
  */
     public func toDict() -> [String: AnyObject] {
         var dict = [String: AnyObject]()
@@ -119,6 +125,7 @@ public class CameraConfiguration {
         dict["deviceTypes"] = self.getDeviceTypeStrings() as AnyObject
         dict["cameraPosition"] = self.getCameraPositionString() as AnyObject
         dict["continuousFocus"] = self.continuousFocus as AnyObject
+        dict["highResolutionCaptureEnabled"] = self.highResolutionCaptureEnabled as AnyObject
         return dict
     }
     
