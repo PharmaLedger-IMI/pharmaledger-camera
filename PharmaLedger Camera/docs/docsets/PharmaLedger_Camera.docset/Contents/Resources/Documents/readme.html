@@ -16,7 +16,7 @@
     <a title="README  Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="index.html">PharmaLedger_Camera 0.3.0 Docs</a></p>
+        <p><a href="index.html">PharmaLedger_Camera 1.0.0 Docs</a></p>
         <p class="header-right">
           <form role="search" action="search.json">
             <input type="text" placeholder="Search documentation" data-typeahead>
@@ -47,9 +47,6 @@
             <ul class="nav-group-tasks">
               <li class="nav-group-task">
                 <a href="Classes/CameraConfiguration.html">CameraConfiguration</a>
-              </li>
-              <li class="nav-group-task">
-                <a href="Classes/CameraPreview.html">CameraPreview</a>
               </li>
               <li class="nav-group-task">
                 <a href="Classes/CameraSession.html">CameraSession</a>
@@ -94,7 +91,9 @@
 <li><a href="#sample-code">Sample code</a></li>
 <li><a href="#capturing-and-saving-a-photo">Capturing and saving a photo</a></li>
 <li><a href="#controlling-the-camerasession">Controlling the CameraSession</a></li>
+<li><a href="#lens-focus-control">Lens focus control</a></li>
 <li><a href="#capture-session-resolution-and-session-presets">Capture session resolution and session presets</a></li>
+<li><a href="#selecting-the-capture-device">Selecting the capture device</a></li>
 <li><a href="#handling-device-orientations">Handling device orientations</a></li>
 <li><a href="#development">Development</a></li>
 <li><a href="#building-documentation">Building Documentation</a></li>
@@ -213,7 +212,16 @@ func onPreviewFrame(sampleBuffer: CMSampleBuffer) {
 
     // option 1b - Initialize parameters in the init
     // Any unnecessary parameters can be left out as nil
-    config:CameraConfiguration = CameraConfiguration.init(flash_mode: "torch", color_space: nil, session_preset: nil, auto_orientation: true)
+    config:CameraConfiguration = CameraConfiguration.init(
+        flash_mode: "torch", 
+        color_space: nil, 
+        session_preset: "photo", 
+        device_types: nil, 
+        camera_position: "back", 
+        continuous_focus: true, 
+        highResolutionCaptureEnabled: true, 
+        auto_orientation_enabled: true
+    )
 
     // Initialize the camera with the configuration
     cameraSession = CameraSession.init(cameraEventListener: self,cameraConfiguration: config)
@@ -231,12 +239,37 @@ func onPreviewFrame(sampleBuffer: CMSampleBuffer) {
     config.applyConfiguration()
 }
 </code></pre>
+<h3 id='lens-focus-control' class='heading'>Lens focus control</h3>
+
+<p>The focus mode can be switched between auto and continuous auto focus by setting the <strong>continuousFocus</strong> variable of the <strong>CameraConfiguration</strong> to true or false</p>
+
+<p>To issue a focus request for the CameraSession, simply call <strong>requestFocus</strong> or <strong>requestFocusWIthCallback</strong> to receive completion closure. Focus request callback result is not 100% accurate and behaviour varies between different device types. In general, the callback is more reliable when <strong>continuousFocus</strong> is set to false.</p>
+<pre class="highlight plaintext"><code>func requestFocusWithCallback(){
+    cameraSession?.requestFocusWithCallback(
+        pointOfInterest: nil,
+        requestTimeout: 2.0,
+        completion: {locked in
+            print("locked",locked)
+        }
+    )
+}
+</code></pre>
+
+<p>To set a point of interest, pass a CGPoint within range {0.0} to {1,1}. This coordinate system is always relative to a landscape device orientation with the home button on the right, regardless of the actual device orientation. See <a href="https://developer.apple.com/documentation/avfoundation/avcapturedevice/1385853-focuspointofinterest">focusPointOfInterest documentation</a> for more information.</p>
 <h3 id='capture-session-resolution-and-session-presets' class='heading'>Capture session resolution and session presets</h3>
 
-<p>Capture session preview resolution is controlled by using <a href="https://developer.apple.com/documentation/avfoundation/avcapturesession/preset">session presets</a>. To change the session preset, call the <strong>setSessionPreset</strong> method from the camera configuration class or predefine the value in the initializer.</p>
+<p>Capture session preview resolution is controlled by using <a href="https://developer.apple.com/documentation/avfoundation/avcapturesession/preset">session presets</a>. To change the session preset, call the <strong>setSessionPreset</strong> method from the camera configuration class or predefine the value in the initializer.
+The capture size can be changed by setting the highResolutionCaptureEnabled parameter to true or false.</p>
 <pre class="highlight plaintext"><code>// Predefining the session preset as "medium" in the initialization
-config:CameraConfiguration = CameraConfiguration.init(flash_mode: nil, color_space: nil, session_preset: "medium", auto_orientation: true)
-
+config:CameraConfiguration = CameraConfiguration.init(flash_mode: nil, 
+    color_space: nil, 
+    session_preset: "medium", 
+    device_types: nil, 
+    camera_position: nil, 
+    continuous_focus: true, 
+    highResolutionCaptureEnabled: true, 
+    auto_orientation_enabled: true
+)
 // Using the setSessionPreset method
 config.setSessionPreset("medium")
 </code></pre>
@@ -269,12 +302,32 @@ config.setSessionPreset("medium")
 <ul>
 <li>&ldquo;cif352x288&rdquo;</li>
 </ul>
+<h3 id='selecting-the-capture-device' class='heading'>Selecting the capture device</h3>
+
+<p>To select which camera the framework chooses, an array of device types can be passed to the configuration using <strong>setDeviceTypes</strong> method (see Apple&rsquo;s documentation on <a href="https://developer.apple.com/documentation/avfoundation/avcapturedevice/devicetype">device types</a> for more information). The facing of the camera can be chosen using the <strong>setCameraPosition</strong> method.</p>
+<pre class="highlight plaintext"><code>func selectPreferredDevice(){
+    //select device by priority order: tripleCamera &gt; dualCamera &gt; wideAngleCamera
+    config.setDeviceTypes(["tripleCamera","dualCamera","wideAngleCamera"])
+    config.setCameraPosition("back")
+}
+</code></pre>
+
+<p>These parameters can also be defined in configuration init.</p>
 <h3 id='handling-device-orientations' class='heading'>Handling device orientations</h3>
 
 <p>By default, the framework detects changes to the device orientation automatically. Orientation can also be managed manually as shown in the example below:</p>
 <pre class="highlight plaintext"><code>func initCameraSession(){
     // init the session with auto orientation disabled:
-    config:CameraConfiguration = CameraConfiguration.init(flash_mode: nil, color_space: nil, auto_orientation: false)
+    config:CameraConfiguration = CameraConfiguration.init(
+        flash_mode: "torch", 
+        color_space: nil, 
+        session_preset: "photo", 
+        device_types: nil, 
+        camera_position: "back", 
+        continuous_focus: true, 
+        highResolutionCaptureEnabled: true, 
+        auto_orientation_enabled: false
+    )
 
     cameraSession = CameraSession.init(cameraEventListener: self, cameraConfiguration: config)
 }

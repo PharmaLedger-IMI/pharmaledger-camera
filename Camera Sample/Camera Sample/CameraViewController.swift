@@ -123,8 +123,6 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
     
     private let infoview:UILabel = UILabel.init()
     
-    var cameraPreview:CameraPreview?
-    
     var camerapreview_widthconstraint:NSLayoutConstraint?
     var camerapreview_heightconstraint:NSLayoutConstraint?
     var camerapreview_topconstraint:NSLayoutConstraint?
@@ -316,7 +314,6 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
     
     @objc func captureButtonClick(){
         print("capture button clicked!")
-        cameraPreview?.takePicture()
         cameraSession?.takePicture()
     }
     

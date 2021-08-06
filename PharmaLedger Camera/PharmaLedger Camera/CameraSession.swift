@@ -64,7 +64,6 @@ import UIKit
         self.cameraSessionDelegate = cameraEventListener
         super.init()
         self.cameraConfiguration.delegate = self
-        print("CameraSession","init with delegate")
         self.initCamera()
     }
     
@@ -78,12 +77,10 @@ import UIKit
         self.cameraSessionDelegate = cameraEventListener
         super.init()
         self.cameraConfiguration.delegate = self
-        print("CameraSession","init with delegate and configuration")
         self.initCamera()
     }
     
     func initCamera(){
-        print("CameraSession","initalizing camera...")
         checkPermission()
         currentDeviceTypes = cameraConfiguration.getDeviceTypes()
         currentCameraPosition = cameraConfiguration.getCameraPosition()
@@ -95,13 +92,11 @@ import UIKit
                 captureSession?.startRunning()
                 configureRuntimeSettings(device: captureDevice!)
                 cameraSessionDelegate.onCameraInitialized()
-                print("CameraSession","Camera successfully configured")
             }else if(configuration == .permissionsDenied){
                 self.cameraSessionDelegate.onCameraPermissionDenied()
             }
             else{
                 captureSession?.commitConfiguration()
-                print("configuration error!","Error: \(configuration)")
             }
         }
     }
@@ -119,28 +114,21 @@ import UIKit
             let supportedColorSpaces = device.activeFormat.supportedColorSpaces
             if(supportedColorSpaces.contains(preferredColorSpace)){
                 captureSession?.automaticallyConfiguresCaptureDeviceForWideColor = false
-                print("camConfig","Trying to set active colorspace to \(cameraConfiguration.getPreferredColorSpaceString())")
                 if(preferredColorSpace != device.activeColorSpace){
                     device.activeColorSpace = preferredColorSpace
-                }else{
-                    print("camConfig","color space already set")
                 }
             }else{
-                print("preferred color space is not supported!")
                 cameraConfiguration.setPreferredColorSpace(color_space: "")
             }
         }else {
-            print("camConfig","Preferred color space is not defined")
             captureSession?.automaticallyConfiguresCaptureDeviceForWideColor = true
         }
         
         let preferredSessionPreset:AVCaptureSession.Preset = cameraConfiguration.getSessionPreset()
         if(sessionPreset != preferredSessionPreset){
-            print("setting the preset to \(cameraConfiguration.getSessionPresetString())")
             sessionPreset = preferredSessionPreset
             captureSession?.sessionPreset = sessionPreset
         }else{
-            print("session preset is already set to \(cameraConfiguration.getSessionPresetString())")
         }
         
         device.unlockForConfiguration()
@@ -152,7 +140,6 @@ import UIKit
             addDeviceOrientationObserver()
         }
         do{
-            print("camConfig","Try to set torch mode to \(cameraConfiguration.getFlashConfiguration() ?? "undefined") and torch level to \(cameraConfiguration.getTorchLevel())")
             try device.lockForConfiguration()
             if(device.isTorchModeSupported(cameraConfiguration.getTorchMode()) && device.isTorchAvailable){
                 device.torchMode = cameraConfiguration.getTorchMode()
@@ -224,7 +211,6 @@ import UIKit
         captureSession?.addOutput(photoOutput!)
         
         guard let photo_connection = photoOutput?.connection(with: .video) else {
-            print("photo connection not available")
             return .deviceOutputConnectionFailure
         }
         self.photoCaptureConnection = photo_connection
@@ -239,13 +225,11 @@ import UIKit
         if(devices.isEmpty){
             //try to get fallback devices
             cameraConfiguration.setDeviceTypes(deviceTypes: [])
-            print("selectDevice","didn't find devices with initial query, searching with fallback \(cameraConfiguration.getDeviceTypeStrings())")
             discoverySession = AVCaptureDevice.DiscoverySession(deviceTypes: cameraConfiguration.getDeviceTypes(), mediaType: .video, position: position)
             devices = discoverySession.devices
         }
         
         guard !devices.isEmpty else { return nil}
-        print("selectDevice","number of available devices for criteria: \(devices.count)")
         return devices.first(where: { device in device.position == position })!
     }
     
@@ -270,7 +254,6 @@ import UIKit
         }
         self.configureDevice(device: device)
         captureSession?.startRunning()
-        print("start camera...")
         self.configureRuntimeSettings(device: device)
         
         sessionQueue.resume()
@@ -336,7 +319,6 @@ import UIKit
         
         if(focusTimeoutHandler != nil){
             if(focusTimeoutHandler!.isValid){
-                print("focusCallback", "invalidate current request")
                 focusTimeoutHandler?.invalidate()
             }
         }
@@ -351,14 +333,12 @@ import UIKit
             
                 if let focusMode:AVCaptureDevice.FocusMode = self.captureDevice?.focusMode {
                     if(focusMode == .locked){
-                        print("focusCallback", "auto focus is now locked!")
                         timer.invalidate()
                         self.currentFocuscallbackTime = 0.0
                         completion(true)
                         return
                     }else if(focusMode == .continuousAutoFocus){
                         if(self.captureDevice!.isAdjustingFocus){
-                            print("focusCallback", "no longer adjusting focus")
                             timer.invalidate()
                             self.currentFocuscallbackTime = 0.0
                             completion(true)
@@ -368,7 +348,6 @@ import UIKit
                 }
             }
             
-            print("focusCallback","timer is now at \(self.currentFocuscallbackTime)")
             if(self.currentFocuscallbackTime>=self.focusCallbackTimeout){
                 timer.invalidate()
                 self.currentFocuscallbackTime = 0.0
@@ -381,12 +360,10 @@ import UIKit
     /// - Parameter pointOfInterest: Point of interest ranging from {0,0} to {1,1}. This coordinate system is always relative to a landscape device orientation with the home button on the right, regardless of the actual device orientation.
     public func requestFocus(pointOfInterest:CGPoint?){
         guard let device = captureDevice else {
-            print("requestFocus","couldn't define capture device")
             return
         }
         
         if(!device.isFocusModeSupported(.continuousAutoFocus) && !device.isFocusModeSupported(.autoFocus)){
-            print("requestFocus","device doesn't support focus requests")
             return
         }
         
@@ -404,24 +381,19 @@ import UIKit
         
         if(device.isFocusPointOfInterestSupported && pointOfInterest != nil){
             device.focusPointOfInterest = pointOfInterest!
-        }else{
-            print("requestFocus","POI not supported")
         }
+        
         if(cameraConfiguration.continuousFocus){
-            print("requestFocus","request continuousAuto")
             if(device.isFocusModeSupported(.continuousAutoFocus)){
                 device.focusMode = .continuousAutoFocus
             }else{
-                print("requestFocus","mode continuousAuto not supported")
                 device.focusMode = .autoFocus
                 cameraConfiguration.continuousFocus = false
             }
         }else{
-            print("requestFocus","request auto")
             if(device.isFocusModeSupported(.autoFocus)){
                 device.focusMode = .autoFocus
             }else{
-                print("requestFocus","mode auto not supported")
                 device.focusMode = .continuousAutoFocus
                 
                 cameraConfiguration.continuousFocus = true
@@ -444,7 +416,6 @@ import UIKit
         }
         
         let deviceOrientation = UIDevice.current.orientation
-        print("update orientation...")
         switch deviceOrientation {
         case .landscapeLeft:
             connection.videoOrientation = .landscapeRight
@@ -466,7 +437,6 @@ import UIKit
         
         if(lastOrientation != deviceOrientation){
             if(deviceOrientation == .faceUp || deviceOrientation == .faceDown){
-                print("faceUp or faceDown, return!")
                 return
             }
             lastOrientation = deviceOrientation
@@ -486,7 +456,7 @@ import UIKit
         guard let capture_connection = self.photoCaptureConnection else {
             return
         }
-        print("setOrientation",orientation)
+        
         switch orientation {
         case "landscapeLeft":
             connection.videoOrientation = .landscapeRight
@@ -524,24 +494,17 @@ import UIKit
         var willRequestPermission:Bool = false
         switch AVCaptureDevice.authorizationStatus(for: AVMediaType.video) {
             case .authorized:
-                print("AVPermission","Authorized!")
                 cameraPermissionGranted = true
                 break
             case .notDetermined:
-                print("AVPermission","Not determined, request permission...")
                 willRequestPermission = true
                 requestPermission()
                 break
             default:
-                print("AVPermission","Permission not granted!")
                 cameraPermissionGranted = false
                 break
         }
-        if(!willRequestPermission){
-            print("permissions won't be asked")
-        }else{
-            print("permissions will be asked")
-        }
+        
     }
     
     private func requestPermission() {
@@ -554,10 +517,8 @@ import UIKit
     
     //MARK: CameraConfigurationChangeListener
     func onConfigurationsChanged() {
-        print("onConfigurationsChanged", "configurations were changed and applied")
         //if there are any critical changes that require session reconfiguration, run initCamera instead
         if(currentCameraPosition != cameraConfiguration.getCameraPosition() || deviceArrayHasChanged()){
-            print("onConfigurationsChanged", "reinitialize the camera")
             stopCamera()
             sessionQueue.resume()
             initCamera()
@@ -571,7 +532,6 @@ import UIKit
             return
         }
         
-        print("onConfigurationsChanged", "apply device and runtime configurations")
         guard let device:AVCaptureDevice = self.captureDevice else {
             return
         }
@@ -582,25 +542,21 @@ import UIKit
     
     private func deviceArrayHasChanged()->Bool{
         guard let device_types:[AVCaptureDevice.DeviceType] = currentDeviceTypes else {
-            print("deviceArrayHasChanged","device_types not defined")
             return false
         }
         
         let configTypes = cameraConfiguration.getDeviceTypes()
         
         if(device_types.count != configTypes.count){
-            print("deviceArrayHasChanged","different array sizes!")
             return true
         }
         
         for i in 0 ... device_types.count-1 {
             if(device_types[i] != configTypes[i]){
-                print("deviceArrayHasChanged","index \(i) is different in arrays!")
                 return true
             }
         }
         
-        print("deviceArrayHasChanged","no changes detected")
         return false
     }
     

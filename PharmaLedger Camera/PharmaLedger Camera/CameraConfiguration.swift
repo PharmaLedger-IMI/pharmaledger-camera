@@ -71,7 +71,6 @@ public class CameraConfiguration {
         self.torchlevel = 1.0
         self.autoOrientationEnabled = true
         self.deviceTypes = deviceTypeDefaults
-        print("camConfig","initialized")
     }
     
     /// Initialize the camera session with customizable configurations. Parameters that don't need to be configured can be left as nil.
@@ -178,7 +177,6 @@ public class CameraConfiguration {
             self.flashmode = .auto
             break
         }
-        print("camConfig","torch mode set to \(flash_mode)")
     }
     
     /// Sets the torch level
@@ -372,18 +370,6 @@ public class CameraConfiguration {
     //MARK: Camera selection
     
     /// Sets the device type criteria for [the device discovery session](https://developer.apple.com/documentation/avfoundation/avcapturedevice/discoverysession)
-    /// - Parameter deviceTypes: Supported values are **.builtInTripleCamera**, **.builtInDualCamera**, **.builtInDualWideCamera**, **.builtInUltraWideAngleCamera**, **.builtInTrueDepthCamera**, **.builtInWideAngleCamera** and **.builtInTelephotoCamera**. Device discovery session will prioritize device types in the array based on their array index.
-    ///
-    /// If an empty array is passed, the configuration will fallback to [.builtInDualWideCamera,.builtInWideAngleCamera]
-    public func setDeviceTypes(deviceTypes:[AVCaptureDevice.DeviceType]){
-        if(deviceTypes.isEmpty){
-            self.deviceTypes = deviceTypeDefaults
-        }else{
-            self.deviceTypes = deviceTypes
-        }
-    }
-    
-    /// Sets the device type criteria for [the device discovery session](https://developer.apple.com/documentation/avfoundation/avcapturedevice/discoverysession)
     /// - Parameter deviceTypes: Supported values are **tripleCamera**, **dualCamera**, **dualWideCamera**, **wideAngleCamera**, **ultraWideAngleCamera**, **telephotoCamera** and **trueDepthCamera**. Device discovery session will prioritize device types in the array based on their array index.
     ///
     /// If an empty array is passed, the configuration will fallback to ["dualWideCamera","wideAngleCamera"]
@@ -395,18 +381,13 @@ public class CameraConfiguration {
             for deviceTypeString in deviceTypes! {
                 if let deviceType = stringToDeviceType(deviceType: deviceTypeString){
                     devicetypesArray.append(deviceType)
-                    print("setDeviceTypes","type \(deviceTypeString) added")
-                }else{
-                    print("setDeviceTypes","type \(deviceTypeString) was not found")
                 }
             }
             if(devicetypesArray.isEmpty){
-                print("setDeviceTypes","Using defaults")
                 devicetypesArray = deviceTypeDefaults
             }
             
         }else{
-            print("setDeviceTypes","Using defaults")
             devicetypesArray = deviceTypeDefaults
         }
         self.deviceTypes = devicetypesArray
@@ -425,9 +406,6 @@ public class CameraConfiguration {
         for deviceType in self.deviceTypes {
             if let deviceTypeString = deviceTypeToString(deviceType: deviceType) {
                 deviceTypeStringsArray.append(deviceTypeString)
-                print("getDeviceTypeStrings","found \(deviceTypeString)")
-            }else{
-                print("getDeviceTypeStrings","didn't find device type")
             }
         }
         return deviceTypeStringsArray
@@ -473,12 +451,6 @@ public class CameraConfiguration {
         default:
             return nil
         }
-    }
-    
-    /// Sets the camera position.
-    /// - Parameter position: [AVCaptureDevice.Position](https://developer.apple.com/documentation/avfoundation/avcapturedevice/position) enum. Use .front or .back
-    public func setCameraPosition(position:AVCaptureDevice.Position){
-        self.cameraPosition = position
     }
     
     /// Sets the camera position.
