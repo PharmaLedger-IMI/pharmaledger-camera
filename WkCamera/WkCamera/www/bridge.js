@@ -63,6 +63,7 @@ var _w = undefined;
 var _h = undefined;
 
 function callNative(api, args, callback) {
+    // @ts-ignore
     let handle = window.webkit.messageHandlers[api]
     let payload = {}
     if (args !== undefined) {
@@ -148,7 +149,7 @@ function takePictureBase64NativeCamera(onCaptureCallback) {
 
 /**
  * Gets a JPEG snapshot, corresponds to endpoint /snapshot
- * @returns {Promise<Blob>} JPEG snapshot
+ * @returns {Promise<void | Blob>} JPEG snapshot
  */
  function getSnapshot() {
     return fetch(`${_serverUrl}/snapshot`)
@@ -202,13 +203,13 @@ function onNativeCameraInitialized(wsPort) {
             let t0 = performance.now();
             if (_ycbcr) {
                 getRawFrameYCbCr(_x, _y, _w, _h).then(image => {
-                    if (image instanceof PLRgbImage || image instanceof PLYCbCrImage) {
+                    if (image instanceof PLYCbCrImage) {
                         _onFrameGrabbedCallBack(image, performance.now() - t0);
                     }
                 })
             } else {
                 getRawFrame(_x, _y, _w, _h).then(image => {
-                    if (image instanceof PLRgbImage || image instanceof PLYCbCrImage) {
+                    if (image instanceof PLRgbImage) {
                         _onFrameGrabbedCallBack(image, performance.now() - t0);
                     }
                 })
@@ -224,7 +225,7 @@ function onNativeCameraInitialized(wsPort) {
 
 /**
  * Gets a downsampled RGB frame for preview, corresponds to endpoint /previewframe
- * @returns  {Promise<PLRgbImage>} Downsampled RGB frame for preview
+ * @returns  {Promise<void | PLRgbImage>} Downsampled RGB frame for preview
  */
 function getPreviewFrame() {
     return fetch(`${_serverUrl}/previewframe`)
@@ -243,7 +244,7 @@ function getPreviewFrame() {
  * @param  {number} [y=undefined]
  * @param  {number} [w=undefined]
  * @param  {number} [h=undefined]
- * @returns {Promise<PLRgbImage>} a raw RGB frame
+ * @returns {Promise<void | PLRgbImage>} a raw RGB frame
  */
 function getRawFrame(x = undefined, y = undefined, w = undefined, h = undefined) {
     let fetchString = `${_serverUrl}/rawframe`;
@@ -261,6 +262,7 @@ function getRawFrame(x = undefined, y = undefined, w = undefined, h = undefined)
         params.h = h;
     }
     if (Object.keys(params).length > 0) {
+        // @ts-ignore
         const urlParams = new URLSearchParams(params);
         fetchString = `${fetchString}?${urlParams.toString()}`;
     }
@@ -279,7 +281,7 @@ function getRawFrame(x = undefined, y = undefined, w = undefined, h = undefined)
  * @param  {number} [y=undefined]
  * @param  {number} [w=undefined]
  * @param  {number} [h=undefined]
- * @returns {Promise<PLYCbCrImage>} a raw YCbCr frame
+ * @returns {Promise<Void | PLYCbCrImage>} a raw YCbCr frame
  */
 function getRawFrameYCbCr(x = undefined, y = undefined, w = undefined, h = undefined) {
     let fetchString = `${_serverUrl}/rawframe_ycbcr`;
@@ -297,6 +299,7 @@ function getRawFrameYCbCr(x = undefined, y = undefined, w = undefined, h = undef
         params.h = h;
     }
     if (Object.keys(params).length > 0) {
+        // @ts-ignore
         const urlParams = new URLSearchParams(params);
         fetchString = `${fetchString}?${urlParams.toString()}`;
     }

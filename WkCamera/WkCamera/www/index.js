@@ -15,18 +15,29 @@ var rawCrop_h = undefined;
 var rawFramesCounter = 0;
 var rawFramesElapsedSum = 0;
 var rawFramesMeasuredFPS = 0;
-var elapsed = 0
 var controls;
 const bytePerChannel = 3;
+// @ts-ignore
 if (bytePerChannel === 4) {
+    // @ts-ignore
     formatTexture = THREE.RGBAFormat;
 } else if (bytePerChannel === 3) {
+    // @ts-ignore
     formatTexture = THREE.RGBFormat;
 }
 var formatTexture;
 var flashMode = 'off'
 var usingMJPEG = false
-
+var status_test, status_fps_preview, status_fps_raw, title_h2, configInfo;
+var startCameraButtonGL, startCameraButtonMJPEG, stopCameraButton;
+var takePictureButton1, takePictureButton2, flashButton, getConfigButton, colorspaceButton;
+var torchRange;
+var snapshotImage;
+var streamPreview, rawCropCanvas, rawCropCbCanvas, rawCropCrCanvas;
+var invertRawFrameCheck, cropRawFrameCheck, ycbcrCheck;
+var rawCropRoiInput;
+var select_preset;
+var selectedPresetName;
 
 document.addEventListener("DOMContentLoaded", () => {
     status_test = document.getElementById('status_test');
@@ -36,6 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
     startCameraButtonGL = document.getElementById('startCameraButtonGL');
     startCameraButtonMJPEG = document.getElementById('startCameraButtonMJPEG');
     stopCameraButton = document.getElementById('stopCameraButton');
+    // @ts-ignore
     stopCameraButton.disabled = true
 
     title_h2 = document.getElementById('title_id');
@@ -52,8 +64,11 @@ document.addEventListener("DOMContentLoaded", () => {
             document.getElementById("torchLevelRangeLabel").innerHTML = `Torch Level: ${torchRange.value}`;
         }
     })
+    // @ts-ignore
     torchRange.value = "1.0";
+    // @ts-ignore
     document.getElementById("torchLevelRangeLabel").innerHTML = `Torch Level: ${torchRange.value}`;
+    // @ts-ignore
     torchRange.disabled = true;
     snapshotImage = document.getElementById('snapshotImage');
     getConfigButton = document.getElementById("getConfigButton");
@@ -96,6 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
         setCropCoords();
     })
     cropRawFrameCheck.addEventListener('change', function() {
+        // @ts-ignore
         if (this.checked) {
             show(rawCropRoiInput);        
         } else {
@@ -110,17 +126,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
     select_preset = document.getElementById('select_preset');
     let i = 0
-    for (presetName of sessionPresetNames) {
+    for (let presetName of sessionPresetNames) {
         var p_i = new Option(presetName, presetName)
+        // @ts-ignore
         select_preset.options.add(p_i);
         i++;
     }
+    // @ts-ignore
     for (let i = 0; i < select_preset.options.length; i++) {
+        // @ts-ignore
         if (select_preset.options[i].value === 'hd1920x1080') {
+            // @ts-ignore
             select_preset.selectedIndex = i;
             break;
         }
     }
+    // @ts-ignore
     selectedPresetName = select_preset.options[select_preset.selectedIndex].value;
     status_test.innerHTML = selectedPresetName;
 
@@ -165,7 +186,7 @@ document.addEventListener("DOMContentLoaded", () => {
         startCameraButtonMJPEG.disabled = true
         stopCameraButton.disabled = false
         torchRange.disabled = false
-        ycbcrCheck,disabled = true
+        ycbcrCheck.disabled = true
         setCropCoords();
         hide(canvasgl);
         canvasgl.parentElement.style.display = "none";
@@ -201,8 +222,6 @@ document.addEventListener("DOMContentLoaded", () => {
         stopCameraButton.disabled = true
         torchRange.disabled = true
         ycbcrCheck.disabled = false
-        time0 = undefined
-        globalCounter = 0
         title_h2.innerHTML = "Camera Test"
     });
 
@@ -240,15 +259,19 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function setupGLView(w, h) {
+    // @ts-ignore
     scene = new THREE.Scene();
+    // @ts-ignore
     camera = new THREE.PerspectiveCamera(75, w/h, 0.1, 10000);
+    // @ts-ignore
     renderer = new THREE.WebGLRenderer({ canvas: canvasgl, antialias: true });
 
-    cameraHeight = h/2/Math.tan(camera.fov/2*(Math.PI/180))
+    let cameraHeight = h/2/Math.tan(camera.fov/2*(Math.PI/180))
     camera.position.set(0,0,cameraHeight);
     let clientHeight = Math.round(h/w * canvasgl.clientWidth);    
     renderer.setSize(canvasgl.clientWidth, clientHeight);
 
+    // @ts-ignore
     controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enablePan = false;
     controls.enableZoom = false;
@@ -257,13 +280,17 @@ function setupGLView(w, h) {
     const dataTexture = new Uint8Array(w*h*bytePerChannel);
     for (let i=0; i<w*h*bytePerChannel; i++)
         dataTexture[i] = 255;
+    // @ts-ignore
     const frameTexture = new THREE.DataTexture(dataTexture, w, h, formatTexture, THREE.UnsignedByteType);
     frameTexture.needsUpdate = true;
+    // @ts-ignore
     const planeGeo = new THREE.PlaneBufferGeometry(w, h);
+    // @ts-ignore
     material = new THREE.MeshBasicMaterial({
         map: frameTexture,
     });
     material.map.flipY = true;
+    // @ts-ignore
     const plane = new THREE.Mesh(planeGeo, material);
     scene.add(plane);
 
@@ -307,7 +334,7 @@ function setCropCoords() {
 
 
 /**
- * @param {PLRgbImage} buffer preview data coming from native camera
+ * @param {PLRgbImage} rgbImage preview data coming from native camera
  * @param {number} elapsedTime time in ms elapsed to get the preview frame
  */
 function onFramePreview(rgbImage, elapsedTime) {
@@ -317,6 +344,7 @@ function onFramePreview(rgbImage, elapsedTime) {
         previewHeight = rgbImage.height;
         setupGLView(previewWidth, previewHeight);
     }
+    // @ts-ignore
     material.map = new THREE.DataTexture(frame, rgbImage.width, rgbImage.height, formatTexture, THREE.UnsignedByteType);
     material.map.flipY = true;
     material.needsUpdate = true;
@@ -337,11 +365,10 @@ function onFramePreview(rgbImage, elapsedTime) {
  * @param {number} elapsedTime time in ms elapsed to get the raw frame
  */
 function onFrameGrabbed(plImage, elapsedTime) {
+    let pSizeText = "";
     if (usingMJPEG === false) {
         pSizeText = `, p(${previewWidth}x${previewHeight}), p FPS:${targetPreviewFPS}`
-    } else {
-        pSizeText = ""
-    }
+    } 
     
     let rawframeLengthMB = undefined
     if (plImage instanceof PLRgbImage) {
