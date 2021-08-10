@@ -544,7 +544,7 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
     // MARK: js message handlers implementations
     private func handleCameraStart(onCameraInitializedJsCallback: String?, sessionPreset: String, flash_mode: String?, auto_orientation_enabled: Bool?) {
         self.onCameraInitializedJsCallback = onCameraInitializedJsCallback
-        self.cameraConfiguration = .init(flash_mode: flash_mode, color_space: nil, session_preset: sessionPreset, auto_orienation_enabled: auto_orientation_enabled ?? false)
+        self.cameraConfiguration = .init(flash_mode: flash_mode, color_space: nil, session_preset: sessionPreset, device_types: ["wideAngleCamera"], camera_position: "back", continuous_focus: true, highResolutionCaptureEnabled: true, auto_orientation_enabled: true)
         self.cameraSession = .init(cameraEventListener: self, cameraConfiguration: self.cameraConfiguration!)
         return
     }
