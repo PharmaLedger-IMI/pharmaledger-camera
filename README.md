@@ -7,7 +7,9 @@
   - [Sample code](#sample-code)
     - [Capturing and saving a photo](#capturing-and-saving-a-photo)
     - [Controlling the CameraSession](#controlling-the-camerasession)
+    - [Lens focus control](#lens-focus-control)
     - [Capture session resolution and session presets](#capture-session-resolution-and-session-presets)
+    - [Selecting the capture device](#selecting-the-capture-device)
     - [Handling device orientations](#handling-device-orientations)
   - [Development](#development)
     - [Building Documentation](#building-documentation)
@@ -126,7 +128,16 @@ The camera can be configured using the [CameraConfiguration](https://truemedinc.
 
         // option 1b - Initialize parameters in the init
         // Any unnecessary parameters can be left out as nil
-        config:CameraConfiguration = CameraConfiguration.init(flash_mode: "torch", color_space: nil, session_preset: nil, auto_orientation: true)
+        config:CameraConfiguration = CameraConfiguration.init(
+            flash_mode: "torch", 
+            color_space: nil, 
+            session_preset: "photo", 
+            device_types: nil, 
+            camera_position: "back", 
+            continuous_focus: true, 
+            highResolutionCaptureEnabled: true, 
+            auto_orientation_enabled: true
+        )
 
         // Initialize the camera with the configuration
         cameraSession = CameraSession.init(cameraEventListener: self,cameraConfiguration: config)
@@ -144,13 +155,39 @@ To configure the Camera during session runtime (eg. when toggling the flash mode
         config.applyConfiguration()
     }
 
+### Lens focus control
+
+The focus mode can be switched between auto and continuous auto focus by setting the **continuousFocus** variable of the **CameraConfiguration** to true or false
+
+To issue a focus request for the CameraSession, simply call **requestFocus** or **requestFocusWIthCallback** to receive completion closure. Focus request callback result is not 100% accurate and behaviour varies between different device types. In general, the callback is more reliable when **continuousFocus** is set to false.
+
+    func requestFocusWithCallback(){
+        cameraSession?.requestFocusWithCallback(
+            pointOfInterest: nil,
+            requestTimeout: 2.0,
+            completion: {locked in
+                print("locked",locked)
+            }
+        )
+    }
+
+To set a point of interest, pass a CGPoint within range {0.0} to {1,1}. This coordinate system is always relative to a landscape device orientation with the home button on the right, regardless of the actual device orientation. See [focusPointOfInterest documentation](https://developer.apple.com/documentation/avfoundation/avcapturedevice/1385853-focuspointofinterest) for more information.
+
 ### Capture session resolution and session presets
 
 Capture session preview resolution is controlled by using [session presets](https://developer.apple.com/documentation/avfoundation/avcapturesession/preset). To change the session preset, call the **setSessionPreset** method from the camera configuration class or predefine the value in the initializer.
+The capture size can be changed by setting the highResolutionCaptureEnabled parameter to true or false.
 
     // Predefining the session preset as "medium" in the initialization
-    config:CameraConfiguration = CameraConfiguration.init(flash_mode: nil, color_space: nil, session_preset: "medium", auto_orientation: true)
-
+    config:CameraConfiguration = CameraConfiguration.init(flash_mode: nil, 
+        color_space: nil, 
+        session_preset: "medium", 
+        device_types: nil, 
+        camera_position: nil, 
+        continuous_focus: true, 
+        highResolutionCaptureEnabled: true, 
+        auto_orientation_enabled: true
+    )
     // Using the setSessionPreset method
     config.setSessionPreset("medium")
 
@@ -174,13 +211,34 @@ The aspect ratios for the different settings are as follows:
 11:9 parameters:
 - "cif352x288"
 
+### Selecting the capture device
+
+To select which camera the framework chooses, an array of device types can be passed to the configuration using **setDeviceTypes** method (see Apple's documentation on [device types](https://developer.apple.com/documentation/avfoundation/avcapturedevice/devicetype) for more information). The facing of the camera can be chosen using the **setCameraPosition** method.
+
+    func selectPreferredDevice(){
+        //select device by priority order: tripleCamera > dualCamera > wideAngleCamera
+        config.setDeviceTypes(["tripleCamera","dualCamera","wideAngleCamera"])
+        config.setCameraPosition("back")
+    }
+
+These parameters can also be defined in configuration init.
+
 ### Handling device orientations
 
 By default, the framework detects changes to the device orientation automatically. Orientation can also be managed manually as shown in the example below:
 
     func initCameraSession(){
         // init the session with auto orientation disabled:
-        config:CameraConfiguration = CameraConfiguration.init(flash_mode: nil, color_space: nil, auto_orientation: false)
+        config:CameraConfiguration = CameraConfiguration.init(
+            flash_mode: "torch", 
+            color_space: nil, 
+            session_preset: "photo", 
+            device_types: nil, 
+            camera_position: "back", 
+            continuous_focus: true, 
+            highResolutionCaptureEnabled: true, 
+            auto_orientation_enabled: false
+        )
 
         cameraSession = CameraSession.init(cameraEventListener: self, cameraConfiguration: config)
     }

@@ -12,13 +12,31 @@ import PharmaLedger_Camera
 import AVFoundation
 
 class CameraViewController: UIViewController, CameraEventListener, SettingsViewDelegate {
+    func onHighResolutionEnabled(high_resolution: Bool) {
+        cameraConfig?.highResolutionCaptureEnabled = high_resolution
+    }
+    
+    func onDeviceTypeChanged(device_type: String) {
+        cameraConfig?.setDeviceTypes(deviceTypes: [device_type])
+        cameraConfig?.applyConfiguration()
+    }
+    
+    func onCameraPositionChanged(camera_position: String) {
+        cameraConfig?.setCameraPosition(position: camera_position)
+        cameraConfig?.applyConfiguration()
+    }
+    
+    func onContinuousFocusChanged(continuous_focus: Bool) {
+        cameraConfig?.continuousFocus = continuous_focus
+        cameraConfig?.applyConfiguration()
+    }
+    
     func onSessionPresetChanged(session_preset: String) {
         cameraConfig?.setSessionPreset(preset: session_preset)
         cameraConfig?.applyConfiguration()
         readjustAspectRatio()
         setViewConstraints(orientation: UIDevice.current.orientation)
     }
-    
     
     //MARK: SettingsViewDelegate
     func onTorchLevelChanged(level: Float) {
@@ -57,7 +75,7 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
         }else{
             imageData.savePhotoToLibrary()
         }
-        self.showToast(message: "file saved", font: .systemFont(ofSize: 14.0))
+        cameraImagePreview?.showToast(message: "file saved", font: .systemFont(ofSize: 14.0))
     }
     
     func onPreviewFrame(sampleBuffer: CMSampleBuffer) {
@@ -105,8 +123,6 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
     
     private let infoview:UILabel = UILabel.init()
     
-    var cameraPreview:CameraPreview?
-    
     var camerapreview_widthconstraint:NSLayoutConstraint?
     var camerapreview_heightconstraint:NSLayoutConstraint?
     var camerapreview_topconstraint:NSLayoutConstraint?
@@ -120,11 +136,14 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
     
     init(cameraConfig:CameraConfiguration){
         self.cameraConfig = cameraConfig
-        self.settingsView.setTorchLevel(torch_level: cameraConfig.getTorchLevel())
-        self.settingsView.setColorSpace(color_space: cameraConfig.getPreferredColorSpaceString())
-        self.settingsView.setFlashMode(flash_mode: cameraConfig.getFlashConfiguration() ?? "auto")
+        self.settingsView.setConfig(config: cameraConfig)
         super.init(nibName: nil, bundle: nil)
         print("camera view initialized")
+    }
+    
+    public func setSaveMode(save_mode:String){
+        self.saveMode = save_mode
+        self.settingsView.setSaveMode(save_mode: self.saveMode)
     }
     
     required init?(coder: NSCoder) {
@@ -184,12 +203,16 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
         infoview.textAlignment = .center
         infoview.numberOfLines = 0
         
+        cameraImagePreview?.backgroundColor = .gray
         cameraImagePreview?.addSubview(infoButton)
         cameraImagePreview?.addSubview(settingsButton)
         cameraImagePreview?.addSubview(closeButton)
         cameraImagePreview?.addSubview(infoview)
         cameraImagePreview?.addSubview(settingsView)
         cameraImagePreview?.isUserInteractionEnabled = true
+        
+        let cameraTapGesture = UITapGestureRecognizer(target: self, action: #selector(requestFocusWithPOI))
+        cameraImagePreview?.addGestureRecognizer(cameraTapGesture)
         
         let ui_spacing:CGFloat = 5
         let button_width:CGFloat = 50
@@ -247,7 +270,7 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
             cameraSession = CameraSession.init(cameraEventListener: self,cameraConfiguration: cameraConfig!)
         }
         
-       
+        
     }
     
     func readjustAspectRatio(){
@@ -291,7 +314,6 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
     
     @objc func captureButtonClick(){
         print("capture button clicked!")
-        cameraPreview?.takePicture()
         cameraSession?.takePicture()
     }
     
@@ -310,6 +332,35 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
         }
         
         
+    }
+    
+    @objc func requestFocusWithPOI(touch:UITapGestureRecognizer){
+        let rawLocation = touch.location(in: self.cameraImagePreview)
+        
+        var x_corrected:CGFloat = rawLocation.x
+        var y_corrected:CGFloat = rawLocation.y
+        
+        var width_corrected:CGFloat = self.cameraImagePreview!.frame.width
+        var height_corrected:CGFloat = self.cameraImagePreview!.frame.height
+        
+        if(UIDevice.current.orientation == .portrait || UIDevice.current.orientation == .portraitUpsideDown){
+            width_corrected = self.cameraImagePreview!.frame.height
+            height_corrected = self.cameraImagePreview!.frame.width
+            
+            x_corrected = rawLocation.y
+            y_corrected = height_corrected - rawLocation.x
+            
+        }
+        
+        let pointOfInterest:CGPoint = CGPoint.init(x: x_corrected/width_corrected, y: y_corrected/height_corrected)
+        
+        print("requestFocusWithPOI","touched at \(rawLocation)")
+        print("requestFocusWithPOI","requesting focus at point \(pointOfInterest)")
+        
+        cameraSession?.requestFocusWithCallback(pointOfInterest: pointOfInterest, requestTimeout: 2.0, completion: {locked in
+            print("requestFocusWithPOI","focus request has finished as locked:\(locked)")
+            self.cameraImagePreview?.showToast(message: "focus locked: \(locked)", font: .systemFont(ofSize: 14.0))
+        })
     }
     
     @objc func toggleSettingsView(){
@@ -342,7 +393,20 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
         //get info
         let sdk_version = Bundle(for: CameraSession.self).infoDictionary?["CFBundleShortVersionString"]
         
-        let infotext = "Current color space: \(cameraSession?.getCurrentColorSpaceString() ?? "")\nFlash mode: \(cameraConfig?.getFlashConfiguration() ?? "")\nTorch level: \(cameraConfig?.getTorchLevel() ?? 1.0)\n\n\n\nSDK version: \(sdk_version ?? "")"
+        var infotext = ""
+        let configDict:[String: AnyObject] = cameraConfig!.toDict()
+        
+        for key in configDict.keys {
+            let stringvalue = String(describing: configDict[key])// as? String ?? ""
+            infotext.append("\(key):\(stringvalue)\n")
+            print("configDict-\(key)",configDict[key] ?? "not set")
+        }
+        
+        infotext.append("\n\nSDK version: \(sdk_version ?? "")")
+        /*var infotext = "Current color space: \(cameraSession?.getCurrentColorSpaceString() ?? "")\n"
+        infotext.append("Flash mode: \(cameraConfig?.getFlashConfiguration() ?? "")\n")
+        infotext.append("Torch level: \(cameraConfig?.getTorchLevel() ?? 1.0)\n")
+        */
         //display info
         infoview.text = infotext
     }
@@ -459,11 +523,11 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
     
 }
 
-extension UIViewController {
-
+extension UIView {
+    
 func showToast(message : String, font: UIFont) {
 
-    let toastLabel = UILabel(frame: self.view.frame)
+    let toastLabel = UILabel(frame: self.frame)
     toastLabel.backgroundColor = UIColor.black.withAlphaComponent(0.6)
     toastLabel.textColor = UIColor.white
     toastLabel.font = font
@@ -472,7 +536,7 @@ func showToast(message : String, font: UIFont) {
     toastLabel.alpha = 1.0
     toastLabel.layer.cornerRadius = 10;
     toastLabel.clipsToBounds  =  true
-    self.view.addSubview(toastLabel)
+    self.addSubview(toastLabel)
     UIView.animate(withDuration: 4.0, delay: 0.1, options: .curveEaseOut, animations: {
          toastLabel.alpha = 0.0
     }, completion: {(isCompleted) in

@@ -20,16 +20,17 @@ import UIKit
     private var photoCaptureConnection:AVCaptureConnection?
     
     private let sessionQueue = DispatchQueue(label: "camera_session_queue")
-    let discoverySession = AVCaptureDevice.DiscoverySession(deviceTypes:
-        [.builtInTrueDepthCamera, .builtInDualCamera, .builtInWideAngleCamera],
-        mediaType: .video, position: .back)
     private var sessionPreset:AVCaptureSession.Preset = .photo
+    private var currentDeviceTypes:[AVCaptureDevice.DeviceType]?
+    private var currentCameraPosition:AVCaptureDevice.Position?
     
     private let cameraSessionDelegate:CameraEventListener
     private var photoOutput: AVCapturePhotoOutput?
     
     private let cameraConfiguration:CameraConfiguration
     private let notificationCenter:NotificationCenter = NotificationCenter.default
+    
+    private var lastOrientation:UIDeviceOrientation?
     
     private var cameraPermissionGranted = false
     
@@ -46,6 +47,14 @@ import UIKit
         case success
     }
     
+    //focus variables
+    private var currentFocuscallbackTime = 0.0
+    private var focusCallbackTimeout:Double = 2.0
+    private let focusCallbackMinimumTime = 0.4
+    private let focusCallbackInterval = 0.1
+    
+    private var focusTimeoutHandler:Timer?
+    
     //MARK: Initialization
     
     /// Initialisation of the CameraSession. Attempts to configure the session session with default CameraConfiguration and starts it if successfull
@@ -55,7 +64,6 @@ import UIKit
         self.cameraSessionDelegate = cameraEventListener
         super.init()
         self.cameraConfiguration.delegate = self
-        print("CameraSession","init with delegate")
         self.initCamera()
     }
     
@@ -69,13 +77,13 @@ import UIKit
         self.cameraSessionDelegate = cameraEventListener
         super.init()
         self.cameraConfiguration.delegate = self
-        print("CameraSession","init with delegate and configuration")
         self.initCamera()
     }
     
     func initCamera(){
-        print("CameraSession","initalizing camera...")
         checkPermission()
+        currentDeviceTypes = cameraConfiguration.getDeviceTypes()
+        currentCameraPosition = cameraConfiguration.getCameraPosition()
         sessionQueue.async { [unowned self] in
             let configuration = self.configureSession()
             if(configuration == .success){
@@ -84,13 +92,11 @@ import UIKit
                 captureSession?.startRunning()
                 configureRuntimeSettings(device: captureDevice!)
                 cameraSessionDelegate.onCameraInitialized()
-                print("CameraSession","Camera successfully configured")
-                
             }else if(configuration == .permissionsDenied){
                 self.cameraSessionDelegate.onCameraPermissionDenied()
             }
             else{
-                print("configuration error!","Error: \(configuration)")
+                captureSession?.commitConfiguration()
             }
         }
     }
@@ -108,28 +114,21 @@ import UIKit
             let supportedColorSpaces = device.activeFormat.supportedColorSpaces
             if(supportedColorSpaces.contains(preferredColorSpace)){
                 captureSession?.automaticallyConfiguresCaptureDeviceForWideColor = false
-                print("camConfig","Trying to set active colorspace to \(cameraConfiguration.getPreferredColorSpaceString())")
                 if(preferredColorSpace != device.activeColorSpace){
                     device.activeColorSpace = preferredColorSpace
-                }else{
-                    print("camConfig","color space already set")
                 }
             }else{
-                print("preferred color space is not supported!")
                 cameraConfiguration.setPreferredColorSpace(color_space: "")
             }
         }else {
-            print("camConfig","Preferred color space is not defined")
             captureSession?.automaticallyConfiguresCaptureDeviceForWideColor = true
         }
         
         let preferredSessionPreset:AVCaptureSession.Preset = cameraConfiguration.getSessionPreset()
         if(sessionPreset != preferredSessionPreset){
-            print("setting the preset to \(cameraConfiguration.getSessionPresetString())")
             sessionPreset = preferredSessionPreset
             captureSession?.sessionPreset = sessionPreset
         }else{
-            print("session preset is already set to \(cameraConfiguration.getSessionPresetString())")
         }
         
         device.unlockForConfiguration()
@@ -141,17 +140,20 @@ import UIKit
             addDeviceOrientationObserver()
         }
         do{
-            print("camConfig","Try to set torch mode to \(cameraConfiguration.getFlashConfiguration() ?? "undefined") and torch level to \(cameraConfiguration.getTorchLevel())")
             try device.lockForConfiguration()
-            device.torchMode = cameraConfiguration.getTorchMode()
-            if(device.torchMode == .on){
-                do {
-                    try device.setTorchModeOn(level: cameraConfiguration.getTorchLevel())
-                } catch {
-                    print(error)
+            if(device.isTorchModeSupported(cameraConfiguration.getTorchMode()) && device.isTorchAvailable){
+                device.torchMode = cameraConfiguration.getTorchMode()
+                if(device.torchMode == .on){
+                    do {
+                        try device.setTorchModeOn(level: cameraConfiguration.getTorchLevel())
+                    } catch {
+                        print(error)
+                    }
                 }
             }
             device.unlockForConfiguration()
+            
+            requestFocus(pointOfInterest: nil)
         }catch {
             print(error)
         }
@@ -164,7 +166,7 @@ import UIKit
         captureSession?.beginConfiguration()
         captureSession?.sessionPreset = self.sessionPreset
         
-        guard let captureDevice:AVCaptureDevice = selectDevice(in: .back) else {
+        guard let captureDevice:AVCaptureDevice = selectDevice(in: cameraConfiguration.getCameraPosition()) else {
             return .deviceDiscoveryFailure
         }
         self.captureDevice = captureDevice
@@ -209,7 +211,6 @@ import UIKit
         captureSession?.addOutput(photoOutput!)
         
         guard let photo_connection = photoOutput?.connection(with: .video) else {
-            print("photo connection not available")
             return .deviceOutputConnectionFailure
         }
         self.photoCaptureConnection = photo_connection
@@ -219,9 +220,16 @@ import UIKit
     }
     
     private func selectDevice(in position: AVCaptureDevice.Position) -> AVCaptureDevice? {
-        let devices = self.discoverySession.devices
+        var discoverySession = AVCaptureDevice.DiscoverySession(deviceTypes: cameraConfiguration.getDeviceTypes(), mediaType: .video, position: position)
+        var devices = discoverySession.devices
+        if(devices.isEmpty){
+            //try to get fallback devices
+            cameraConfiguration.setDeviceTypes(deviceTypes: [])
+            discoverySession = AVCaptureDevice.DiscoverySession(deviceTypes: cameraConfiguration.getDeviceTypes(), mediaType: .video, position: position)
+            devices = discoverySession.devices
+        }
+        
         guard !devices.isEmpty else { return nil}
-
         return devices.first(where: { device in device.position == position })!
     }
     
@@ -255,7 +263,7 @@ import UIKit
     @objc public func takePicture(){
         
         let photoSettings = AVCapturePhotoSettings()
-        photoSettings.isHighResolutionPhotoEnabled = true
+        photoSettings.isHighResolutionPhotoEnabled = cameraConfiguration.highResolutionCaptureEnabled
         photoSettings.flashMode = cameraConfiguration.getFlashMode()
         
         photoOutput?.capturePhoto(with: photoSettings, delegate: self)
@@ -281,6 +289,121 @@ import UIKit
         }
     }
     
+    //MARK: Focus request handling
+    
+    /** Focus request with a callback
+    - Parameters:
+      - pointOfInterest: Point of interest ranging from {0,0} to {1,1}. This coordinate system is always relative to a landscape device orientation with the home button on the right, regardless of the actual device orientation.
+      - requestTimeout: Focus request will time out after the defined duration (in seconds). Default is 2.0.
+      - completion: Closure for focus request.
+      - locked: Callback completion result. **True** if the device successfully found focus and **false** if focus has not been locked before timing out. Note that some device types might return false even when focus is found.
+     
+ # Code
+ ```
+ cameraSession?.requestFocusWithCallback(
+     pointOfInterest: pointOfInterest,
+     requestTimeout: 2.0,
+     completion: {locked in
+        print("locked",locked)
+ })
+ ```
+     
+ */
+    public func requestFocusWithCallback(pointOfInterest:CGPoint?, requestTimeout:Double?, completion: @escaping (_ locked:Bool) -> Void){
+        
+        if(requestTimeout != nil){
+            self.focusCallbackTimeout = requestTimeout!
+        }
+        
+        requestFocus(pointOfInterest: pointOfInterest)
+        
+        if(focusTimeoutHandler != nil){
+            if(focusTimeoutHandler!.isValid){
+                focusTimeoutHandler?.invalidate()
+            }
+        }
+        
+        currentFocuscallbackTime = 0.0
+        
+        focusTimeoutHandler = Timer.scheduledTimer(withTimeInterval: self.focusCallbackInterval, repeats: true) {timer in
+            
+            self.currentFocuscallbackTime += self.focusCallbackInterval
+            
+            if(self.currentFocuscallbackTime >= self.focusCallbackMinimumTime){
+            
+                if let focusMode:AVCaptureDevice.FocusMode = self.captureDevice?.focusMode {
+                    if(focusMode == .locked){
+                        timer.invalidate()
+                        self.currentFocuscallbackTime = 0.0
+                        completion(true)
+                        return
+                    }else if(focusMode == .continuousAutoFocus){
+                        if(self.captureDevice!.isAdjustingFocus){
+                            timer.invalidate()
+                            self.currentFocuscallbackTime = 0.0
+                            completion(true)
+                            return
+                        }
+                    }
+                }
+            }
+            
+            if(self.currentFocuscallbackTime>=self.focusCallbackTimeout){
+                timer.invalidate()
+                self.currentFocuscallbackTime = 0.0
+                completion(false)
+            }
+        }
+    }
+    
+    /// Lens focus request.
+    /// - Parameter pointOfInterest: Point of interest ranging from {0,0} to {1,1}. This coordinate system is always relative to a landscape device orientation with the home button on the right, regardless of the actual device orientation.
+    public func requestFocus(pointOfInterest:CGPoint?){
+        guard let device = captureDevice else {
+            return
+        }
+        
+        if(!device.isFocusModeSupported(.continuousAutoFocus) && !device.isFocusModeSupported(.autoFocus)){
+            return
+        }
+        
+        do{
+            try device.lockForConfiguration()
+        }catch {
+            print(error)
+            return
+        }
+        
+        device.isSmoothAutoFocusEnabled = device.isSmoothAutoFocusSupported
+        if(device.isAutoFocusRangeRestrictionSupported){
+            device.autoFocusRangeRestriction = .none
+        }
+        
+        if(device.isFocusPointOfInterestSupported && pointOfInterest != nil){
+            device.focusPointOfInterest = pointOfInterest!
+        }
+        
+        if(cameraConfiguration.continuousFocus){
+            if(device.isFocusModeSupported(.continuousAutoFocus)){
+                device.focusMode = .continuousAutoFocus
+            }else{
+                device.focusMode = .autoFocus
+                cameraConfiguration.continuousFocus = false
+            }
+        }else{
+            if(device.isFocusModeSupported(.autoFocus)){
+                device.focusMode = .autoFocus
+            }else{
+                device.focusMode = .continuousAutoFocus
+                
+                cameraConfiguration.continuousFocus = true
+            }
+        }
+        
+        
+        device.unlockForConfiguration()
+    }
+    
     //MARK: Device orientation
     
     /// Requests to update the camera orientation based on the current UIDevice orientation
@@ -293,7 +416,6 @@ import UIKit
         }
         
         let deviceOrientation = UIDevice.current.orientation
-        
         switch deviceOrientation {
         case .landscapeLeft:
             connection.videoOrientation = .landscapeRight
@@ -311,6 +433,17 @@ import UIKit
         guard let device = captureDevice else {
             return
         }
+        
+        
+        if(lastOrientation != deviceOrientation){
+            if(deviceOrientation == .faceUp || deviceOrientation == .faceDown){
+                return
+            }
+            lastOrientation = deviceOrientation
+        }else{
+            return
+        }
+        
         configureRuntimeSettings(device: device)
     }
     
@@ -361,24 +494,17 @@ import UIKit
         var willRequestPermission:Bool = false
         switch AVCaptureDevice.authorizationStatus(for: AVMediaType.video) {
             case .authorized:
-                print("AVPermission","Authorized!")
                 cameraPermissionGranted = true
                 break
             case .notDetermined:
-                print("AVPermission","Not determined, request permission...")
                 willRequestPermission = true
                 requestPermission()
                 break
             default:
-                print("AVPermission","Permission not granted!")
                 cameraPermissionGranted = false
                 break
         }
-        if(!willRequestPermission){
-            print("permissions won't be asked")
-        }else{
-            print("permissions will be asked")
-        }
+        
     }
     
     private func requestPermission() {
@@ -391,11 +517,47 @@ import UIKit
     
     //MARK: CameraConfigurationChangeListener
     func onConfigurationsChanged() {
+        //if there are any critical changes that require session reconfiguration, run initCamera instead
+        if(currentCameraPosition != cameraConfiguration.getCameraPosition() || deviceArrayHasChanged()){
+            stopCamera()
+            sessionQueue.resume()
+            initCamera()
+            var orientationString:String = "portrait"
+            if(lastOrientation == .landscapeLeft){
+                orientationString = "landscapeLeft"
+            }else if(lastOrientation == .landscapeRight){
+                orientationString = "landscapeRight"
+            }
+            setOrientation(orientation: orientationString)
+            return
+        }
+        
         guard let device:AVCaptureDevice = self.captureDevice else {
             return
         }
         self.configureDevice(device: device)
         self.configureRuntimeSettings(device: device)
+    }
+    
+    
+    private func deviceArrayHasChanged()->Bool{
+        guard let device_types:[AVCaptureDevice.DeviceType] = currentDeviceTypes else {
+            return false
+        }
+        
+        let configTypes = cameraConfiguration.getDeviceTypes()
+        
+        if(device_types.count != configTypes.count){
+            return true
+        }
+        
+        for i in 0 ... device_types.count-1 {
+            if(device_types[i] != configTypes[i]){
+                return true
+            }
+        }
+        
+        return false
     }
     
 }

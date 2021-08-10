@@ -10,6 +10,22 @@ import PharmaLedger_Camera
 import AVFoundation
 
 class ViewController: UIViewController,SettingsViewDelegate {
+    func onHighResolutionEnabled(high_resolution: Bool) {
+        cameraConfig.highResolutionCaptureEnabled = high_resolution
+    }
+    
+    func onDeviceTypeChanged(device_type: String) {
+        cameraConfig.setDeviceTypes(deviceTypes: [device_type])
+    }
+    
+    func onCameraPositionChanged(camera_position: String) {
+        cameraConfig.setCameraPosition(position: camera_position)
+    }
+    
+    func onContinuousFocusChanged(continuous_focus: Bool) {
+        cameraConfig.continuousFocus = continuous_focus
+    }
+    
     func onSessionPresetChanged(session_preset: String) {
         cameraConfig.setSessionPreset(preset: session_preset)
     }
@@ -54,6 +70,10 @@ class ViewController: UIViewController,SettingsViewDelegate {
         openCameraViewButton.addTarget(self, action: #selector(openCamera), for: .touchUpInside)
         openCameraViewButton.setTitleColor(UIColor.systemBlue, for: .normal)
         
+        initConfigParameters()
+        cameraConfig.setCameraPosition(position: "back")
+        settingsView.setDevicePosition(device_position: "back")
+        
         view.addSubview(settingsView)
         view.addSubview(openCameraViewButton)
         
@@ -63,9 +83,9 @@ class ViewController: UIViewController,SettingsViewDelegate {
             openCameraViewButton.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             openCameraViewButton.heightAnchor.constraint(equalToConstant: 100),
             openCameraViewButton.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor),
-            settingsView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            settingsView.leadingAnchor.constraint(equalTo: view.layoutMarginsGuide.leadingAnchor),
             settingsView.topAnchor.constraint(equalTo: view.layoutMarginsGuide.topAnchor),
-            settingsView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            settingsView.trailingAnchor.constraint(equalTo: view.layoutMarginsGuide.trailingAnchor),
             settingsView.bottomAnchor.constraint(equalTo: view.layoutMarginsGuide.bottomAnchor, constant: -100),
         ])
     }
@@ -75,10 +95,7 @@ class ViewController: UIViewController,SettingsViewDelegate {
         if(cameraViewController != nil){
             cameraViewController = nil
             cameraConfig = CameraConfiguration.init()
-            cameraConfig.setFlashConfiguration(flash_mode: settingsView.getCurrentFlashMode())
-            saveMode = settingsView.getCurrentSaveMode()
-            cameraConfig.setTorchLevel(level: settingsView.getCurrentTorchLevel())
-            cameraConfig.setPreferredColorSpace(color_space: settingsView.getCurrentColorSpace())
+            initConfigParameters()
             print("camera view controller removed")
         }
     }
@@ -93,12 +110,21 @@ class ViewController: UIViewController,SettingsViewDelegate {
         cameraViewController = CameraViewController.init(cameraConfig: cameraConfig)
         
         cameraViewController?.modalPresentationStyle = .fullScreen
-        cameraViewController?.saveMode = self.saveMode ?? "files"
+        cameraViewController?.setSaveMode(save_mode: self.saveMode ?? "files")
         //self.navigationController?.pushViewController(cameraViewController!, animated: true)
         
         print("camera should open now")
         show(cameraViewController!, sender: self)
     }
     
-    
+    private func initConfigParameters(){
+        cameraConfig.setTorchLevel(level: settingsView.getCurrentTorchLevel())
+        cameraConfig.setPreferredColorSpace(color_space: settingsView.getCurrentColorSpace())
+        cameraConfig.setCameraPosition(position: settingsView.getCurrentCameraPosition())
+        cameraConfig.setDeviceTypes(deviceTypes: [settingsView.getCurrentDeviceType()])
+        cameraConfig.setFlashConfiguration(flash_mode: settingsView.getCurrentFlashMode())
+        cameraConfig.setSessionPreset(preset: settingsView.getCurrentSessionPreset())
+        cameraConfig.continuousFocus = settingsView.currentContinuousFocus
+        saveMode = settingsView.getCurrentSaveMode()
+    }
 }

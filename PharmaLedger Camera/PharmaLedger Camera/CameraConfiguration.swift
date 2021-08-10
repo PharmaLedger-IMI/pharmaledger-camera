@@ -26,6 +26,16 @@ public class CameraConfiguration {
     private var sessionPreset:AVCaptureSession.Preset = .photo
     private var aspectRatio:CGFloat = 4.0/3.0
     
+    private let deviceTypeDefaults:[AVCaptureDevice.DeviceType] =  [.builtInWideAngleCamera]
+    private var deviceTypes:[AVCaptureDevice.DeviceType] = [.builtInTripleCamera,
+                                                            .builtInDualCamera,
+                                                            .builtInDualWideCamera,
+                                                            .builtInTrueDepthCamera,
+                                                            .builtInWideAngleCamera,
+                                                            .builtInTelephotoCamera
+    ]
+    private var cameraPosition:AVCaptureDevice.Position = .back
+    
     private var colorSpace:AVCaptureColorSpace?
     
     /// List of supported aspect ratios. 16/9 || 4/3 || 11/9
@@ -42,6 +52,17 @@ public class CameraConfiguration {
      */
     public var autoOrientationEnabled:Bool = true
     
+    /** Defines the preferred [AVCaptureDevice.FocusMode](https://developer.apple.com/documentation/avfoundation/avcapturedevice/focusmode).
+     If true, preferred focusmode will be set to **continuousAutoFocus**, otherwise the mode will switch between **autoFocus** and **locked**.
+     
+     Default: true
+     
+     */
+    public var continuousFocus:Bool = true
+    
+    ///If high resolution is enabled, the photo capture will be taken with the highest possible resolution available. Default: **true**
+    public var highResolutionCaptureEnabled = true
+    
     //MARK: Initialization
     
     /// Initializes the camera confifugration with default values. To further customize the configuration, call any
@@ -49,19 +70,27 @@ public class CameraConfiguration {
         self.setFlashConfiguration(flash_mode: "auto")
         self.torchlevel = 1.0
         self.autoOrientationEnabled = true
-        print("camConfig","initialized")
+        self.deviceTypes = deviceTypeDefaults
     }
     
     /// Initialize the camera session with customizable configurations. Parameters that don't need to be configured can be left as nil.
     /// - Parameter flash_mode: Available modes are "torch", "flash", "off" and "auto"
     /// - Parameter color_space: Possible values are "sRGB", "P3_D65" or "HLG_BT2020".
     /// - Parameter session_preset: Session preset in String format. See **setSessionPreset** for more information.
-    /// - Parameter auto_orienation_enabled: If set to true, camera session will attempt to automatically adjust the preview and capture orientation based on the device orientation
-    public init(flash_mode: String?, color_space:String?, session_preset:String?, auto_orienation_enabled:Bool) {
+    /// - Parameter device_types: Additional criteria for selecting the camera. Supported values are **tripleCamera**, **dualCamera**, **dualWideCamera**, **wideAngleCamera**, **ultraWideAngleCamera**, **telephotoCamera** and **trueDepthCamera**. Device discovery session will prioritize device types in the array based on their array index. Defaults to ["wideAngleCamera"] if undefined or empty.
+    /// - Parameter camera_position: "back" or "front". If not defined, this setting will default to "back"
+    /// - Parameter continuous_focus: Defines the preferred [AVCaptureDevice.FocusMode](https://developer.apple.com/documentation/avfoundation/avcapturedevice/focusmode). If true, preferred focusmode will be set to **continuousAutoFocus**, otherwise the mode will switch between **autoFocus** and **locked**.
+    /// - Parameter highResolutionCaptureEnabled: If high resolution is enabled, the photo capture will be taken with the highest possible resolution available.
+    /// - Parameter auto_orientation_enabled: If set to true, camera session will attempt to automatically adjust the preview and capture orientation based on the device orientation
+    public init(flash_mode: String?, color_space:String?, session_preset:String?, device_types:[String]?, camera_position:String?, continuous_focus:Bool, highResolutionCaptureEnabled:Bool, auto_orientation_enabled:Bool) {
         self.setFlashConfiguration(flash_mode: flash_mode ?? self.flash_configuration)
         self.setPreferredColorSpace(color_space: color_space ?? "")
-        self.autoOrientationEnabled = auto_orienation_enabled
+        self.autoOrientationEnabled = auto_orientation_enabled
         self.setSessionPreset(preset: session_preset)
+        self.continuousFocus = continuous_focus
+        self.setDeviceTypes(deviceTypes: device_types)
+        self.setCameraPosition(position: camera_position)
+        self.highResolutionCaptureEnabled = highResolutionCaptureEnabled
     }
     
     //MARK: Public functions
@@ -71,6 +100,19 @@ public class CameraConfiguration {
         self.delegate?.onConfigurationsChanged()
     }
     
+    /** Conversion to dictionary
+ - Returns: [String: AnyObject] dictionary. Available dictionary keys are:
+     - "preferredColorSpace" (String)
+     - "sessionPreset" (String)
+     - "flashConfiguration" (String)
+     - "torchLevel" (Float)
+     - "aspectRatio" (CGFloat)
+     - "autoOrientationEnabled" (Bool)
+     - "deviceTypes" (String array)
+     - "cameraPosition" (String)
+     - "continuousFocus" (Bool)
+     - "highResolutionCaptureEnabled" (Bool)
+ */
     public func toDict() -> [String: AnyObject] {
         var dict = [String: AnyObject]()
         dict["preferredColorSpace"] = self.getPreferredColorSpaceString() as AnyObject
@@ -79,6 +121,10 @@ public class CameraConfiguration {
         dict["torchLevel"] = self.getTorchLevel() as AnyObject
         dict["aspectRatio"] = self.getAspectRatio() as AnyObject
         dict["autoOrientationEnabled"] = self.autoOrientationEnabled as AnyObject
+        dict["deviceTypes"] = self.getDeviceTypeStrings() as AnyObject
+        dict["cameraPosition"] = self.getCameraPositionString() as AnyObject
+        dict["continuousFocus"] = self.continuousFocus as AnyObject
+        dict["highResolutionCaptureEnabled"] = self.highResolutionCaptureEnabled as AnyObject
         return dict
     }
     
@@ -131,7 +177,6 @@ public class CameraConfiguration {
             self.flashmode = .auto
             break
         }
-        print("camConfig","torch mode set to \(flash_mode)")
     }
     
     /// Sets the torch level
@@ -139,7 +184,6 @@ public class CameraConfiguration {
     public func setTorchLevel(level:Float){
         self.torchlevel = level
     }
-    
     
     //MARK: Color space
     
@@ -321,5 +365,117 @@ public class CameraConfiguration {
     /// - Returns: Camera aspect ratio, eg. 4.0/3.0 (longer side divided by shorter side)
     public func getAspectRatio() -> CGFloat{
         return aspectRatio
+    }
+    
+    //MARK: Camera selection
+    
+    /// Sets the device type criteria for [the device discovery session](https://developer.apple.com/documentation/avfoundation/avcapturedevice/discoverysession)
+    /// - Parameter deviceTypes: Supported values are **tripleCamera**, **dualCamera**, **dualWideCamera**, **wideAngleCamera**, **ultraWideAngleCamera**, **telephotoCamera** and **trueDepthCamera**. Device discovery session will prioritize device types in the array based on their array index.
+    ///
+    /// If an empty array is passed, the configuration will fallback to ["wideAngleCamera"]
+    public func setDeviceTypes(deviceTypes:[String]?){
+        var devicetypesArray:[AVCaptureDevice.DeviceType] = []
+        
+        if deviceTypes != nil {
+            
+            for deviceTypeString in deviceTypes! {
+                if let deviceType = stringToDeviceType(deviceType: deviceTypeString){
+                    devicetypesArray.append(deviceType)
+                }
+            }
+            if(devicetypesArray.isEmpty){
+                devicetypesArray = deviceTypeDefaults
+            }
+            
+        }else{
+            devicetypesArray = deviceTypeDefaults
+        }
+        self.deviceTypes = devicetypesArray
+    }
+    
+    /// Gets the current device type criteria used for [device discovery](https://developer.apple.com/documentation/avfoundation/avcapturedevice/discoverysession)
+    /// - Returns: Device type enum array. See [AVCaptureDevice.DeviceType](https://developer.apple.com/documentation/avfoundation/avcapturedevice/devicetype) for more info
+    public func getDeviceTypes() -> [AVCaptureDevice.DeviceType]{
+        return self.deviceTypes
+    }
+    
+    /// Gets the current device type criteria used for [device discovery](https://developer.apple.com/documentation/avfoundation/avcapturedevice/discoverysession)
+    /// - Returns: Device type array in String format
+    public func getDeviceTypeStrings() -> [String]{
+        var deviceTypeStringsArray:[String] = []
+        for deviceType in self.deviceTypes {
+            if let deviceTypeString = deviceTypeToString(deviceType: deviceType) {
+                deviceTypeStringsArray.append(deviceTypeString)
+            }
+        }
+        return deviceTypeStringsArray
+    }
+    
+    private func stringToDeviceType(deviceType:String) -> AVCaptureDevice.DeviceType?{
+        switch deviceType {
+        case "tripleCamera":
+            return .builtInTripleCamera
+        case "dualCamera":
+            return .builtInDualCamera
+        case "dualWideCamera":
+            return .builtInDualWideCamera
+        case "ultraWideAngleCamera":
+            return .builtInUltraWideCamera
+        case "trueDepthCamera":
+            return .builtInTrueDepthCamera
+        case "wideAngleCamera":
+            return .builtInWideAngleCamera
+        case "telephotoCamera":
+            return .builtInTelephotoCamera
+        default:
+            return nil
+        }
+    }
+    
+    private func deviceTypeToString(deviceType:AVCaptureDevice.DeviceType) -> String?{
+        switch deviceType {
+        case .builtInTripleCamera:
+            return "tripleCamera"
+        case .builtInDualCamera:
+            return "dualCamera"
+        case .builtInDualWideCamera:
+            return "dualWideCamera"
+        case .builtInTrueDepthCamera:
+            return "trueDepthCamera"
+        case .builtInWideAngleCamera:
+            return "wideAngleCamera"
+        case .builtInTelephotoCamera:
+            return "telephotoCamera"
+        case .builtInUltraWideCamera:
+            return "ultraWideAngleCamera"
+        default:
+            return nil
+        }
+    }
+    
+    /// Sets the camera position.
+    /// - Parameter position: Position in string format. Available values are "front" and "back"
+    public func setCameraPosition(position:String?){
+        if(position == "front"){
+            self.cameraPosition = .front
+        }else{
+            self.cameraPosition = .back
+        }
+    }
+    
+    /// Gets the current camera position.
+    /// - Returns: Returns the current camera position as [AVCaptureDevice.Position](https://developer.apple.com/documentation/avfoundation/avcapturedevice/position) enum.
+    public func getCameraPosition() ->AVCaptureDevice.Position {
+        return self.cameraPosition
+    }
+    
+    /// Gets the current camera position.
+    /// - Returns: Returns the current camera position as String ("back" or "front")
+    public func getCameraPositionString() -> String {
+        if(self.cameraPosition == .back){
+            return "back"
+        } else {
+            return "front"
+        }
     }
 }
