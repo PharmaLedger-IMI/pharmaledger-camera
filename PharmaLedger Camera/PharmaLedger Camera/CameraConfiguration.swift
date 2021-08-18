@@ -128,6 +128,31 @@ public class CameraConfiguration {
         return dict
     }
     
+    public class func createFromConfig(configDict: [String: AnyObject]) -> CameraConfiguration {
+        let colorspace = configDict["preferredColorSpace"] as? String
+        let session_preset = configDict["sessionPreset"] as? String
+        let flash_config = configDict["flashConfiguration"] as? String
+        var auto_orientation_enabled = false
+        if let auto_orientation = configDict["autoOrientationEnabled"] as? Bool {
+            auto_orientation_enabled = auto_orientation
+        }
+        let device_types = configDict["deviceTypes"] as? [String]
+        let camera_position = configDict["cameraPosition"] as? String
+        var continuous_focus_enabled = true
+        if let continuous_focus = configDict["continuousFocus"] as? Bool {
+            continuous_focus_enabled = continuous_focus
+        }
+        var high_resolution_capture_enabled = true
+        if let high_res_enabled = configDict["highResolutionCaptureEnabled"] as? Bool {
+            high_resolution_capture_enabled = high_res_enabled
+        }
+        let instance = CameraConfiguration.init(flash_mode: flash_config, color_space: colorspace, session_preset: session_preset, device_types: device_types, camera_position: camera_position, continuous_focus: continuous_focus_enabled, highResolutionCaptureEnabled: high_resolution_capture_enabled, auto_orientation_enabled: auto_orientation_enabled)
+        if let torch_level = configDict["torchLevel"] as? NSNumber {
+            instance.torchlevel = torch_level.floatValue
+        }
+        return instance
+    }
+    
     //MARK: Flash and torch mode
     
     /// Returns the current torch mode in AVCaptureDevice.TorchMode format

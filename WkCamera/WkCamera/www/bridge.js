@@ -13,6 +13,16 @@ const sessionPresetNames = [
     "photo"
 ];
 
+const deviceTypeNames = [
+    "wideAngleCamera",
+    "tripleCamera",
+    "dualCamera",
+    "dualWideCamera",
+    "ultraWideAngleCamera",
+    "telephotoCamera",
+    "trueDepthCamera"
+]
+
 /** Class representing a raw interleaved RGB image */
 class PLRgbImage {
     /**
@@ -43,6 +53,35 @@ class PLYCbCrImage {
         }
         this.yArrayBuffer = arrayBuffer.slice(0, this.width*this.height);
         this.cbCrArrayBuffer = arrayBuffer.slice(this.width*this.height)
+    }
+}
+
+/** Class wrapping a camera configuration */
+class PLCameraConfig {
+    
+    /** creates a camera configuration for use with function `startNativeCameraWithConfig`
+     * @param  {string} sessionPreset one of the session presets available in sessionPresetNames
+     * @param  {string} flashConfiguration="auto" can be `torch`, `flash`, or `off`, all other values will be treated as `auto`
+     * @param  {boolean} continuousFocus=true Defines the preferred [AVCaptureDevice.FocusMode](https://developer.apple.com/documentation/avfoundation/avcapturedevice/focusmode). If true, preferred focusmode will be set to **continuousAutoFocus**, otherwise the mode will switch between **autoFocus** and **locked**.
+     * @param  {boolean} autoOrientationEnabled=true If set to true, camera session will attempt to automatically adjust the preview and capture orientation based on the device orientation
+     * @param  {[String]} deviceTypes=["wideAngleCamera"] Additional criteria for selecting the camera. Supported values are **tripleCamera**, **dualCamera**, **dualWideCamera**, **wideAngleCamera**, **ultraWideAngleCamera**, **telephotoCamera** and **trueDepthCamera**. Device discovery session will prioritize device types in the array based on their array index.
+     * @param  {String} cameraPosition="back" "back" or "front". If not defined, this setting will default to "back"
+     * @param  {boolean} highResolutionCaptureEnabled=true If high resolution is enabled, the photo capture will be taken with the highest possible resolution available.
+     * @param  {string | undefined} preferredColorSpace=undefined Possible values are "sRGB", "P3_D65" or "HLG_BT2020".
+     * @param  {number} torchLevel=1.0 Float in the range of 0 to 1.0
+     * @param  {number} aspectRatio=4.0/3.0 This value will not be used
+     */
+    constructor(sessionPreset, flashConfiguration = "auto", continuousFocus = true, autoOrientationEnabled = true, deviceTypes = ["wideAngleCamera"], cameraPosition = "back", highResolutionCaptureEnabled = true, preferredColorSpace = undefined, torchLevel = 1.0, aspectRatio = 4.0/3.0) {
+        this.sessionPreset = sessionPreset;
+        this.flashConfiguration = flashConfiguration;
+        this.torchLevel = torchLevel;
+        this.continuousFocus = continuousFocus;
+        this.autoOrientationEnabled = autoOrientationEnabled;
+        this.deviceTypes = deviceTypes;
+        this.cameraPosition = cameraPosition;
+        this.highResolutionCaptureEnabled = highResolutionCaptureEnabled;
+        this.preferredColorSpace = preferredColorSpace;
+        this.aspectRatio = aspectRatio;
     }
 }
   
@@ -89,10 +128,10 @@ function callNative(api, args, callback) {
  * @param {number} targetGrabFps fps for the full resolution raw frame
  * @param {boolean} [auto_orientation_enabled=false] set to true to rotate image feed with respect to device orientation
  * @param {function} onCameraInitializedCallBack called after camera initilaization is finished
- * @param  {number} [x=undefined] RGB raw frame ROI top-left x-coord
- * @param  {number} [y=undefined] RGB raw frame ROI top-left y-coord
- * @param  {number} [w=undefined] RGB raw frame ROI width
- * @param  {number} [h=undefined] RGB raw frame ROI height
+ * @param  {number} [x=undefined] RGB/YCbCr raw frame ROI top-left x-coord
+ * @param  {number} [y=undefined] RGB/YCbCr raw frame ROI top-left y-coord
+ * @param  {number} [w=undefined] RGB/YCbCr raw frame ROI width
+ * @param  {number} [h=undefined] RGB/YCbCr raw frame ROI height
  * @param  {boolean} [ycbcr=false] set to true to receive data as YCbCr 420 in 'onFrameGrabbedCallBack'
  */
 function startNativeCamera(sessionPresetName, flashMode, onFramePreviewCallback = undefined, targetPreviewFps = 25, previewWidth = 640, onFrameGrabbedCallBack = undefined, targetGrabFps = 10, auto_orientation_enabled=false, onCameraInitializedCallBack = undefined, x=undefined, y=undefined, w=undefined, h=undefined, ycbcr=false) {
@@ -113,6 +152,38 @@ function startNativeCamera(sessionPresetName, flashMode, onFramePreviewCallback 
     }
     callNative("StartCamera", params);
 }
+
+/**
+ * @param  {PLCameraConfig} config
+ * @param  {function} onFramePreviewCallback callBack for each preview frame. Data are received as PLRgbImage. Can be undefined if you want to call 'getPreviewFrame' yourself
+ * @param  {number} targetPreviewFps=25 fps for the preview
+ * @param  {number} previewWidth=640 width for the preview data
+ * @param  {function} onFrameGrabbedCallBack=undefined callBack for each raw frame. Data are received as PLRgbImage or PLYCbCrImage. Can be undefined if you want to call 'getRawFrame' or 'getRawFrameYCbCr' yourself
+ * @param  {number} targetGrabFps=10 fps for the full resolution raw frame
+ * @param  {function} onCameraInitializedCallBack=undefined called after camera initilaization is finished
+ * @param  {number} x=undefined RGB/YCbCr raw frame ROI top-left x-coord
+ * @param  {number} y=undefined RGB/YCbCr raw frame ROI top-left y-coord
+ * @param  {number} w=undefined RGB/YCbCr raw frame ROI width
+ * @param  {number} h=undefined RGB/YCbCr raw frame ROI height
+ * @param  {boolean} ycbcr=false set to true to receive data as YCbCr 420 in 'onFrameGrabbedCallBack'
+ */
+function startNativeCameraWithConfig(config, onFramePreviewCallback = undefined, targetPreviewFps = 25, previewWidth = 640, onFrameGrabbedCallBack = undefined, targetGrabFps = 10, onCameraInitializedCallBack = undefined, x=undefined, y=undefined, w=undefined, h=undefined, ycbcr=false) {
+    _targetPreviewFps = targetPreviewFps
+    _previewWidth = previewWidth
+    _onFramePreviewCallback = onFramePreviewCallback;
+    _onFrameGrabbedCallBack = onFrameGrabbedCallBack;
+    _onCameraInitializedCallBack = onCameraInitializedCallBack;
+    _ycbcr = ycbcr;
+    _targetGrabFps = targetGrabFps
+    setRawCropRoi(x, y, w, h);
+    let params = {
+        "onInitializedJsCallback": onNativeCameraInitialized.name,
+        "previewWidth": _previewWidth,
+        "config": config
+    }
+    callNative("StartCameraWithConfig", params);
+}
+
 /**
  * Sets the raw crop to a new position
  * @param  {number} x

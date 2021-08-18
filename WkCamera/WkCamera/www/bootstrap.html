@@ -25,10 +25,22 @@
             </select>
         </div>
         <div class="col">
+            <button type="button" class="btn btn-danger btn-sm" id='stopCameraButton'>Stop</button><br/>
+        </div>
+    </div>
+    <div class="row top-buffer">
+        <label for="select_cameras">Desired Cameras</label>
+        <select class="form-control form-control-sm" id="select_cameras" multiple onchange="ChangeDesiredCamerasList()"></select>
+    </div>
+    <div class="row top-buffer">
+        <div class="col">
             <button type="button" class="btn btn-primary btn-sm" id="flashButton" >F off</button>
         </div>
         <div class="col">
-            <button type="button" class="btn btn-danger btn-sm" id='stopCameraButton'>Stop</button><br/>
+            <button type="button" class="btn btn-primary btn-sm" id="continuousAFButton" >AF ON</button>
+        </div>
+        <div class="col">
+            <button type="button" class="btn btn-primary btn-sm" id="selectCameraButton" >Back Cam</button>
         </div>
     </div>
     <div class="row top-buffer">

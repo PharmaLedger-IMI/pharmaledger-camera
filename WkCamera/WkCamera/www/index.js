@@ -30,7 +30,10 @@ var flashMode = 'off'
 var usingMJPEG = false
 var status_test, status_fps_preview, status_fps_raw, title_h2, configInfo;
 var startCameraButtonGL, startCameraButtonMJPEG, stopCameraButton;
-var takePictureButton1, takePictureButton2, flashButton, getConfigButton, colorspaceButton;
+var takePictureButton1, takePictureButton2, flashButton, getConfigButton, colorspaceButton, continuousAFButton, selectCameraButton;
+var afOn = true;
+var selectedCamera = "back";
+var selectedColorspace = undefined;
 var torchRange;
 var snapshotImage;
 var streamPreview, rawCropCanvas, rawCropCbCanvas, rawCropCrCanvas;
@@ -38,6 +41,8 @@ var invertRawFrameCheck, cropRawFrameCheck, ycbcrCheck;
 var rawCropRoiInput;
 var select_preset;
 var selectedPresetName;
+var select_cameras;
+var selectedDevicesNames;
 
 document.addEventListener("DOMContentLoaded", () => {
     status_test = document.getElementById('status_test');
@@ -68,8 +73,6 @@ document.addEventListener("DOMContentLoaded", () => {
     torchRange.value = "1.0";
     // @ts-ignore
     document.getElementById("torchLevelRangeLabel").innerHTML = `Torch Level: ${torchRange.value}`;
-    // @ts-ignore
-    torchRange.disabled = true;
     snapshotImage = document.getElementById('snapshotImage');
     getConfigButton = document.getElementById("getConfigButton");
     getConfigButton.addEventListener("click", (e) => {
@@ -81,22 +84,40 @@ document.addEventListener("DOMContentLoaded", () => {
     configInfo = document.getElementById("configInfo");
     colorspaceButton = document.getElementById("colorspaceButton");
     colorspaceButton.addEventListener('click', function(e) {
-        let nextColorspace = '';
         switch (colorspaceButton.innerHTML) {
             case 'sRGB':
-                nextColorspace = 'HLG_BT2020';
+                selectedColorspace = 'HLG_BT2020';
                 break;
             case 'HLG_BT2020':
-                nextColorspace = 'P3_D65';
+                selectedColorspace = 'P3_D65';
                 break;
             default:
-                nextColorspace = 'sRGB';
+                selectedColorspace = 'sRGB';
                 break;
         }
-        colorspaceButton.innerHTML = nextColorspace;
-        setPreferredColorSpaceNativeCamera(nextColorspace);
+        colorspaceButton.innerHTML = selectedColorspace;
+        setPreferredColorSpaceNativeCamera(selectedColorspace);
     });
-
+    continuousAFButton = document.getElementById("continuousAFButton");
+    continuousAFButton.addEventListener('click', function(e) {
+        if (afOn === true) {
+            afOn = false;
+            continuousAFButton.innerHTML = "AF OFF";
+        } else {
+            afOn = true;
+            continuousAFButton.innerHTML = "AF ON";
+        }
+    });
+    selectCameraButton = document.getElementById("selectCameraButton");
+    selectCameraButton.addEventListener('click', function(e) {
+        if (selectedCamera === "back") {
+            selectedCamera = "front";
+            selectCameraButton.innerHTML = "Front Cam";
+        } else {
+            selectedCamera = "back";
+            selectCameraButton.innerHTML = "Back Cam";
+        }
+    });
 
     canvasgl = document.getElementById('cameraCanvas');
     streamPreview = document.getElementById('streamPreview');
@@ -145,14 +166,27 @@ document.addEventListener("DOMContentLoaded", () => {
     selectedPresetName = select_preset.options[select_preset.selectedIndex].value;
     status_test.innerHTML = selectedPresetName;
 
+    select_cameras = document.getElementById('select_cameras');
+    // hardcoded cameras list
+    for (let deviceTypeName of deviceTypeNames) {
+        // @ts-ignore
+        select_cameras.options.add(new Option(deviceTypeName, deviceTypeName));
+    }
+    // @ts-ignore
+    select_cameras.selectedIndex = 0;
+    selectedDevicesNames = [ deviceTypeNames[0] ]
+
+
     startCameraButtonGL.addEventListener('click', function(e) {
         usingMJPEG = false
         select_preset.disabled = true;
         startCameraButtonGL.disabled = true
         startCameraButtonMJPEG.disabled = true
         stopCameraButton.disabled = false
-        torchRange.disabled = false
         ycbcrCheck.disabled = true
+        continuousAFButton.disabled = true
+        selectCameraButton.disabled = true
+        select_cameras.disabled = true
         setCropCoords();
         show(canvasgl);
         canvasgl.parentElement.style.display = "block";
@@ -161,15 +195,14 @@ document.addEventListener("DOMContentLoaded", () => {
         show(status_fps_preview);
         show(status_fps_raw);
         setupGLView(previewWidth, previewHeight);
-        startNativeCamera(
-            selectedPresetName, 
-            flashMode, 
+        const config = new PLCameraConfig(selectedPresetName, flashMode, afOn, true, selectedDevicesNames, selectedCamera, true, selectedColorspace, parseFloat(torchRange.value));   
+        startNativeCameraWithConfig( 
+            config, 
             onFramePreview, 
             targetPreviewFPS, 
             previewWidth, 
             onFrameGrabbed, 
             targetRawFPS, 
-            true,
             () => {
                 title_h2.innerHTML = _serverUrl;
             },
@@ -185,8 +218,10 @@ document.addEventListener("DOMContentLoaded", () => {
         startCameraButtonGL.disabled = true
         startCameraButtonMJPEG.disabled = true
         stopCameraButton.disabled = false
-        torchRange.disabled = false
         ycbcrCheck.disabled = true
+        continuousAFButton.disabled = true
+        selectCameraButton.disabled = true
+        select_cameras.disabled = true
         setCropCoords();
         hide(canvasgl);
         canvasgl.parentElement.style.display = "none";
@@ -194,15 +229,14 @@ document.addEventListener("DOMContentLoaded", () => {
         streamPreview.parentElement.style.display = "block";
         hide(status_fps_preview);
         show(status_fps_raw);
-        startNativeCamera(
-            selectedPresetName, 
-            flashMode, 
+        const config = new PLCameraConfig(selectedPresetName, flashMode, afOn, true, selectedDevicesNames, selectedCamera, true, selectedColorspace, parseFloat(torchRange.value));   
+        startNativeCameraWithConfig( 
+            config, 
             undefined, 
             targetPreviewFPS, 
             previewWidth, 
             onFrameGrabbed, 
-            targetRawFPS,
-            true, 
+            targetRawFPS, 
             () => {
                 streamPreview.src = `${_serverUrl}/mjpeg`;
                 title_h2.innerHTML = _serverUrl;
@@ -220,8 +254,10 @@ document.addEventListener("DOMContentLoaded", () => {
         startCameraButtonGL.disabled = false
         startCameraButtonMJPEG.disabled = false
         stopCameraButton.disabled = true
-        torchRange.disabled = true
         ycbcrCheck.disabled = false
+        continuousAFButton.disabled = false
+        selectCameraButton.disabled = false
+        select_cameras.disabled = false
         title_h2.innerHTML = "Camera Test"
     });
 
@@ -257,6 +293,15 @@ document.addEventListener("DOMContentLoaded", () => {
     hide(status_fps_preview)
     hide(status_fps_raw)
 });
+
+function ChangeDesiredCamerasList() {
+    selectedDevicesNames = [];
+    for (let i = 0; i < select_cameras.options.length; i++) {
+       if (select_cameras.options[i].selected) {
+           selectedDevicesNames.push(select_cameras.options[i].value);
+       }
+   }
+}
 
 function setupGLView(w, h) {
     // @ts-ignore

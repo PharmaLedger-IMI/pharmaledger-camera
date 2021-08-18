@@ -14,6 +14,7 @@ import GCDWebServers
 
 public enum MessageNames: String, CaseIterable {
     case StartCamera = "StartCamera"
+    case StartCameraWithConfig = "StartCameraWithConfig"
     case StopCamera = "StopCamera"
     case TakePicture = "TakePicture"
     case SetFlashMode = "SetFlashMode"
@@ -189,6 +190,14 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
                               sessionPreset: args?["sessionPreset"] as! String,
                               flash_mode: args?["flashMode"] as? String,
                               auto_orientation_enabled: args?["auto_orientation_enabled"] as? Bool)
+            jsonString = ""
+        case .StartCameraWithConfig:
+            if let pWidth = args?["previewWidth"] as? Int {
+                self.previewWidth = pWidth
+            }
+            if let configDict = args?["config"] as? [String: AnyObject] {
+                handleCameraStart(onCameraInitializedJsCallback: args?["onInitializedJsCallback"] as? String, configDict: configDict)
+            }
             jsonString = ""
         case .StopCamera:
             handleCameraStop()
@@ -544,9 +553,15 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
     // MARK: js message handlers implementations
     private func handleCameraStart(onCameraInitializedJsCallback: String?, sessionPreset: String, flash_mode: String?, auto_orientation_enabled: Bool?) {
         self.onCameraInitializedJsCallback = onCameraInitializedJsCallback
-        self.cameraConfiguration = .init(flash_mode: flash_mode, color_space: nil, session_preset: sessionPreset, device_types: ["wideAngleCamera"], camera_position: "back", continuous_focus: true, highResolutionCaptureEnabled: true, auto_orientation_enabled: true)
+        self.cameraConfiguration = .init(flash_mode: flash_mode, color_space: nil, session_preset: sessionPreset, device_types: ["wideAngleCamera"], camera_position: "back", continuous_focus: true, highResolutionCaptureEnabled: true, auto_orientation_enabled: auto_orientation_enabled ?? false)
         self.cameraSession = .init(cameraEventListener: self, cameraConfiguration: self.cameraConfiguration!)
         return
+    }
+    
+    private func handleCameraStart(onCameraInitializedJsCallback: String?, configDict: [String: AnyObject]) {
+        self.onCameraInitializedJsCallback = onCameraInitializedJsCallback
+        self.cameraConfiguration = CameraConfiguration.createFromConfig(configDict: configDict)
+        self.cameraSession = .init(cameraEventListener: self, cameraConfiguration: self.cameraConfiguration!)
     }
     
     private func handleCameraStop() {
