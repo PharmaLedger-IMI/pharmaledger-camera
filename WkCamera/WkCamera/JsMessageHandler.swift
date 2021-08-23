@@ -548,6 +548,12 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
 //            response = response.applyCORSHeaders()
             return response
         })
+        
+        webserver.addHandler(forMethod: "GET", path: "/deviceinfo", request: GCDWebServerRequest.classForCoder(), processBlock: {rerquest in
+            let deviceInfoDict = UIDevice.getDeviceInfo()
+            let response = GCDWebServerDataResponse(jsonObject: deviceInfoDict)
+            return response
+        })
     }
     
     // MARK: js message handlers implementations

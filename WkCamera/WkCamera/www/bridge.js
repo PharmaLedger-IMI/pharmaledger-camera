@@ -396,6 +396,18 @@ function getCameraConfiguration() {
 }
 
 /**
+ * Get device information, corresponds to endpoint /deviceinfo
+ * @returns {Promise<any>} the device information {"modelName": string, "systemVersion": string}
+ */
+function getDeviceInfo() {
+    let fetchString = `${_serverUrl}/deviceinfo`;
+    return fetch(fetchString)
+    .then(response => {
+        return response.json()
+    })
+}
+
+/**
  * Packs a response from endpoints providing raw rgb buffer as octet-stream and image size in headers
  * 
  * @param  {Response} response

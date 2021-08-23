@@ -77,8 +77,11 @@ document.addEventListener("DOMContentLoaded", () => {
     getConfigButton = document.getElementById("getConfigButton");
     getConfigButton.addEventListener("click", (e) => {
         getCameraConfiguration()
-        .then(data => {
-            configInfo.innerHTML = JSON.stringify(data);
+        .then(cameraConfig => {
+            getDeviceInfo()
+            .then(deviceInfo => {
+                configInfo.innerHTML = `cameraConfig: ${JSON.stringify(cameraConfig)}<br/>deviceInfo: ${JSON.stringify(deviceInfo)}`;
+            })
         })
     });
     configInfo = document.getElementById("configInfo");
