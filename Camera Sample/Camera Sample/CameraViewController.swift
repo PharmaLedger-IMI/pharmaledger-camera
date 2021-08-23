@@ -93,6 +93,8 @@ class CameraViewController: UIViewController, CameraEventListener, SettingsViewD
 
     func onCameraInitialized() {
         print("camConfig","Current colorspace: \(cameraSession?.getCurrentColorSpaceString() ?? "nil")")
+        let deviceInfo = UIDevice.getDeviceInfo()
+        print("deviceInfo","\(deviceInfo)")
     }
     
     func onCameraPermissionDenied() {

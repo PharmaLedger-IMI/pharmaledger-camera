@@ -114,5 +114,43 @@ extension CMSampleBuffer {
     }
 }
 
+//MARK: UIDevice extension
 
+public extension UIDevice {
+
+    /** Gets device information as a dictionary.
+ - Returns: [String: AnyObject] dictionary. Available dictionary keys are:
+     - "modelName" (String)
+     - "systemVersion" (String)
+     
+     # Code:
+     ```
+     let deviceInfo = UIDevice.getDeviceInfo()
+     print("deviceInfo","\(deviceInfo)")
+     ```
+     */
+    static func getDeviceInfo() -> [String: AnyObject] {
+        
+        var dict = [String: AnyObject]()
+        dict["modelIdentifier"] = modelIdentifier as AnyObject
+        dict["systemVersion"] = current.systemVersion as AnyObject
+        return dict
+    }
+    
+    /// Model identifier
+    /// # Example
+    /// This parameter will be either "iPhone10,1" or "iPhone10,4" for iPhone 8
+    static let modelIdentifier:String = {
+        var systemInfo = utsname()
+        uname(&systemInfo)
+        let machineMirror = Mirror(reflecting: systemInfo.machine)
+        let identifier = machineMirror.children.reduce("") { identifier, element in
+            guard let value = element.value as? Int8, value != 0 else { return identifier }
+            return identifier + String(UnicodeScalar(UInt8(value)))
+        }
+        
+        return identifier
+    }()
+
+}
 

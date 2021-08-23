@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>Data Extension Reference</title>
+    <title>UIDevice Extension Reference</title>
     <link rel="stylesheet" type="text/css" href="../css/jazzy.css" />
     <link rel="stylesheet" type="text/css" href="../css/highlight.css" />
     <meta charset='utf-8'>
@@ -13,8 +13,8 @@
     <script src="../js/jazzy.search.js" defer></script>
   </head>
   <body>
-    <a name="//apple_ref/swift/Extension/Data" class="dashAnchor"></a>
-    <a title="Data Extension Reference"></a>
+    <a name="//apple_ref/swift/Extension/UIDevice" class="dashAnchor"></a>
+    <a title="UIDevice Extension Reference"></a>
     <header>
       <div class="content-wrapper">
         <p><a href="../index.html">PharmaLedger_Camera 1.1.0 Docs</a></p>
@@ -29,7 +29,7 @@
       <p id="breadcrumbs">
         <a href="../index.html">PharmaLedger_Camera Reference</a>
         <img id="carat" src="../img/carat.png" />
-        Data Extension Reference
+        UIDevice Extension Reference
       </p>
     </div>
     <div class="content-wrapper">
@@ -81,11 +81,11 @@
       <article class="main-content">
         <section>
           <section class="section">
-            <h1>Data</h1>
+            <h1>UIDevice</h1>
               <div class="declaration">
                 <div class="language">
                   
-                  <pre class="highlight swift"><code><span class="kd">extension</span> <span class="kt">Data</span></code></pre>
+                  <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">extension</span> <span class="kt">UIDevice</span></code></pre>
 
                 </div>
               </div>
@@ -97,9 +97,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:10Foundation4DataV19PharmaLedger_CameraE18savePhotoToLibraryyyF"></a>
-                    <a name="//apple_ref/swift/Method/savePhotoToLibrary()" class="dashAnchor"></a>
-                    <a class="token" href="#/s:10Foundation4DataV19PharmaLedger_CameraE18savePhotoToLibraryyyF">savePhotoToLibrary()</a>
+                    <a name="/s:So8UIDeviceC19PharmaLedger_CameraE13getDeviceInfoSDySSyXlGyFZ"></a>
+                    <a name="//apple_ref/swift/Method/getDeviceInfo()" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So8UIDeviceC19PharmaLedger_CameraE13getDeviceInfoSDySSyXlGyFZ">getDeviceInfo()</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -107,16 +107,29 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Saves the image to photos library. Requires NSPhotoLibraryUsageDescription declaration in Info.plist file.</p>
+                        <p>Gets device information as a dictionary.</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">savePhotoToLibrary</span><span class="p">()</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="kd">func</span> <span class="nf">getDeviceInfo</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="kt">String</span> <span class="p">:</span> <span class="kt">AnyObject</span><span class="p">]</span></code></pre>
 
                         </div>
+                      </div>
+                      <div>
+                        <h4>Return Value</h4>
+                        <p>[String: AnyObject] dictionary. Available dictionary keys are:</p>
+
+<ul>
+<li>&ldquo;modelName&rdquo; (String)</li>
+<li>&ldquo;systemVersion&rdquo; (String)</li>
+</ul>
+<h1 id='code' class='heading'>Code:</h1>
+<pre class="highlight swift"><code><span class="k">let</span> <span class="nv">deviceInfo</span> <span class="o">=</span> <span class="kt">UIDevice</span><span class="o">.</span><span class="nf">getDeviceInfo</span><span class="p">()</span>
+<span class="nf">print</span><span class="p">(</span><span class="s">"deviceInfo"</span><span class="p">,</span><span class="s">"</span><span class="se">\(</span><span class="n">deviceInfo</span><span class="se">)</span><span class="s">"</span><span class="p">)</span>
+</code></pre>
                       </div>
                     </section>
                   </div>
@@ -124,9 +137,9 @@
                 <li class="item">
                   <div>
                     <code>
-                    <a name="/s:10Foundation4DataV19PharmaLedger_CameraE16savePhotoToFiles8fileNameSSSgSS_tF"></a>
-                    <a name="//apple_ref/swift/Method/savePhotoToFiles(fileName:)" class="dashAnchor"></a>
-                    <a class="token" href="#/s:10Foundation4DataV19PharmaLedger_CameraE16savePhotoToFiles8fileNameSSSgSS_tF">savePhotoToFiles(fileName:<wbr>)</a>
+                    <a name="/s:So8UIDeviceC19PharmaLedger_CameraE15modelIdentifierSSvpZ"></a>
+                    <a name="//apple_ref/swift/Variable/modelIdentifier" class="dashAnchor"></a>
+                    <a class="token" href="#/s:So8UIDeviceC19PharmaLedger_CameraE15modelIdentifierSSvpZ">modelIdentifier</a>
                     </code>
                   </div>
                   <div class="height-container">
@@ -134,70 +147,19 @@
                     <section class="section">
                       <div class="pointer"></div>
                       <div class="abstract">
-                        <p>Saves the image data to the app file directory. Returns the final absolute path to the file as String</p>
+                        <p>Model identifier</p>
+<h1 id='example' class='heading'>Example</h1>
+
+<p>This parameter will be either &ldquo;iPhone10,1&rdquo; or &ldquo;iPhone10,4&rdquo; for iPhone 8</p>
 
                       </div>
                       <div class="declaration">
                         <h4>Declaration</h4>
                         <div class="language">
                           <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">savePhotoToFiles</span><span class="p">(</span><span class="nv">fileName</span><span class="p">:</span> <span class="kt">String</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kt">String</span><span class="p">?</span></code></pre>
+                          <pre class="highlight swift"><code><span class="kd">static</span> <span class="k">let</span> <span class="nv">modelIdentifier</span><span class="p">:</span> <span class="kt">String</span></code></pre>
 
                         </div>
-                      </div>
-                      <div>
-                        <h4>Parameters</h4>
-                        <table class="graybox">
-                          <tbody>
-                            <tr>
-                              <td>
-                                <code>
-                                <em>fileName</em>
-                                </code>
-                              </td>
-                              <td>
-                                <div>
-                                  <p>Name for the saved image (.jpg will be appended to the end)</p>
-                                </div>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                      <div>
-                        <h4>Return Value</h4>
-                        <p>Absolute String path of the saved file.</p>
-                      </div>
-                    </section>
-                  </div>
-                </li>
-                <li class="item">
-                  <div>
-                    <code>
-                    <a name="/s:10Foundation4DataV19PharmaLedger_CameraE05imageB7ToBytesSays5UInt8VGyF"></a>
-                    <a name="//apple_ref/swift/Method/imageDataToBytes()" class="dashAnchor"></a>
-                    <a class="token" href="#/s:10Foundation4DataV19PharmaLedger_CameraE05imageB7ToBytesSays5UInt8VGyF">imageDataToBytes()</a>
-                    </code>
-                  </div>
-                  <div class="height-container">
-                    <div class="pointer-container"></div>
-                    <section class="section">
-                      <div class="pointer"></div>
-                      <div class="abstract">
-                        <p>Converts a Data object to UInt8 byte array</p>
-
-                      </div>
-                      <div class="declaration">
-                        <h4>Declaration</h4>
-                        <div class="language">
-                          <p class="aside-title">Swift</p>
-                          <pre class="highlight swift"><code><span class="kd">public</span> <span class="kd">func</span> <span class="nf">imageDataToBytes</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="p">[</span><span class="kt">UInt8</span><span class="p">]</span></code></pre>
-
-                        </div>
-                      </div>
-                      <div>
-                        <h4>Return Value</h4>
-                        <p>Byte array in UInt8 form</p>
                       </div>
                     </section>
                   </div>
