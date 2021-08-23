@@ -129,6 +129,7 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
     private var onGrabFrameJsCallBack: String?
     private let ciContext = CIContext(options: nil)
     private var previewWidth = 640;
+    private var previewHeight = -1;
     private var onCameraInitializedJsCallback: String?
     private var onCaptureJsCallback: String?
     let webserver = GCDWebServer()
@@ -338,6 +339,14 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
         let resizeFilter = CIFilter(name: "CILanczosScaleTransform")!
         resizeFilter.setValue(ciImage, forKey: kCIInputImageKey)
         let previewHeight = Int(CGFloat(ciImage.extent.height) / CGFloat(ciImage.extent.width) * CGFloat(self.previewWidth))
+        if self.previewHeight != previewHeight {
+            self.previewHeight = previewHeight
+            if dataBufferRGBsmall != nil {
+                free(dataBufferRGBsmall)
+                dataBufferRGBsmall = nil
+            }
+            dataBufferRGBsmall = malloc(3*self.previewHeight*self.previewWidth)
+        }
         let scale = CGFloat(previewHeight) / ciImage.extent.height
         let ratio = CGFloat(self.previewWidth) / CGFloat(ciImage.extent.width) / scale
         resizeFilter.setValue(scale, forKey: kCIInputScaleKey)
@@ -352,11 +361,7 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
         let Bpr = cgImage.bytesPerRow
         let cgContext = CGContext(data: nil, width: cgImage.width, height: cgImage.height, bitsPerComponent: bpc, bytesPerRow: Bpr, space: colorspace, bitmapInfo: cgImage.bitmapInfo.rawValue)
 
-
         cgContext?.draw(cgImage, in: CGRect(x: 0, y: 0, width: cgImage.width, height: cgImage.height))
-        if dataBufferRGBsmall == nil {
-            dataBufferRGBsmall = malloc(3*cgImage.height*cgImage.width)
-        }
         var inBufferSmall = vImage_Buffer(
             data: cgContext!.data!,
             height: vImagePixelCount(cgImage.height),
@@ -600,6 +605,7 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
             free(dataBufferRGBsmall)
             dataBufferRGBsmall = nil
         }
+        self.previewHeight = -1
         dataBuffer_w = -1
         dataBuffer_h = -1
         self.currentCIImage = nil
