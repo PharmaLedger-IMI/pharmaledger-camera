@@ -214,8 +214,11 @@ import UIKit
             return .deviceOutputConnectionFailure
         }
         self.photoCaptureConnection = photo_connection
-        self.updateOrientation()
-        
+        if(cameraConfiguration.initOrientation != nil){
+            self.setOrientation(orientation: cameraConfiguration.initOrientation!)
+        }else{
+            self.updateOrientation()
+        }
         return .success
     }
     

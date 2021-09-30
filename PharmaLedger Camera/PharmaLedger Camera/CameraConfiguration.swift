@@ -38,6 +38,9 @@ public class CameraConfiguration {
     
     private var colorSpace:AVCaptureColorSpace?
     
+    /// Predefines the orientation when initializing the camera (available values are "landscapeRight", "landscapeLeft" and "portrait").
+    public var initOrientation:String?
+    
     /// List of supported aspect ratios. 16/9 || 4/3 || 11/9
     public let supportedAspectRatios:[CGFloat] = [16.0/9.0, 4.0/3.0, 11.0/9.0]
     
@@ -82,7 +85,8 @@ public class CameraConfiguration {
     /// - Parameter continuous_focus: Defines the preferred [AVCaptureDevice.FocusMode](https://developer.apple.com/documentation/avfoundation/avcapturedevice/focusmode). If true, preferred focusmode will be set to **continuousAutoFocus**, otherwise the mode will switch between **autoFocus** and **locked**.
     /// - Parameter highResolutionCaptureEnabled: If high resolution is enabled, the photo capture will be taken with the highest possible resolution available.
     /// - Parameter auto_orientation_enabled: If set to true, camera session will attempt to automatically adjust the preview and capture orientation based on the device orientation
-    public init(flash_mode: String?, color_space:String?, session_preset:String?, device_types:[String]?, camera_position:String?, continuous_focus:Bool, highResolutionCaptureEnabled:Bool, auto_orientation_enabled:Bool) {
+    /// - Parameter init_orientation: Predefines the orientation when initializing the camera (available values are "landscapeRight", "landscapeLeft" and "portrait").
+    public init(flash_mode: String?, color_space:String?, session_preset:String?, device_types:[String]?, camera_position:String?, continuous_focus:Bool, highResolutionCaptureEnabled:Bool, auto_orientation_enabled:Bool, init_orientation:String? = nil) {
         self.setFlashConfiguration(flash_mode: flash_mode ?? self.flash_configuration)
         self.setPreferredColorSpace(color_space: color_space ?? "")
         self.autoOrientationEnabled = auto_orientation_enabled
@@ -91,6 +95,7 @@ public class CameraConfiguration {
         self.setDeviceTypes(deviceTypes: device_types)
         self.setCameraPosition(position: camera_position)
         self.highResolutionCaptureEnabled = highResolutionCaptureEnabled
+        self.initOrientation = init_orientation
     }
     
     //MARK: Public functions
@@ -136,6 +141,7 @@ public class CameraConfiguration {
         if let auto_orientation = configDict["autoOrientationEnabled"] as? Bool {
             auto_orientation_enabled = auto_orientation
         }
+        
         let device_types = configDict["deviceTypes"] as? [String]
         let camera_position = configDict["cameraPosition"] as? String
         var continuous_focus_enabled = true
@@ -146,7 +152,7 @@ public class CameraConfiguration {
         if let high_res_enabled = configDict["highResolutionCaptureEnabled"] as? Bool {
             high_resolution_capture_enabled = high_res_enabled
         }
-        let instance = CameraConfiguration.init(flash_mode: flash_config, color_space: colorspace, session_preset: session_preset, device_types: device_types, camera_position: camera_position, continuous_focus: continuous_focus_enabled, highResolutionCaptureEnabled: high_resolution_capture_enabled, auto_orientation_enabled: auto_orientation_enabled)
+        let instance = CameraConfiguration.init(flash_mode: flash_config, color_space: colorspace, session_preset: session_preset, device_types: device_types, camera_position: camera_position, continuous_focus: continuous_focus_enabled, highResolutionCaptureEnabled: high_resolution_capture_enabled, auto_orientation_enabled: auto_orientation_enabled, init_orientation: (configDict["initOrientation"] as? String) ?? nil)
         if let torch_level = configDict["torchLevel"] as? NSNumber {
             instance.torchlevel = torch_level.floatValue
         }
