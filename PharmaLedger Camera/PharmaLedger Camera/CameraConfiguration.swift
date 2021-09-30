@@ -117,6 +117,7 @@ public class CameraConfiguration {
      - "cameraPosition" (String)
      - "continuousFocus" (Bool)
      - "highResolutionCaptureEnabled" (Bool)
+     - "initOrientation" (String)
  */
     public func toDict() -> [String: AnyObject] {
         var dict = [String: AnyObject]()
@@ -130,9 +131,25 @@ public class CameraConfiguration {
         dict["cameraPosition"] = self.getCameraPositionString() as AnyObject
         dict["continuousFocus"] = self.continuousFocus as AnyObject
         dict["highResolutionCaptureEnabled"] = self.highResolutionCaptureEnabled as AnyObject
+        dict["initOrientation"] = self.initOrientation as AnyObject
         return dict
     }
     
+    /** Creates configuration instance from a dictionary
+- Parameter configDict: Dictionary array. Use the following keys for configurations:
+     - "preferredColorSpace" (String)
+     - "sessionPreset" (String)
+     - "flashConfiguration" (String)
+     - "torchLevel" (Float)
+     - "aspectRatio" (CGFloat)
+     - "autoOrientationEnabled" (Bool)
+     - "deviceTypes" (String array)
+     - "cameraPosition" (String)
+     - "continuousFocus" (Bool)
+     - "highResolutionCaptureEnabled" (Bool)
+     - "initOrientation" (String)
+- Returns: CameraConfiguration
+ */
     public class func createFromConfig(configDict: [String: AnyObject]) -> CameraConfiguration {
         let colorspace = configDict["preferredColorSpace"] as? String
         let session_preset = configDict["sessionPreset"] as? String

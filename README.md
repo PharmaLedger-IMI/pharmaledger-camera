@@ -228,7 +228,7 @@ These parameters can also be defined in configuration init.
 By default, the framework detects changes to the device orientation automatically. Orientation can also be managed manually as shown in the example below:
 
     func initCameraSession(){
-        // init the session with auto orientation disabled:
+        // init the session with auto orientation disabled and fixed to portrait:
         config:CameraConfiguration = CameraConfiguration.init(
             flash_mode: "torch", 
             color_space: nil, 
@@ -237,11 +237,14 @@ By default, the framework detects changes to the device orientation automaticall
             camera_position: "back", 
             continuous_focus: true, 
             highResolutionCaptureEnabled: true, 
-            auto_orientation_enabled: false
+            auto_orientation_enabled: false,
+            init_orientation: "portrait
         )
 
         cameraSession = CameraSession.init(cameraEventListener: self, cameraConfiguration: config)
     }
+
+For manually updating the camera orientation during runtime, call the **updateOrientation** or **setOrientation** functions when the view transitions to a new orientation.
 
     public override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
         super.viewWillTransition(to: size, with: coordinator)

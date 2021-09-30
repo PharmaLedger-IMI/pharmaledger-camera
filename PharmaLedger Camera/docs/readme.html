@@ -16,7 +16,7 @@
     <a title="README  Reference"></a>
     <header>
       <div class="content-wrapper">
-        <p><a href="index.html">PharmaLedger_Camera 1.1.0 Docs</a></p>
+        <p><a href="index.html">PharmaLedger_Camera 1.1.1 Docs</a></p>
         <p class="header-right">
           <form role="search" action="search.json">
             <input type="text" placeholder="Search documentation" data-typeahead>
@@ -320,7 +320,7 @@ config.setSessionPreset("medium")
 
 <p>By default, the framework detects changes to the device orientation automatically. Orientation can also be managed manually as shown in the example below:</p>
 <pre class="highlight plaintext"><code>func initCameraSession(){
-    // init the session with auto orientation disabled:
+    // init the session with auto orientation disabled and fixed to portrait:
     config:CameraConfiguration = CameraConfiguration.init(
         flash_mode: "torch", 
         color_space: nil, 
@@ -329,13 +329,16 @@ config.setSessionPreset("medium")
         camera_position: "back", 
         continuous_focus: true, 
         highResolutionCaptureEnabled: true, 
-        auto_orientation_enabled: false
+        auto_orientation_enabled: false,
+        init_orientation: "portrait
     )
 
     cameraSession = CameraSession.init(cameraEventListener: self, cameraConfiguration: config)
 }
+</code></pre>
 
-public override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+<p>For manually updating the camera orientation during runtime, call the <strong>updateOrientation</strong> or <strong>setOrientation</strong> functions when the view transitions to a new orientation.</p>
+<pre class="highlight plaintext"><code>public override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
     super.viewWillTransition(to: size, with: coordinator)
 
     // Use updateOrientation() to attempt an
