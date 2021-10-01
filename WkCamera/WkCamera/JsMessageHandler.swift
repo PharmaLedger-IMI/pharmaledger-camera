@@ -133,9 +133,9 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
     private var onCameraInitializedJsCallback: String?
     private var onCaptureJsCallback: String?
     let webserver = GCDWebServer()
-    let mjpegQueue = DispatchQueue(label: "stream-queue", qos: .userInteractive, attributes: [], autoreleaseFrequency: .inherit, target: nil)
-    let rawframeQueue = DispatchQueue(label: "rawframe-queue", qos: .userInitiated, attributes: [], autoreleaseFrequency: .inherit, target: nil)
-    let previewframeQueue = DispatchQueue(label: "previewframe-queue", qos: .userInteractive, attributes: [], autoreleaseFrequency: .inherit, target: nil)
+    let mjpegQueue = DispatchQueue(label: "stream-queue", qos: .userInteractive, attributes: [], autoreleaseFrequency: .workItem, target: nil)
+    let rawframeQueue = DispatchQueue(label: "rawframe-queue", qos: .userInitiated, attributes: [], autoreleaseFrequency: .workItem, target: nil)
+    let previewframeQueue = DispatchQueue(label: "previewframe-queue", qos: .userInteractive, attributes: [], autoreleaseFrequency: .workItem, target: nil)
     
     
     // MARK: public methods
