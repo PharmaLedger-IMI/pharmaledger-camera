@@ -198,7 +198,7 @@ document.addEventListener("DOMContentLoaded", () => {
         show(status_fps_preview);
         show(status_fps_raw);
         setupGLView(previewWidth, previewHeight);
-        const config = new PLCameraConfig(selectedPresetName, flashMode, afOn, true, selectedDevicesNames, selectedCamera, true, selectedColorspace, parseFloat(torchRange.value));   
+        const config = new PLCameraConfig(selectedPresetName, flashMode, afOn, false, selectedDevicesNames, selectedCamera, true, selectedColorspace, parseFloat(torchRange.value), 4.0/3.0, "portrait");   
         startNativeCameraWithConfig( 
             config, 
             onFramePreview, 
@@ -232,7 +232,7 @@ document.addEventListener("DOMContentLoaded", () => {
         streamPreview.parentElement.style.display = "block";
         hide(status_fps_preview);
         show(status_fps_raw);
-        const config = new PLCameraConfig(selectedPresetName, flashMode, afOn, true, selectedDevicesNames, selectedCamera, true, selectedColorspace, parseFloat(torchRange.value));   
+        const config = new PLCameraConfig(selectedPresetName, flashMode, afOn, false, selectedDevicesNames, selectedCamera, true, selectedColorspace, parseFloat(torchRange.value), 4.0/3.0, "portrait");   
         startNativeCameraWithConfig( 
             config, 
             undefined, 
