@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 52;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -12,7 +12,26 @@
 		B57070EB266DF32800E917B2 /* CameraSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57070EA266DF32800E917B2 /* CameraSession.swift */; };
 		B57F115C2678944400C3C19C /* Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57F115B2678944400C3C19C /* Helpers.swift */; };
 		B58A16232680962E00BBD843 /* CameraConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58A16222680962E00BBD843 /* CameraConfiguration.swift */; };
+		D27622A9270B37A9004620E6 /* GCDWebServers.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = D276229F270B2D0E004620E6 /* GCDWebServers.xcframework */; };
+		D27622AA270B37A9004620E6 /* GCDWebServers.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D276229F270B2D0E004620E6 /* GCDWebServers.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D2E65B30270AF591003B9E94 /* PharmaledgerMessageHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2E65B2D270AF591003B9E94 /* PharmaledgerMessageHandler.swift */; };
+		D2E65B31270AF591003B9E94 /* Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2E65B2E270AF591003B9E94 /* Utilities.swift */; };
+		D2E65B32270AF591003B9E94 /* CaptureProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2E65B2F270AF591003B9E94 /* CaptureProcessor.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		D27622AB270B37A9004620E6 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				D27622AA270B37A9004620E6 /* GCDWebServers.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		B55389512671FD6E0064A5D5 /* CameraEventListener.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraEventListener.swift; sourceTree = "<group>"; };
@@ -22,6 +41,10 @@
 		B57070EA266DF32800E917B2 /* CameraSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraSession.swift; sourceTree = "<group>"; };
 		B57F115B2678944400C3C19C /* Helpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Helpers.swift; sourceTree = "<group>"; };
 		B58A16222680962E00BBD843 /* CameraConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraConfiguration.swift; sourceTree = "<group>"; };
+		D276229F270B2D0E004620E6 /* GCDWebServers.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = GCDWebServers.xcframework; path = Carthage/Build/GCDWebServers.xcframework; sourceTree = "<group>"; };
+		D2E65B2D270AF591003B9E94 /* PharmaledgerMessageHandler.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PharmaledgerMessageHandler.swift; sourceTree = "<group>"; };
+		D2E65B2E270AF591003B9E94 /* Utilities.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Utilities.swift; sourceTree = "<group>"; };
+		D2E65B2F270AF591003B9E94 /* CaptureProcessor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CaptureProcessor.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -29,6 +52,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D27622A9270B37A9004620E6 /* GCDWebServers.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -40,6 +64,7 @@
 			children = (
 				B57070DF266DEC5700E917B2 /* PharmaLedger Camera */,
 				B57070DE266DEC5700E917B2 /* Products */,
+				D276229E270B2D0E004620E6 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -60,8 +85,19 @@
 				B57070EA266DF32800E917B2 /* CameraSession.swift */,
 				B57F115B2678944400C3C19C /* Helpers.swift */,
 				B58A16222680962E00BBD843 /* CameraConfiguration.swift */,
+				D2E65B2F270AF591003B9E94 /* CaptureProcessor.swift */,
+				D2E65B2D270AF591003B9E94 /* PharmaledgerMessageHandler.swift */,
+				D2E65B2E270AF591003B9E94 /* Utilities.swift */,
 			);
 			path = "PharmaLedger Camera";
+			sourceTree = "<group>";
+		};
+		D276229E270B2D0E004620E6 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				D276229F270B2D0E004620E6 /* GCDWebServers.xcframework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -86,6 +122,7 @@
 				B57070D9266DEC5700E917B2 /* Sources */,
 				B57070DA266DEC5700E917B2 /* Frameworks */,
 				B57070DB266DEC5700E917B2 /* Resources */,
+				D27622AB270B37A9004620E6 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -144,10 +181,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D2E65B31270AF591003B9E94 /* Utilities.swift in Sources */,
+				D2E65B32270AF591003B9E94 /* CaptureProcessor.swift in Sources */,
 				B55389522671FD6F0064A5D5 /* CameraEventListener.swift in Sources */,
 				B57070EB266DF32800E917B2 /* CameraSession.swift in Sources */,
 				B57F115C2678944400C3C19C /* Helpers.swift in Sources */,
 				B58A16232680962E00BBD843 /* CameraConfiguration.swift in Sources */,
+				D2E65B30270AF591003B9E94 /* PharmaledgerMessageHandler.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -295,7 +335,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.1;
+				MARKETING_VERSION = 1.1.2;
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = "io.truemed.PharmaLedger-Camera";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -326,7 +366,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.1.1;
+				MARKETING_VERSION = 1.1.2;
 				PRODUCT_BUNDLE_IDENTIFIER = "io.truemed.PharmaLedger-Camera";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;

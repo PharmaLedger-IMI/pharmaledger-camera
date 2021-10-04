@@ -1,14 +1,19 @@
 //
+//  PharmaledgerMessageHandler.swift
+//  PSKNodeServer
+//  Created by Sergio Mota on 20/07/2021.
+//  Based on file:
+//  https://github.com/PharmaLedger-IMI/pharmaledger-camera/blob/feature/jscamera/WkCamera/WkCamera/JsMessageHandler.swift
 //  JsMessageHandler.swift
 //  jscamera
 //
 //  Created by Yves Delacrétaz on 29.06.21.
+//  Updated from code @ 01.102021 https://github.com/PharmaLedger-IMI/pharmaledger-camera/commit/4847c378127f5d0b6d240c5ca36b1df916bc9ed8
 //
 
 import Foundation
 import WebKit
 import AVFoundation
-import PharmaLedger_Camera
 import Accelerate
 import GCDWebServers
 
@@ -28,10 +33,15 @@ enum StreamResponseError: Error {
     case cannotCreateFrameHeadersData
 }
 
-public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHandler {
+public class PharmaledgerMessageHandler: NSObject, CameraEventListener, WKScriptMessageHandler {
+    private let logPreview = true;
+    // const method to run inside the iframe from the leaflet app...
+    private var jsWindowPrefix = "";
+    
     // MARK: public vars
     public var cameraSession: CameraSession?
     public var cameraConfiguration: CameraConfiguration?
+    public var webserverPort: UInt { get { return webserver.port } }
     
     // MARK: WKScriptMessageHandler Protocol
     public func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
@@ -76,7 +86,7 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
                 return
             }
             let base64 = "data:image/jpeg;base64, " + imageData.base64EncodedString()
-            let js = "\(jsCallback)(\"\(base64)\")"
+            let js = "\(jsWindowPrefix)\(jsCallback)(\"\(base64)\")"
             DispatchQueue.main.async {
                 webview.evaluateJavaScript(js, completionHandler: {result, error in
                     guard error == nil else {
@@ -139,8 +149,9 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
     
     
     // MARK: public methods
-    public init(staticPath: String?) {
+    public init(staticPath: String?, jsWindowPrefix: String="") {
         super.init()
+        self.jsWindowPrefix = jsWindowPrefix
         addWebserverHandlers(staticPath: staticPath)
         startWebserver()
     }
@@ -233,7 +244,7 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
         if let callback = jsCallback {
             if !callback.isEmpty {
                 DispatchQueue.main.async {
-                    let js = "\(callback)(\(jsonString))"
+                    let js = "\(self.jsWindowPrefix)\(callback)(\(jsonString))"
                     webview.evaluateJavaScript(js, completionHandler: {result, error in
                         guard error == nil else {
                             print(error!)
@@ -466,9 +477,11 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
                     let data = self.prepareRGBData(ciImage: ciImage, roi: roi)
                     let contentType = "application/octet-stream"
                     let response = GCDWebServerDataResponse(data: data, contentType: contentType)
+                    response.setValue("*", forAdditionalHeader: "Access-Control-Allow-Origin")
                     let imageSize: CGSize = roi?.size ?? ciImage.extent.size
                     response.setValue(String(Int(imageSize.width)), forAdditionalHeader: "image-width")
                     response.setValue(String(Int(imageSize.height)), forAdditionalHeader: "image-height")
+                    response.setValue("image-width,image-height", forAdditionalHeader: "Access-Control-Expose-Headers")
                     completion(response)
                 } else {
                     completion(GCDWebServerErrorResponse.init(statusCode: 500))
@@ -502,6 +515,8 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
                     let imageSize: CGSize = roi?.size ?? ciImage.extent.size
                     response.setValue(String(Int(imageSize.width)), forAdditionalHeader: "image-width")
                     response.setValue(String(Int(imageSize.height)), forAdditionalHeader: "image-height")
+                    response.setValue("*", forAdditionalHeader: "Access-Control-Allow-Origin")
+                    response.setValue("image-width,image-height", forAdditionalHeader: "Access-Control-Expose-Headers")
                     completion(response)
                 } else {
                     completion(GCDWebServerErrorResponse.init(statusCode: 500))
@@ -515,8 +530,10 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
                     let (data, w, h) = self.preparePreviewData(ciImage: ciImage)
                     let contentType = "application/octet-stream"
                     let response = GCDWebServerDataResponse(data: data, contentType: contentType)
+                    response.setValue("*", forAdditionalHeader: "Access-Control-Allow-Origin")
                     response.setValue(String(w), forAdditionalHeader: "image-width")
                     response.setValue(String(h), forAdditionalHeader: "image-height")
+                    response.setValue("image-width,image-height", forAdditionalHeader: "Access-Control-Expose-Headers")
                     completion(response)
                 } else {
                     completion(GCDWebServerErrorResponse(statusCode: 500))
@@ -529,11 +546,16 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
                 let semaphore = DispatchSemaphore(value: 0)
                 let photoSettings = AVCapturePhotoSettings()
                 photoSettings.isHighResolutionPhotoEnabled = true
-                photoSettings.flashMode = self.cameraSession!.getConfig()!.getFlashMode()
+                guard let flashMode = self.cameraSession?.getConfig()?.getFlashMode() else {
+                    completion(nil)
+                    return
+                }
+                photoSettings.flashMode = flashMode
                 var response: GCDWebServerResponse? = nil
                 let processor = CaptureProcessor(completion: {data in
                     let contentType = "image/jpeg"
                     response = GCDWebServerDataResponse(data: data, contentType: contentType)
+                    response?.setValue("*", forAdditionalHeader: "Access-Control-Allow-Origin")
                     semaphore.signal()
                 })
                 guard let photoOutput = self.cameraSession?.getPhotoOutput() else {
@@ -550,14 +572,18 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
             var response: GCDWebServerDataResponse!
             let cameraConfigDict: [String: AnyObject] = self.cameraConfiguration?.toDict() ?? [String: AnyObject]()
             response = GCDWebServerDataResponse(jsonObject: cameraConfigDict)
-//            response = response.applyCORSHeaders()
+            response.setValue("*", forAdditionalHeader: "Access-Control-Allow-Origin")
             return response
         })
         
         webserver.addHandler(forMethod: "GET", path: "/deviceinfo", request: GCDWebServerRequest.classForCoder(), processBlock: {rerquest in
             let deviceInfoDict = UIDevice.getDeviceInfo()
-            let response = GCDWebServerDataResponse(jsonObject: deviceInfoDict)
-            return response
+            if let response = GCDWebServerDataResponse(jsonObject: deviceInfoDict) {
+                response.setValue("*", forAdditionalHeader: "Access-Control-Allow-Origin")
+                return response
+            } else {
+                return nil
+            }
         })
     }
     
@@ -605,7 +631,7 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
             free(dataBufferRGBsmall)
             dataBufferRGBsmall = nil
         }
-        self.previewHeight = -1
+        self.previewWidth = -1
         dataBuffer_w = -1
         dataBuffer_h = -1
         self.currentCIImage = nil
@@ -651,7 +677,7 @@ public class JsMessageHandler: NSObject, CameraEventListener, WKScriptMessageHan
                 return
             }
             DispatchQueue.main.async {
-                webview.evaluateJavaScript("\(jsCallback)(\(self.webserver.port))", completionHandler: {result, error in
+                webview.evaluateJavaScript("\(self.jsWindowPrefix)\(jsCallback)(\(self.webserver.port))", completionHandler: {result, error in
                     guard error == nil else {
                         print(error!)
                         return
