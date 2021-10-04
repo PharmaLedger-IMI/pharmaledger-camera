@@ -20,7 +20,8 @@
 
 - Camera Sample (Swift project that implements the Camera Framework)
 - pharmaledger_flutterdemo (Flutter application that uses the Camera Framework to access the native camera)
-- PharmaLedger Camera (native iOS camera Framework)
+- PharmaLedger Camera (native iOS camera Framework)  
+### **Run the script ``./carthage.sh`` before using/building the framework**
 
 ## Documentation
 
