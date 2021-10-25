@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 52;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -17,6 +17,8 @@
 		B5707125266E19FB00E917B2 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B5707123266E19FB00E917B2 /* LaunchScreen.storyboard */; };
 		B59A30F3268306A8000D2D94 /* CameraViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59A30F2268306A8000D2D94 /* CameraViewController.swift */; };
 		B59A30F626834A6C000D2D94 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B59A30F526834A6C000D2D94 /* SettingsView.swift */; };
+		D21D97BC272707100064BF42 /* GCDWebServers.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = D21D97BB272707100064BF42 /* GCDWebServers.xcframework */; };
+		D21D97BD272707100064BF42 /* GCDWebServers.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D21D97BB272707100064BF42 /* GCDWebServers.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -36,6 +38,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				D21D97BD272707100064BF42 /* GCDWebServers.xcframework in Embed Frameworks */,
 				B530C5842671E2D900D1FBC9 /* PharmaLedger_Camera.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
@@ -55,6 +58,7 @@
 		B5707132266E1F8100E917B2 /* PharmaLedger Camera.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "PharmaLedger Camera.xcodeproj"; path = "../../PharmaLedger Camera/PharmaLedger Camera.xcodeproj"; sourceTree = "<group>"; };
 		B59A30F2268306A8000D2D94 /* CameraViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraViewController.swift; sourceTree = "<group>"; };
 		B59A30F526834A6C000D2D94 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		D21D97BB272707100064BF42 /* GCDWebServers.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = GCDWebServers.xcframework; path = "../PharmaLedger Camera/Carthage/Build/GCDWebServers.xcframework"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -62,6 +66,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D21D97BC272707100064BF42 /* GCDWebServers.xcframework in Frameworks */,
 				B530C5832671E2D900D1FBC9 /* PharmaLedger_Camera.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -114,6 +119,7 @@
 		B5707138266E1FCA00E917B2 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				D21D97BB272707100064BF42 /* GCDWebServers.xcframework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
