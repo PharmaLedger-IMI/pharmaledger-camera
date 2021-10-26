@@ -12,10 +12,10 @@
 		B57070EB266DF32800E917B2 /* CameraSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57070EA266DF32800E917B2 /* CameraSession.swift */; };
 		B57F115C2678944400C3C19C /* Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = B57F115B2678944400C3C19C /* Helpers.swift */; };
 		B58A16232680962E00BBD843 /* CameraConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = B58A16222680962E00BBD843 /* CameraConfiguration.swift */; };
-		D21D97B02727042C0064BF42 /* GCDWebServers.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = D276229F270B2D0E004620E6 /* GCDWebServers.xcframework */; };
 		D2E65B30270AF591003B9E94 /* PharmaledgerMessageHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2E65B2D270AF591003B9E94 /* PharmaledgerMessageHandler.swift */; };
 		D2E65B31270AF591003B9E94 /* Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2E65B2E270AF591003B9E94 /* Utilities.swift */; };
 		D2E65B32270AF591003B9E94 /* CaptureProcessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2E65B2F270AF591003B9E94 /* CaptureProcessor.swift */; };
+		D2FD46B327282C1100CBD80F /* GCDWebServers.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = D276229F270B2D0E004620E6 /* GCDWebServers.xcframework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -37,7 +37,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D21D97B02727042C0064BF42 /* GCDWebServers.xcframework in Frameworks */,
+				D2FD46B327282C1100CBD80F /* GCDWebServers.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

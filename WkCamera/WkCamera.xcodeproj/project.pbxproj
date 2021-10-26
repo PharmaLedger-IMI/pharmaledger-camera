@@ -9,8 +9,8 @@
 /* Begin PBXBuildFile section */
 		D20B6E1026959326001F6876 /* PharmaLedger_Camera.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D20B6E0F2695930E001F6876 /* PharmaLedger_Camera.framework */; };
 		D20B6E1126959326001F6876 /* PharmaLedger_Camera.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D20B6E0F2695930E001F6876 /* PharmaLedger_Camera.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		D21D97B7272706480064BF42 /* GCDWebServers.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = D21D97B6272706480064BF42 /* GCDWebServers.xcframework */; };
-		D21D97B8272706480064BF42 /* GCDWebServers.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D21D97B6272706480064BF42 /* GCDWebServers.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		D26E46AD27281D020073A25F /* GCDWebServers.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = D21D97B6272706480064BF42 /* GCDWebServers.xcframework */; };
+		D26E46AE27281D020073A25F /* GCDWebServers.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = D21D97B6272706480064BF42 /* GCDWebServers.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D2DA5A182693A6E1006B8C4E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2DA5A172693A6E1006B8C4E /* AppDelegate.swift */; };
 		D2DA5A1A2693A6E1006B8C4E /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2DA5A192693A6E1006B8C4E /* SceneDelegate.swift */; };
 		D2DA5A1C2693A6E1006B8C4E /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2DA5A1B2693A6E1006B8C4E /* ContentView.swift */; };
@@ -39,7 +39,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				D21D97B8272706480064BF42 /* GCDWebServers.xcframework in Embed Frameworks */,
+				D26E46AE27281D020073A25F /* GCDWebServers.xcframework in Embed Frameworks */,
 				D20B6E1126959326001F6876 /* PharmaLedger_Camera.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
@@ -68,7 +68,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				D21D97B7272706480064BF42 /* GCDWebServers.xcframework in Frameworks */,
+				D26E46AD27281D020073A25F /* GCDWebServers.xcframework in Frameworks */,
 				D20B6E1026959326001F6876 /* PharmaLedger_Camera.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -376,7 +376,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"WkCamera/Preview Content\"";
-				DEVELOPMENT_TEAM = DBWXNH8PAN;
+				DEVELOPMENT_TEAM = BN448RPDQT;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = WkCamera/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
@@ -384,7 +384,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.alpvision.WkCamera;
+				PRODUCT_BUNDLE_IDENTIFIER = any.test.WkCamera;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -398,7 +398,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"WkCamera/Preview Content\"";
-				DEVELOPMENT_TEAM = DBWXNH8PAN;
+				DEVELOPMENT_TEAM = BN448RPDQT;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = WkCamera/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
@@ -406,7 +406,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.alpvision.WkCamera;
+				PRODUCT_BUNDLE_IDENTIFIER = any.test.WkCamera;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";

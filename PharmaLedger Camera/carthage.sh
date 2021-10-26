@@ -1,1 +1,1 @@
-carthage update --use-xcframeworks
+carthage update --use-xcframeworks --platform iOS
