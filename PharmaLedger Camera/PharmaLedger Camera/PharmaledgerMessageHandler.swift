@@ -632,6 +632,7 @@ public class PharmaledgerMessageHandler: NSObject, CameraEventListener, WKScript
             dataBufferRGBsmall = nil
         }
         self.previewWidth = -1
+        self.previewHeight = -1
         dataBuffer_w = -1
         dataBuffer_h = -1
         self.currentCIImage = nil
