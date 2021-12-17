@@ -15,6 +15,7 @@
     - [Building Documentation](#building-documentation)
     - [Testing](#testing)
     - [Releasing](#releasing)
+  - [WkWebView Interaction](#wkwebview-interaction)
 
 ## Repository contents
 
@@ -276,3 +277,22 @@ Quickest way to test the Framework is to boot the sample project **Camera Sample
 ### Releasing
 
 To build a release framework, open the **PharmaLedger Camera** project and select the release build scheme (create a new release scheme if there is none available). After this, build the project and find the release build in the project Output.
+
+## WkWebView Interaction
+
+The class `PharmaledgerMessageHandler` is responsible for all interactions between a webview and the native camera framework. It defines custom webkit messages and also uses an embedded webserver to provide GET endpoints to access some native functionalities.  
+You can instanciate the message handler so that it creates its own GCDWebServer instance, or you can pass an already available webserver instance. In this case handlers for custom endpoints will be added to the instance, and thus can potentially be replaced in the initial instance.  
+To create a new webserver instance, use the below constructor, passing `nil` for `webserver` parameter:  
+
+    public convenience init(staticPath: String? = nil, jsWindowPrefix: String = "", webserver: GCDWebServer? = nil)
+
+And then use instance method `getWebView` to retrieve the webview with custom webkit messages that are mandatory for native camera interaction.
+
+To use an already available webserver either pass the webserver instance to the above constructor, or use the default constructor and method `setWebserver`. This can be useful if you want to pre-load some content in the webview with custom messages before adding the new GET endpoints. The below code snippet shows such a case.
+
+    let messageHandler = PharmaledgerMessageHandler()
+    var webView = messageHandler.getWebview(frame: self.view.frame)
+    let commonWebserver = GCDWebServer()
+    ... do many other stuffs, add handlers to commonWebserver, start it, ...
+    messageHandler.setWebserver(webserver: commonWebserver)
+    

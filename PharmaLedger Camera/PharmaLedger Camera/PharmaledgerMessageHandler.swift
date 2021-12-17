@@ -34,14 +34,19 @@ enum StreamResponseError: Error {
 }
 
 public class PharmaledgerMessageHandler: NSObject, CameraEventListener, WKScriptMessageHandler {
-    private let logPreview = true;
     // const method to run inside the iframe from the leaflet app...
     private var jsWindowPrefix = "";
     
     // MARK: public vars
     public var cameraSession: CameraSession?
     public var cameraConfiguration: CameraConfiguration?
-    public var webserverPort: UInt { get { return webserver.port } }
+    public var webserverPort: UInt {
+        if let webserver = webserver {
+            return webserver.port
+        } else {
+            return 0
+        }
+    }
     
     // MARK: WKScriptMessageHandler Protocol
     public func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
@@ -106,6 +111,7 @@ public class PharmaledgerMessageHandler: NSObject, CameraEventListener, WKScript
     }
     
     // MARK: privates vars
+    private var hasOwnWebserver = false
     private var ypCbCrPixelRange = vImage_YpCbCrPixelRange(Yp_bias: 0,
                                                      CbCr_bias: 128,
                                                      YpRangeMax: 255,
@@ -142,18 +148,48 @@ public class PharmaledgerMessageHandler: NSObject, CameraEventListener, WKScript
     private var previewHeight = -1;
     private var onCameraInitializedJsCallback: String?
     private var onCaptureJsCallback: String?
-    let webserver = GCDWebServer()
+    var webserver: GCDWebServer?
     let mjpegQueue = DispatchQueue(label: "stream-queue", qos: .userInteractive, attributes: [], autoreleaseFrequency: .workItem, target: nil)
     let rawframeQueue = DispatchQueue(label: "rawframe-queue", qos: .userInitiated, attributes: [], autoreleaseFrequency: .workItem, target: nil)
     let previewframeQueue = DispatchQueue(label: "previewframe-queue", qos: .userInteractive, attributes: [], autoreleaseFrequency: .workItem, target: nil)
     
     
     // MARK: public methods
-    public init(staticPath: String?, jsWindowPrefix: String="") {
-        super.init()
+    
+    /// Initialisation
+    /// - Parameters:
+    ///   - staticPath: internal bundle filepath that will be served as '/'.
+    ///   - jsWindowPrefix: string that will be prepended to all callbacks evaluated with evaluateJavascript webview method.
+    ///   - webserver: an already available GCDWebServer instance can be re-used. WARNING: if some endpoints are already defined in the instance passed as parameter, they will be replaced.
+    public convenience init(staticPath: String? = nil, jsWindowPrefix: String = "", webserver: GCDWebServer? = nil) {
+        self.init()
+        if let webserver = webserver {
+            self.webserver = webserver
+        } else {
+            self.webserver = GCDWebServer()
+            self.hasOwnWebserver = true
+        }
         self.jsWindowPrefix = jsWindowPrefix
         addWebserverHandlers(staticPath: staticPath)
-        startWebserver()
+        // start server only if not provided from outside
+        if webserver == nil {
+            startWebserver()
+        }
+    }
+    
+    public override init() {
+        super.init()
+    }
+    
+    /// To use when you want to initialise with default constructor (for example to get the webview from this instance that implements WKScriptMessageHandler
+    /// - Parameters:
+    ///   - webserver: an already available GCDWebServer instance. WARNING: if some endpoints are already defined in the instance passed as parameter, they will be replaced.
+    ///   - jsWindowPrefix: string that will be prepended to all callbacks evaluated with evaluateJavascript webview method.
+    ///   - staticPath: internal bundle filepath that will be served as '/'.
+    public func setWebserver(webserver: GCDWebServer, jsWindowPrefix: String = "", staticPath: String? = nil) {
+        self.webserver = webserver
+        self.jsWindowPrefix = jsWindowPrefix
+        addWebserverHandlers(staticPath: staticPath)
     }
     
     deinit {
@@ -170,11 +206,18 @@ public class PharmaledgerMessageHandler: NSObject, CameraEventListener, WKScript
                 webview.configuration.userContentController.removeScriptMessageHandler(forName: m.rawValue)
             }
             self.webview = nil
-            webserver.stop()
-            webserver.removeAllHandlers()
+            if let webserver = webserver {
+                if (self.hasOwnWebserver) {
+                    webserver.stop()
+                    webserver.removeAllHandlers()
+                } 
+            }
         }
     }
     
+    /// Returns a WKWebView with custom messages needed for native camera
+    /// - Parameters:
+    ///   - frame: the webview frame
     public func getWebview(frame: CGRect) -> WKWebView {
         let configuration = WKWebViewConfiguration()
         configuration.userContentController = WKUserContentController()
@@ -395,7 +438,10 @@ public class PharmaledgerMessageHandler: NSObject, CameraEventListener, WKScript
             GCDWebServerOption_BindToLocalhost: true
         ]
         do {
-            try self.webserver.start(options: options)
+            if let webserver = webserver {
+                try webserver.start(options: options)
+                print("*** camera webserver: http://localhost:\(options[GCDWebServerOption_Port]!)")
+            }
         } catch {
             print(error)
         }
@@ -403,188 +449,190 @@ public class PharmaledgerMessageHandler: NSObject, CameraEventListener, WKScript
     
     // MARK: webserver endpoints definitions
     private func addWebserverHandlers(staticPath: String?) {
-        if let staticPath = staticPath {
-            webserver.addGETHandler(forBasePath: "/", directoryPath: staticPath, indexFilename: nil, cacheAge: 0, allowRangeRequests: false)
-        }
-        webserver.addHandler(forMethod: "GET", path: "/mjpeg", request: GCDWebServerRequest.classForCoder(), asyncProcessBlock: {(request, completion) in
-            let response = GCDWebServerStreamedResponse(contentType: "multipart/x-mixed-replace; boundary=0123456789876543210", asyncStreamBlock: {completion in
-                self.mjpegQueue.async {
-                    if let ciImage = self.currentCIImage {
-                        if let tempImage = self.ciContext.createCGImage(ciImage, from: ciImage.extent) {
-                            let image = UIImage(cgImage: tempImage)
-                            let jpegData = image.jpegData(compressionQuality: 0.5)!
-                            
-                            let frameHeaders = [
-                                "",
-                                "--0123456789876543210",
-                                "Content-Type: image/jpeg",
-                                "Content-Length: \(jpegData.count)",
-                                "",
-                                ""
-                            ]
-                            if let frameHeadersData = frameHeaders.joined(separator: "\r\n").data(using: String.Encoding.utf8) {
-                                var allData = Data()
-                                allData.append(frameHeadersData)
-                                allData.append(jpegData)
-                                let footersData = ["", ""].joined(separator: "\r\n").data(using: String.Encoding.utf8)!
-                                allData.append(footersData)
-                                completion(allData, nil)
+        if let webserver = webserver {
+            if let staticPath = staticPath {
+                webserver.addGETHandler(forBasePath: "/", directoryPath: staticPath, indexFilename: nil, cacheAge: 0, allowRangeRequests: false)
+            }
+            webserver.addHandler(forMethod: "GET", path: "/mjpeg", request: GCDWebServerRequest.classForCoder(), asyncProcessBlock: {(request, completion) in
+                let response = GCDWebServerStreamedResponse(contentType: "multipart/x-mixed-replace; boundary=0123456789876543210", asyncStreamBlock: {completion in
+                    self.mjpegQueue.async {
+                        if let ciImage = self.currentCIImage {
+                            if let tempImage = self.ciContext.createCGImage(ciImage, from: ciImage.extent) {
+                                let image = UIImage(cgImage: tempImage)
+                                let jpegData = image.jpegData(compressionQuality: 0.5)!
+                                
+                                let frameHeaders = [
+                                    "",
+                                    "--0123456789876543210",
+                                    "Content-Type: image/jpeg",
+                                    "Content-Length: \(jpegData.count)",
+                                    "",
+                                    ""
+                                ]
+                                if let frameHeadersData = frameHeaders.joined(separator: "\r\n").data(using: String.Encoding.utf8) {
+                                    var allData = Data()
+                                    allData.append(frameHeadersData)
+                                    allData.append(jpegData)
+                                    let footersData = ["", ""].joined(separator: "\r\n").data(using: String.Encoding.utf8)!
+                                    allData.append(footersData)
+                                    completion(allData, nil)
+                                } else {
+                                    print("Could not make frame headers data")
+                                    completion(nil, StreamResponseError.cannotCreateFrameHeadersData)
+                                }
                             } else {
-                                print("Could not make frame headers data")
-                                completion(nil, StreamResponseError.cannotCreateFrameHeadersData)
+                                completion(nil, StreamResponseError.cannotCreateCGImage)
                             }
                         } else {
-                            completion(nil, StreamResponseError.cannotCreateCGImage)
+                            completion(nil, StreamResponseError.cannotCreateCIImage)
                         }
+                    }
+                })
+                response.setValue("keep-alive", forAdditionalHeader: "Connection")
+                response.setValue("0", forAdditionalHeader: "Ma-age")
+                response.setValue("0", forAdditionalHeader: "Expires")
+                response.setValue("no-store,must-revalidate", forAdditionalHeader: "Cache-Control")
+                response.setValue("*", forAdditionalHeader: "Access-Control-Allow-Origin")
+                response.setValue("accept,content-type", forAdditionalHeader: "Access-Control-Allow-Headers")
+                response.setValue("GET", forAdditionalHeader: "Access-Control-Allow-Methods")
+                response.setValue("Cache-Control,Content-Encoding", forAdditionalHeader: "Access-Control-expose-headers")
+                response.setValue("no-cache", forAdditionalHeader: "Pragma")
+                completion(response)
+            })
+            
+            webserver.addHandler(forMethod: "GET", path: "/rawframe", request: GCDWebServerRequest.classForCoder(), asyncProcessBlock: { (request, completion) in
+                self.rawframeQueue.async {
+                    var roi: CGRect? = nil
+                    if let query = request.query {
+                        if query.count > 0 {
+                            guard let x = query["x"], let y = query["y"], let w = query["w"], let h = query["h"] else {
+                                let response = GCDWebServerErrorResponse.init(text: "Must specify exactly 4 params (x, y, w, h) or none.")
+                                response?.statusCode = 400
+                                completion(response)
+                                return
+                            }
+                            guard let x = Int(x), let y = Int(y), let w = Int(w), let h = Int(h) else {
+                                let response = GCDWebServerErrorResponse.init(text: "(x, y, w, h) must be integers.")
+                                response?.statusCode = 400
+                                completion(response)
+                                return
+                            }
+                            roi = CGRect(x: x, y: y, width: w, height: h)
+                        }
+                    }
+                    if let ciImage = self.currentCIImage {
+                        let data = self.prepareRGBData(ciImage: ciImage, roi: roi)
+                        let contentType = "application/octet-stream"
+                        let response = GCDWebServerDataResponse(data: data, contentType: contentType)
+                        response.setValue("*", forAdditionalHeader: "Access-Control-Allow-Origin")
+                        let imageSize: CGSize = roi?.size ?? ciImage.extent.size
+                        response.setValue(String(Int(imageSize.width)), forAdditionalHeader: "image-width")
+                        response.setValue(String(Int(imageSize.height)), forAdditionalHeader: "image-height")
+                        response.setValue("image-width,image-height", forAdditionalHeader: "Access-Control-Expose-Headers")
+                        completion(response)
                     } else {
-                        completion(nil, StreamResponseError.cannotCreateCIImage)
+                        completion(GCDWebServerErrorResponse.init(statusCode: 500))
                     }
                 }
             })
-            response.setValue("keep-alive", forAdditionalHeader: "Connection")
-            response.setValue("0", forAdditionalHeader: "Ma-age")
-            response.setValue("0", forAdditionalHeader: "Expires")
-            response.setValue("no-store,must-revalidate", forAdditionalHeader: "Cache-Control")
-            response.setValue("*", forAdditionalHeader: "Access-Control-Allow-Origin")
-            response.setValue("accept,content-type", forAdditionalHeader: "Access-Control-Allow-Headers")
-            response.setValue("GET", forAdditionalHeader: "Access-Control-Allow-Methods")
-            response.setValue("Cache-Control,Content-Encoding", forAdditionalHeader: "Access-Control-expose-headers")
-            response.setValue("no-cache", forAdditionalHeader: "Pragma")
-            completion(response)
-        })
-        
-        webserver.addHandler(forMethod: "GET", path: "/rawframe", request: GCDWebServerRequest.classForCoder(), asyncProcessBlock: { (request, completion) in
-            self.rawframeQueue.async {
-                var roi: CGRect? = nil
-                if let query = request.query {
-                    if query.count > 0 {
-                        guard let x = query["x"], let y = query["y"], let w = query["w"], let h = query["h"] else {
-                            let response = GCDWebServerErrorResponse.init(text: "Must specify exactly 4 params (x, y, w, h) or none.")
-                            response?.statusCode = 400
-                            completion(response)
-                            return
+            webserver.addHandler(forMethod: "GET", path: "/rawframe_ycbcr", request: GCDWebServerRequest.classForCoder(), asyncProcessBlock: { (request, completion) in
+                self.rawframeQueue.async {
+                    var roi: CGRect? = nil
+                    if let query = request.query {
+                        if query.count > 0 {
+                            guard let x = query["x"], let y = query["y"], let w = query["w"], let h = query["h"] else {
+                                let response = GCDWebServerErrorResponse.init(text: "Must specify exactly 4 params (x, y, w, h) or none.")
+                                response?.statusCode = 400
+                                completion(response)
+                                return
+                            }
+                            guard let x = Int(x), let y = Int(y), let w = Int(w), let h = Int(h) else {
+                                let response = GCDWebServerErrorResponse.init(text: "(x, y, w, h) must be integers.")
+                                response?.statusCode = 400
+                                completion(response)
+                                return
+                            }
+                            roi = CGRect(x: x, y: y, width: w, height: h)
                         }
-                        guard let x = Int(x), let y = Int(y), let w = Int(w), let h = Int(h) else {
-                            let response = GCDWebServerErrorResponse.init(text: "(x, y, w, h) must be integers.")
-                            response?.statusCode = 400
-                            completion(response)
-                            return
-                        }
-                        roi = CGRect(x: x, y: y, width: w, height: h)
+                    }
+                    if let ciImage = self.currentCIImage {
+                        let data = self.prepare420Yp8_CbCr8Data(ciImage: ciImage, roi: roi)
+                        let contentType = "application/octet-stream"
+                        let response = GCDWebServerDataResponse(data: data, contentType: contentType)
+                        let imageSize: CGSize = roi?.size ?? ciImage.extent.size
+                        response.setValue(String(Int(imageSize.width)), forAdditionalHeader: "image-width")
+                        response.setValue(String(Int(imageSize.height)), forAdditionalHeader: "image-height")
+                        response.setValue("*", forAdditionalHeader: "Access-Control-Allow-Origin")
+                        response.setValue("image-width,image-height", forAdditionalHeader: "Access-Control-Expose-Headers")
+                        completion(response)
+                    } else {
+                        completion(GCDWebServerErrorResponse.init(statusCode: 500))
                     }
                 }
-                if let ciImage = self.currentCIImage {
-                    let data = self.prepareRGBData(ciImage: ciImage, roi: roi)
-                    let contentType = "application/octet-stream"
-                    let response = GCDWebServerDataResponse(data: data, contentType: contentType)
-                    response.setValue("*", forAdditionalHeader: "Access-Control-Allow-Origin")
-                    let imageSize: CGSize = roi?.size ?? ciImage.extent.size
-                    response.setValue(String(Int(imageSize.width)), forAdditionalHeader: "image-width")
-                    response.setValue(String(Int(imageSize.height)), forAdditionalHeader: "image-height")
-                    response.setValue("image-width,image-height", forAdditionalHeader: "Access-Control-Expose-Headers")
-                    completion(response)
-                } else {
-                    completion(GCDWebServerErrorResponse.init(statusCode: 500))
-                }
-            }
-        })
-        webserver.addHandler(forMethod: "GET", path: "/rawframe_ycbcr", request: GCDWebServerRequest.classForCoder(), asyncProcessBlock: { (request, completion) in
-            self.rawframeQueue.async {
-                var roi: CGRect? = nil
-                if let query = request.query {
-                    if query.count > 0 {
-                        guard let x = query["x"], let y = query["y"], let w = query["w"], let h = query["h"] else {
-                            let response = GCDWebServerErrorResponse.init(text: "Must specify exactly 4 params (x, y, w, h) or none.")
-                            response?.statusCode = 400
-                            completion(response)
-                            return
-                        }
-                        guard let x = Int(x), let y = Int(y), let w = Int(w), let h = Int(h) else {
-                            let response = GCDWebServerErrorResponse.init(text: "(x, y, w, h) must be integers.")
-                            response?.statusCode = 400
-                            completion(response)
-                            return
-                        }
-                        roi = CGRect(x: x, y: y, width: w, height: h)
+            })
+            
+            webserver.addHandler(forMethod: "GET", path: "/previewframe", request: GCDWebServerRequest.self, asyncProcessBlock: {(request, completion) in
+                self.previewframeQueue.async {
+                    if let ciImage = self.currentCIImage {
+                        let (data, w, h) = self.preparePreviewData(ciImage: ciImage)
+                        let contentType = "application/octet-stream"
+                        let response = GCDWebServerDataResponse(data: data, contentType: contentType)
+                        response.setValue("*", forAdditionalHeader: "Access-Control-Allow-Origin")
+                        response.setValue(String(w), forAdditionalHeader: "image-width")
+                        response.setValue(String(h), forAdditionalHeader: "image-height")
+                        response.setValue("image-width,image-height", forAdditionalHeader: "Access-Control-Expose-Headers")
+                        completion(response)
+                    } else {
+                        completion(GCDWebServerErrorResponse(statusCode: 500))
                     }
                 }
-                if let ciImage = self.currentCIImage {
-                    let data = self.prepare420Yp8_CbCr8Data(ciImage: ciImage, roi: roi)
-                    let contentType = "application/octet-stream"
-                    let response = GCDWebServerDataResponse(data: data, contentType: contentType)
-                    let imageSize: CGSize = roi?.size ?? ciImage.extent.size
-                    response.setValue(String(Int(imageSize.width)), forAdditionalHeader: "image-width")
-                    response.setValue(String(Int(imageSize.height)), forAdditionalHeader: "image-height")
-                    response.setValue("*", forAdditionalHeader: "Access-Control-Allow-Origin")
-                    response.setValue("image-width,image-height", forAdditionalHeader: "Access-Control-Expose-Headers")
+            })
+            
+            webserver.addHandler(forMethod: "GET", path: "/snapshot", request: GCDWebServerRequest.classForCoder(), asyncProcessBlock: {(request, completion) in
+                DispatchQueue.global().async {
+                    let semaphore = DispatchSemaphore(value: 0)
+                    let photoSettings = AVCapturePhotoSettings()
+                    photoSettings.isHighResolutionPhotoEnabled = true
+                    guard let flashMode = self.cameraSession?.getConfig()?.getFlashMode() else {
+                        completion(nil)
+                        return
+                    }
+                    photoSettings.flashMode = flashMode
+                    var response: GCDWebServerResponse? = nil
+                    let processor = CaptureProcessor(completion: {data in
+                        let contentType = "image/jpeg"
+                        response = GCDWebServerDataResponse(data: data, contentType: contentType)
+                        response?.setValue("*", forAdditionalHeader: "Access-Control-Allow-Origin")
+                        semaphore.signal()
+                    })
+                    guard let photoOutput = self.cameraSession?.getPhotoOutput() else {
+                        completion(nil)
+                        return
+                    }
+                    photoOutput.capturePhoto(with: photoSettings, delegate: processor)
+                    _ = semaphore.wait(timeout: DispatchTime.now().advanced(by: DispatchTimeInterval.seconds(10)))
                     completion(response)
-                } else {
-                    completion(GCDWebServerErrorResponse.init(statusCode: 500))
                 }
-            }
-        })
-        
-        webserver.addHandler(forMethod: "GET", path: "/previewframe", request: GCDWebServerRequest.self, asyncProcessBlock: {(request, completion) in
-            self.previewframeQueue.async {
-                if let ciImage = self.currentCIImage {
-                    let (data, w, h) = self.preparePreviewData(ciImage: ciImage)
-                    let contentType = "application/octet-stream"
-                    let response = GCDWebServerDataResponse(data: data, contentType: contentType)
-                    response.setValue("*", forAdditionalHeader: "Access-Control-Allow-Origin")
-                    response.setValue(String(w), forAdditionalHeader: "image-width")
-                    response.setValue(String(h), forAdditionalHeader: "image-height")
-                    response.setValue("image-width,image-height", forAdditionalHeader: "Access-Control-Expose-Headers")
-                    completion(response)
-                } else {
-                    completion(GCDWebServerErrorResponse(statusCode: 500))
-                }
-            }
-        })
-        
-        webserver.addHandler(forMethod: "GET", path: "/snapshot", request: GCDWebServerRequest.classForCoder(), asyncProcessBlock: {(request, completion) in
-            DispatchQueue.global().async {
-                let semaphore = DispatchSemaphore(value: 0)
-                let photoSettings = AVCapturePhotoSettings()
-                photoSettings.isHighResolutionPhotoEnabled = true
-                guard let flashMode = self.cameraSession?.getConfig()?.getFlashMode() else {
-                    completion(nil)
-                    return
-                }
-                photoSettings.flashMode = flashMode
-                var response: GCDWebServerResponse? = nil
-                let processor = CaptureProcessor(completion: {data in
-                    let contentType = "image/jpeg"
-                    response = GCDWebServerDataResponse(data: data, contentType: contentType)
-                    response?.setValue("*", forAdditionalHeader: "Access-Control-Allow-Origin")
-                    semaphore.signal()
-                })
-                guard let photoOutput = self.cameraSession?.getPhotoOutput() else {
-                    completion(nil)
-                    return
-                }
-                photoOutput.capturePhoto(with: photoSettings, delegate: processor)
-                _ = semaphore.wait(timeout: DispatchTime.now().advanced(by: DispatchTimeInterval.seconds(10)))
-                completion(response)
-            }
-        })
-        
-        webserver.addHandler(forMethod: "GET", path: "/cameraconfig", request: GCDWebServerRequest.classForCoder(), processBlock: {request in
-            var response: GCDWebServerDataResponse!
-            let cameraConfigDict: [String: AnyObject] = self.cameraConfiguration?.toDict() ?? [String: AnyObject]()
-            response = GCDWebServerDataResponse(jsonObject: cameraConfigDict)
-            response.setValue("*", forAdditionalHeader: "Access-Control-Allow-Origin")
-            return response
-        })
-        
-        webserver.addHandler(forMethod: "GET", path: "/deviceinfo", request: GCDWebServerRequest.classForCoder(), processBlock: {rerquest in
-            let deviceInfoDict = UIDevice.getDeviceInfo()
-            if let response = GCDWebServerDataResponse(jsonObject: deviceInfoDict) {
+            })
+            
+            webserver.addHandler(forMethod: "GET", path: "/cameraconfig", request: GCDWebServerRequest.classForCoder(), processBlock: {request in
+                var response: GCDWebServerDataResponse!
+                let cameraConfigDict: [String: AnyObject] = self.cameraConfiguration?.toDict() ?? [String: AnyObject]()
+                response = GCDWebServerDataResponse(jsonObject: cameraConfigDict)
                 response.setValue("*", forAdditionalHeader: "Access-Control-Allow-Origin")
                 return response
-            } else {
-                return nil
-            }
-        })
+            })
+            
+            webserver.addHandler(forMethod: "GET", path: "/deviceinfo", request: GCDWebServerRequest.classForCoder(), processBlock: {rerquest in
+                let deviceInfoDict = UIDevice.getDeviceInfo()
+                if let response = GCDWebServerDataResponse(jsonObject: deviceInfoDict) {
+                    response.setValue("*", forAdditionalHeader: "Access-Control-Allow-Origin")
+                    return response
+                } else {
+                    return nil
+                }
+            })
+        }
     }
     
     // MARK: js message handlers implementations
@@ -678,7 +726,7 @@ public class PharmaledgerMessageHandler: NSObject, CameraEventListener, WKScript
                 return
             }
             DispatchQueue.main.async {
-                webview.evaluateJavaScript("\(self.jsWindowPrefix)\(jsCallback)(\(self.webserver.port))", completionHandler: {result, error in
+                webview.evaluateJavaScript("\(self.jsWindowPrefix)\(jsCallback)(\(self.webserverPort))", completionHandler: {result, error in
                     guard error == nil else {
                         print(error!)
                         return
